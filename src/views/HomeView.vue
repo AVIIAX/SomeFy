@@ -36,6 +36,7 @@ const { isPlaying, currentTrack } = storeToRefs(useSong)
 
     <div class="py-1.5"></div>
 
+    <!-- Grid layout for Top Hits -->
     <div class="grid grid-cols-5 gap-4">
       <div v-for="(track, index) in artist.tracks" :key="track.id">
         <HomeCard :track="track" />
@@ -66,11 +67,10 @@ const { isPlaying, currentTrack } = storeToRefs(useSong)
     <div class="border-b border-b-[#2A2A2A] mt-2"></div>
     <div class="mb-4"></div>
 
-    <div class="grid grid-cols-5 gap-4">
-      <div v-for="(track, index) in artist.tracks" :key="track.id">
-        <SongRow :artist="artist" :track="track" :index="++index" />
-      </div>
-    </div>
+    <!-- No grid layout for Music Section -->
+    <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
+      <SongRow :artist="artist" :track="track" :index="++index" />
+    </ul>
   </div>
 </template>
 
