@@ -57,7 +57,7 @@
     signInWithEmailAndPassword(getAuth(), email.value, password.value)
       .then(() => {
         alert("Successfully logged in!");
-        router.push("/home");
+        router.push("/");
       })
       .catch((error) => {
         errMsg.value = error.message;

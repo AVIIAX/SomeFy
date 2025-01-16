@@ -54,7 +54,7 @@
     createUserWithEmailAndPassword(getAuth(), email.value, password.value)
       .then(() => {
         alert("Successfully registered!");
-        router.push('/home');
+        router.push('/');
       })
       .catch((error) => {
         alert(error.message);
