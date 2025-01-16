@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^11.2.0",
     "pinia": "^2.0.28",
     "pinia-plugin-persistedstate": "^3.0.2",
     "uniqolor": "^1.1.0",
