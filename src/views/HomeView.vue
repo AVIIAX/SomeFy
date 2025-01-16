@@ -17,59 +17,61 @@ const { isPlaying, currentTrack } = storeToRefs(useSong)
 </script>
 
 <template>
-    
-    <div class="relative p-8">
-      
-      
-  
-      <div class="py-1.5"></div>
-  
-      <div class="flex items-center">
-          <BoostCard :track="artist.boost"/>
+  <div class="relative p-8">
+    <!-- Boost Section -->
+    <div class="py-1.5"></div>
+    <div class="flex items-center">
+      <BoostCard :track="artist.boost" />
+    </div>
+  </div>
+
+  <!-- Top Hits Section -->
+  <div class="relative p-8">
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Top Hits
+    </button>
+
+    <div class="py-1.5"></div>
+
+    <div class="grid grid-cols-5 gap-4">
+      <div v-for="(track, index) in artist.tracks" :key="track.id">
+        <HomeCard :track="track" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Music Section -->
+  <div class="p-8">
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Music
+    </button>
+
+    <div class="mt-6"></div>
+    <div class="flex items-center justify-between px-5 pt-2">
+      <div class="flex items-center justify-between text-gray-400">
+        <div class="mr-7">#</div>
+        <div class="text-sm">Title</div>
+      </div>
+      <div>
+        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
       </div>
     </div>
 
+    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+    <div class="mb-4"></div>
 
-    <div class="relative p-8">
-     
-      <button
-        type="button"
-        class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-      >
-        Top Hits
-      </button>
-  
-      <div class="py-1.5"></div>
-  
-      <div class="flex items-center">
-        <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
-          <HomeCard :track="track" />
-        </ul>
-      </div>
-    </div>
-  
-    <div class="p-8">
-      <button
-        type="button"
-        class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-      >
-        Music
-      </button>
-      <div class="mt-6"></div>
-      <div class="flex items-center justify-between px-5 pt-2">
-        <div class="flex items-center justify-between text-gray-400">
-          <div class="mr-7">#</div>
-          <div class="text-sm">Title</div>
-        </div>
-        <div>
-          <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
-        </div>
-      </div>
-      <div class="border-b border-b-[#2A2A2A] mt-2"></div>
-      <div class="mb-4"></div>
-      <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
+    <div class="grid grid-cols-5 gap-4">
+      <div v-for="(track, index) in artist.tracks" :key="track.id">
         <SongRow :artist="artist" :track="track" :index="++index" />
-      </ul>
+      </div>
     </div>
-  </template>
+  </div>
+</template>
+
   
