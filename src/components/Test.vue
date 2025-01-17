@@ -1,121 +1,80 @@
 <template>
-    <div class="container">
-      <h1>User Data</h1>
-  
-      <!-- Display users -->
-      <div v-if="users.length > 0">
-        <ul>
-          <li v-for="user in users" :key="user.id">
-            <p>Name: {{ user.name }}</p>
-            <p>Email: {{ user.email }}</p>
-            <button @click="editUser(user.id)">Edit</button>
-          </li>
-        </ul>
-      </div>
-  
-      <!-- Add new user -->
-      <div>
-        <h2>Add New User</h2>
-        <input v-model="newUserName" placeholder="Enter Name" />
-        <input v-model="newUserEmail" placeholder="Enter Email" />
-        <button @click="addUser">Add User</button>
-      </div>
-  
-      <!-- Edit user -->
-      <div v-if="editingUserId">
-        <h2>Edit User</h2>
-        <input v-model="editUserName" placeholder="Edit Name" />
-        <input v-model="editUserEmail" placeholder="Edit Email" />
-        <button @click="updateUser">Update User</button>
-      </div>
+    <div>
+      <h1>Upload an Image to Discord</h1>
+      <input type="file" @change="onFileChange" accept="image/*" />
+      <p v-if="fileUrl">
+        Uploaded successfully! <a :href="fileUrl" target="_blank">View Image</a>
+      </p>
+      <img v-if="fileUrl" :src="fileUrl" alt="Uploaded Image" style="max-width: 100%; margin-top: 1em;" />
+      <p v-if="errorMessage" style="color: red;">{{ errorMessage }}</p>
     </div>
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue';
-  import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
-  import { useRouter } from 'vue-router';
+  import { ref } from "vue";
+  import axios from "axios";
   
-  const db = getFirestore();
-  const users = ref([]);
-  const newUserName = ref('');
-  const newUserEmail = ref('');
-  const editUserName = ref('');
-  const editUserEmail = ref('');
-  const editingUserId = ref(null);
+  // Replace this with your actual Discord webhook URL
+  const webhookUrl = "https://discord.com/api/webhooks/1329746552008212523/_3YiBZAKs8yCECE12IVBUBVP7UiGemGageDp0QbXD6b1X0w6pJ--Nmd9G2WpfUSFHKHK"; 
   
-  const router = useRouter();
+  // Reactive variables to store the file URL and error messages
+  const fileUrl = ref(null);
+  const errorMessage = ref("");
   
-  // Fetch users from Firestore
-  const fetchUsers = async () => {
+  /**
+   * Handles the file upload process when a file is selected.
+   * @param {Event} event - The file input change event.
+   */
+  async function onFileChange(event) {
+    const file = event.target.files[0];
+  
+    if (!file) {
+      errorMessage.value = "Please select a file to upload.";
+      return;
+    }
+  
     try {
-      const querySnapshot = await getDocs(collection(db, 'user'));
-      users.value = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      // Prepare the form data for the Discord webhook
+      const formData = new FormData();
+      formData.append("file", file); // Attach the file
+      formData.append(
+        "payload_json",
+        JSON.stringify({ content: "User uploaded an image" }) // Optional message
+      );
+  
+      // Send the file to the Discord webhook
+      const response = await axios.post(webhookUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+      // Extract and store the file's CDN URL
+      if (response.data.attachments && response.data.attachments.length > 0) {
+        fileUrl.value = response.data.attachments[0].url;
+        errorMessage.value = ""; // Clear any error message
+      } else {
+        throw new Error("No attachment URL found in the response.");
+      }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error uploading file to Discord webhook:", error);
+      errorMessage.value = "Failed to upload file. Please try again.";
     }
-  };
-  
-  // Add a new user
-  const addUser = async () => {
-    if (newUserName.value && newUserEmail.value) {
-      try {
-        await addDoc(collection(db, 'user'), {
-          name: newUserName.value,
-          email: newUserEmail.value,
-        });
-        newUserName.value = '';
-        newUserEmail.value = '';
-        fetchUsers(); // Refresh user list
-      } catch (error) {
-        console.error('Error adding user:', error);
-      }
-    }
-  };
-  
-  // Edit user (set up form)
-  const editUser = (userId) => {
-    const user = users.value.find(u => u.id === userId);
-    editUserName.value = user.name;
-    editUserEmail.value = user.email;
-    editingUserId.value = userId;
-  };
-  
-  // Update user
-  const updateUser = async () => {
-    if (editingUserId.value && editUserName.value && editUserEmail.value) {
-      try {
-        const userRef = doc(db, 'user', editingUserId.value);
-        await updateDoc(userRef, {
-          name: editUserName.value,
-          email: editUserEmail.value,
-        });
-        editingUserId.value = null;
-        fetchUsers(); // Refresh user list
-      } catch (error) {
-        console.error('Error updating user:', error);
-      }
-    }
-  };
-  
-  // Fetch users when the component is mounted
-  onMounted(() => {
-    fetchUsers();
-  });
+  }
   </script>
   
   <style scoped>
-  /* Add your styles here */
-  * {
-    color: white;
+  h1 {
+    font-size: 1.5em;
+    margin-bottom: 1em;
   }
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+  p {
+    margin-top: 0.5em;
+  }
+  img {
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
   }
   </style>
   

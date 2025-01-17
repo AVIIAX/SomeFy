@@ -20,6 +20,7 @@ const isLoggedIn = ref(false); // Corrected variable naming
 const showRegister = ref(false); // Controls whether Register or Login is shown
 let auth;
 
+const userID = ref("null");
 const userEmail = ref("null");
 const userName = ref("");
 const userAV = ref("");
@@ -38,7 +39,7 @@ onMounted(() => {
         // Reference to the user's document in Firestore
         const userRef = doc(db, "user", user.uid); // Assuming the user's document is stored with their UID
         const userDoc = await getDoc(userRef); // Fetch the user's document
-
+        userID.value = user.uid;
         if (userDoc.exists()) {
           // If the document exists, extract the 'name' field from it
           const userData = userDoc.data();
@@ -139,6 +140,7 @@ let openMenu = ref(false);
               <img
                 class="rounded-full"
                 width="27"
+                height="27"
                 :src='userAV'
               />
               <div class="text-white text-[14px] ml-1.5 font-semibold">{{userName}}</div>
@@ -162,8 +164,7 @@ let openMenu = ref(false);
             class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"
           >
             <ul class="text-gray-200 font-semibold text-[14px]">
-              <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">
-                Profile
+              <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600"><RouterLink :to="`/user/${userID}`">Profile</RouterLink>
               </li>
               <li class="px-3 py-2.5 hover:bg-[#3E3D3D]" @click="logout">Log out</li>
             </ul>
@@ -173,7 +174,7 @@ let openMenu = ref(false);
         <!-- NavBar -->
         <div id="SideNav" class="h-[100%] p-6 w-[240px] fixed z-50 bg-black">
           <RouterLink to="/">
-            <img width="125" src="/images/icons/spotify-logo.png" />
+            <img width="125" src="https://cdn.discordapp.com/attachments/1329382057264025611/1329751439995834450/11232301.png?ex=678b7b08&is=678a2988&hm=042773dde76316640b71ca684976c85d6aeaf744478cf6b9eab0e65e7b63207b&" />
           </RouterLink>
           <div class="my-8"></div>
           <ul>
@@ -181,43 +182,11 @@ let openMenu = ref(false);
               <MenuItem
                 class="ml-[1px]"
                 :iconSize="23"
-                name="Home"
-                iconString="home"
-                pageUrl="/"
-              />
-            </RouterLink>
-            <RouterLink to="/search">
-              <MenuItem
-                class="ml-[1px]"
-                :iconSize="24"
-                name="Search"
-                iconString="search"
-                pageUrl="/search"
-              />
-            </RouterLink>
-            <RouterLink to="/library">
-              <MenuItem
-                class="ml-[2px]"
-                :iconSize="23"
-                name="Your Library"
-                iconString="library"
-                pageUrl="/library"
+                name="Profile"
+                pageUrl="/profile"
               />
             </RouterLink>
             <div class="py-3.5"></div>
-            <MenuItem
-              :iconSize="24"
-              name="Create Playlist"
-              iconString="playlist"
-              pageUrl="/playlist"
-            />
-            <MenuItem
-              class="-ml-[1px]"
-              :iconSize="27"
-              name="Liked Songs"
-              iconString="liked"
-              pageUrl="/liked"
-            />
           </ul>
           <div class="border-b border-b-gray-700"></div>
           <ul>
@@ -225,21 +194,6 @@ let openMenu = ref(false);
               class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white"
             >
               My Playlist #1
-            </li>
-            <li
-              class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white"
-            >
-              My Playlist #2
-            </li>
-            <li
-              class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white"
-            >
-              My Playlist #3
-            </li>
-            <li
-              class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white"
-            >
-              My Playlist #4
             </li>
           </ul>
         </div>
