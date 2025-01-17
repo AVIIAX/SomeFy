@@ -35,10 +35,18 @@
         </p>
       </div>
       
-    </div><div>
-      <button v-if="!isArtist" id="beArtist">Switch To Artist Page</button>
-      <button v-if="isArtist" id="beArtist">Switch To Listener Page</button></div>
+    </div><div v-if="isAuthUser" :style="{width: '100%'}">
+      <button v-if="!isArtist" id="beArtist" @click="beArtist">Switch To Artist Page</button>
+</div>
   </div>
+
+  <!-- My Tracks -->
+   <div v-if="isArtist"></div>
+
+
+  <!-- Liked Tracks -->
+   <div v-if="!isArtist"></div>
+
 </template>
 
 <script setup>
@@ -47,6 +55,7 @@ import { useRoute } from 'vue-router';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
+import SongRow from '../components/SongRow.vue';
 
 const route = useRoute();
 const userID = route.params.userID;
@@ -145,6 +154,10 @@ const updateProfileField = async (field, value) => {
   } catch (error) {
     console.error('Error updating field:', error);
   }
+};
+
+const beArtist = async () => {
+    await updateProfileField('artist', true);
 };
 </script>
 
@@ -250,6 +263,6 @@ const updateProfileField = async (field, value) => {
   padding: 0.5rem;
   background-color: rgb(155, 143, 143);
   border-radius: 10px;
-
+  width: 100%;
 }
 </style>
