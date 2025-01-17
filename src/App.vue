@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
 import Register from './components/Register.vue';
 import Login from './components/Login.vue';
+import Test from './components/Test.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
@@ -12,15 +13,49 @@ import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import { useSongStore } from './stores/song';
 import { storeToRefs } from 'pinia';
+import { getFirestore, collection, addDoc, doc, getDoc} from "firebase/firestore";
 
+const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
-const showRegister = ref(true); // Controls whether Register or Login is shown
+const showRegister = ref(false); // Controls whether Register or Login is shown
 let auth;
+
+const userEmail = ref("null");
+const userName = ref("");
+const userAV = ref("");
 
 onMounted(() => {
   auth = getAuth();
-  onAuthStateChanged(auth, (user) => {
+
+  onAuthStateChanged(auth, async (user) => {
     isLoggedIn.value = !!user;
+
+    if (user) {
+    // If a user is authenticated
+    userEmail.value = user.email;
+    
+    try {
+        // Reference to the user's document in Firestore
+        const userRef = doc(db, "user", user.uid); // Assuming the user's document is stored with their UID
+        const userDoc = await getDoc(userRef); // Fetch the user's document
+
+        if (userDoc.exists()) {
+          // If the document exists, extract the 'name' field from it
+          const userData = userDoc.data();
+          userName.value = userData.name || "No name available"; // If name exists, use it, otherwise display fallback
+          userAV.value = userData.avatar || "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&"
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data: ", error);
+      }
+
+    
+  } else {
+    console.log("No auth");
+  }
+
   });
   isPlaying.value = false;
 });
@@ -58,9 +93,10 @@ let openMenu = ref(false);
     class="fixed left-0 top-0 w-full h-full bg-gradient-to-b from-[#1C1C1C] to-black flex items-center justify-center"
   >
     <div>
-      <Register v-if="showRegister" @switchToLogin="switchToLogin" />
+      <Register v-if="showRegister" @switchToLogin="switchToLogin"/>
       <Login v-else @switchToRegister="switchToRegister" />
     </div>
+    
   </div>
   
     <!-- LOGGED IN -->
@@ -103,9 +139,9 @@ let openMenu = ref(false);
               <img
                 class="rounded-full"
                 width="27"
-                src="https://yt3.ggpht.com/e9o-24_frmNSSVvjS47rT8qCHgsHNiedqgXbzmrmpsj6H1ketcufR1B9vLXTZRa30krRksPj=s88-c-k-c0x00ffffff-no-rj-mo"
+                :src='userAV'
               />
-              <div class="text-white text-[14px] ml-1.5 font-semibold">☭</div>
+              <div class="text-white text-[14px] ml-1.5 font-semibold">{{userName}}</div>
               <ChevronDown
                 v-if="!openMenu"
                 @click="openMenu = true"
@@ -227,6 +263,7 @@ let openMenu = ref(false);
         <RouterView />
         <div class="mb-[100px]"></div>
       </div>
+      
   
       <MusicPlayer v-if="currentTrack" />
     </div>

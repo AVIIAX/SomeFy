@@ -23,8 +23,11 @@ const firebaseConfig = {
   appId: "1:956308046544:web:545babcc35bd01ac4f94d5"
 };
 
+import { getFirestore, collection, getDocs } from "firebase/firestore";
+
 initializeApp(firebaseConfig);
 
+export const db = getFirestore();
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

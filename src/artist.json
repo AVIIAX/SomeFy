@@ -11,15 +11,7 @@
 
     },
     "tracks": [
-        {
-            "id": 1,
-            "name": "Intro",
-            "artist": "AVIIAX",
-            "Boost": "yes",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326655446840246302/synth.wav?ex=6789722a&is=678820aa&hm=87fc8cd9ab14737869697326644f1d86fdb0bf63113b4c33e29e719d0a0a30f7&",
-            "img": "https://cdn.discordapp.com/attachments/952712667498422272/1329203779647569963/guyblag_Armored_Musketeer_Soviet_Slavic_action_pose_Man_0ea09a68-1085-4757-a7ec-3dbbb59c5c5f.png?ex=678a25bc&is=6788d43c&hm=4731409fc6af5cd0f8b338ae1347f4825439a3d1d0b2a307e54e27485c5cf1fc&"
-        },
+    
         {
         
             "id": 1,
@@ -30,51 +22,6 @@
                 "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1329549456105930762/Abyssal_7.mp3?ex=678abeec&is=67896d6c&hm=1766ccbb2968c697639813a345ad9f447114958a1d2278af6a01bb8c50341110&",
                 "img": "https://cdn.discordapp.com/attachments/1019217435628408882/1316808036752429157/c98a8d90-a055-44e6-8772-2f77fadefa83-0.png?ex=678a890d&is=6789378d&hm=559aa6b1164987003060c5e5a76b8501c70075f7296fc0f142eeb1da1eb680ec&"
     
-        },
-        {
-            "id": 2,
-            "name": "Hmm",
-            "artist": "Someguy",
-            "Boost": "no",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326652224922718234/Thingamoba-1.mp3?ex=678a17ea&is=6788c66a&hm=9fb24848cc1444301c270b074fa58c57d93d292c3a0dfad35fc3808942b38fe2&",
-            "img": "https://cdn.discordapp.com/attachments/952712667498422272/1329214053616193656/dinolexis_DD_character_adult_beetle_folk_using_the_beetle_part__8f2d6959-a9c3-4b4f-8e39-f9c8b341e52e.png?ex=678a2f4d&is=6788ddcd&hm=d8c4d6de4974ef738daf7ded5a73d4d9fddf56b7f639c5d713f3fd91111e4ae9&"
-        },
-        {
-            "id": 3,
-            "name": "Hmm",
-            "artist": "Someguy",
-            "Boost": "no",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326652224922718234/Thingamoba-1.mp3?ex=678a17ea&is=6788c66a&hm=9fb24848cc1444301c270b074fa58c57d93d292c3a0dfad35fc3808942b38fe2&",
-            "img": "https://cdn.discordapp.com/attachments/952712667498422272/1329416821765574688/harigeri__the_punishing_God_textil_art_nightmare_end_of_existen_7914b0b5-22ed-4cb2-9e1f-7590c3974588.png?ex=678a4365&is=6788f1e5&hm=ecdfe5bbc349633f8e6935554801121ceff43c2e8229a4ba0448758751577a84&"
-        },
-        {
-            "id": 4,
-            "name": "Hmm",
-            "artist": "Someguy",
-            "Boost": "no",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326652224922718234/Thingamoba-1.mp3?ex=678a17ea&is=6788c66a&hm=9fb24848cc1444301c270b074fa58c57d93d292c3a0dfad35fc3808942b38fe2&",
-            "img": "https://cdn.discordapp.com/attachments/1019217435628408882/1168519920523419728/generated-image.png?ex=678a467b&is=6788f4fb&hm=9d1b6687f5ada5c264cb58e11c14fee1b10cc52d817d926554d33b74c27edbe1&"
-        },
-        {
-            "id": 1,
-            "name": "Hmm",
-            "artist": "Someguy",
-            "Boost": "no",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326652224922718234/Thingamoba-1.mp3?ex=678a17ea&is=6788c66a&hm=9fb24848cc1444301c270b074fa58c57d93d292c3a0dfad35fc3808942b38fe2&",
-            "img": "https://cdn.discordapp.com/attachments/952712667498422272/1329214053616193656/dinolexis_DD_character_adult_beetle_folk_using_the_beetle_part__8f2d6959-a9c3-4b4f-8e39-f9c8b341e52e.png?ex=678a2f4d&is=6788ddcd&hm=d8c4d6de4974ef738daf7ded5a73d4d9fddf56b7f639c5d713f3fd91111e4ae9&"
-        },
-        {
-            "id": 1,
-            "name": "Hmm",
-            "artist": "Someguy",
-            "Boost": "no",
-            "likes": "0",
-            "path": "https://cdn.discordapp.com/attachments/1326644051205820497/1326652224922718234/Thingamoba-1.mp3?ex=678a17ea&is=6788c66a&hm=9fb24848cc1444301c270b074fa58c57d93d292c3a0dfad35fc3808942b38fe2&",
-            "img": "https://cdn.discordapp.com/attachments/952712667498422272/1329214053616193656/dinolexis_DD_character_adult_beetle_folk_using_the_beetle_part__8f2d6959-a9c3-4b4f-8e39-f9c8b341e52e.png?ex=678a2f4d&is=6788ddcd&hm=d8c4d6de4974ef738daf7ded5a73d4d9fddf56b7f639c5d713f3fd91111e4ae9&"
         }
     ]
 }
