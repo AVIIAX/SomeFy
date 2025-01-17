@@ -42,7 +42,7 @@ onMounted(() => {
         class="rounded-sm transition-all duration-300"
         :class="{ 'blur-sm': isHover }"
         :src="track.img"
-        alt=""
+        :style="{ borderRadius: '15px'}"
       />
       <div
         v-if="isHover"
