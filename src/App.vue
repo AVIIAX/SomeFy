@@ -6,19 +6,22 @@ import Register from './components/Register.vue';
 import Login from './components/Login.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
+import UploadTrackModal from './components/UploadTrackModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
+import PlusIcon from 'vue-material-design-icons/Plus.vue';
 import { useSongStore } from './stores/song';
 import { storeToRefs } from 'pinia';
 import { getFirestore, collection, addDoc, doc, getDoc} from "firebase/firestore";
 
 const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
+const isArtist = ref(false);
 const showRegister = ref(false); // Controls whether Register or Login is shown
 let auth;
-
+const showModal = ref(false);
 const userID = ref("null");
 const userEmail = ref("null");
 const userName = ref("");
@@ -44,6 +47,7 @@ onMounted(() => {
           const userData = userDoc.data();
           userName.value = userData.name || "No name available"; // If name exists, use it, otherwise display fallback
           userAV.value = userData.avatar || "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&"
+          isArtist.value = userData.artist;
         } else {
           console.log("No such document!");
         }
@@ -217,7 +221,17 @@ let openMenu = ref(false);
         <div class="mb-[100px]"></div>
       </div>
       
-  
+      <button @click="showModal = true" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black" v-if="isArtist" :style="{ 
+        backgroundColor: '#3481c9', 
+        color: 'Black', 
+        padding: '1rem', 
+        borderRadius: '100%',
+        bottom: '130px',
+        right: '60px'
+        }">
+        <PlusIcon fillColor="#FFFFFF" :size="30" />
+      </button>
+      <UploadTrackModal v-if="showModal" @close="showModal = false" />
       <MusicPlayer v-if="currentTrack" />
     </div>
 </template>
@@ -244,5 +258,12 @@ let openMenu = ref(false);
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #555;border-radius: 20px;
+}
+
+.happyBtn {
+  transition: all 0.2s linear;
+}
+.happyBtn:hover {
+  transform: scale(1.1) rotateZ(10deg);
 }
 </style>
