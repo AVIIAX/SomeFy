@@ -141,7 +141,7 @@ let openMenu = ref(false);
           >
             <div class="flex items-center">
               <img
-                class="rounded-full"
+                class="rounded-full navProfileImg"
                 width="27"
                 height="27"
                 :src='userAV'
@@ -267,4 +267,9 @@ let openMenu = ref(false);
   transform: scale(1.1) rotateZ(10deg);
 }
 
+.navProfileImg {
+  height: revert-layer;
+  object-fit: cover;
+  border-radius: 50%;
+}
 </style>
