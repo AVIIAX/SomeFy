@@ -101,7 +101,8 @@
     </div>
     <div v-if="!myTracks" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
       <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-        <button class="happyBtn" v-if="!myTracks" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+        <ModalComponent v-if="showModal" @close="showModal = false" />
     </div>
   </div>
 
@@ -114,6 +115,7 @@ import { getFirestore, doc, getDoc, updateDoc, } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 import SongRow from '../components/SongRow.vue';
+import ModalComponent from '../components/UploadTrackModal.vue'
 import artist from '../artist.json'
 
 const route = useRoute();
@@ -128,7 +130,7 @@ const myTracks = ref('');
 const likedTracks = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
-
+const showModal = ref(false);
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 

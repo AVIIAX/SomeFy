@@ -1,0 +1,232 @@
+<template>
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <button class="close-btn" @click="closeModal">&times;</button>
+        <form @submit.prevent="handleSubmit">
+          <!-- Artwork Input -->
+          <div class="artwork-container">
+            <label for="artwork" class="artwork-label">
+              <img
+                v-if="artwork"
+                :src="artwork"
+                class="artwork-preview"
+                alt="Uploaded artwork"
+              />
+              <img
+                v-else
+                src="https://archive.org/download/placeholder-image/placeholder-image.jpg"
+                class="artwork-placeholder"
+                alt="Placeholder"
+              />
+            </label>
+            <input
+              id="artwork"
+              type="file"
+              accept="image/*"
+              class="hidden-input"
+              @change="handleArtworkUpload"
+            />
+          </div>
+  
+          <!-- Name Input -->
+          <input
+            v-model="name"
+            type="text"
+            placeholder="Enter song name"
+            class="input"
+          />
+  
+          <!-- Genre Input -->
+          <input
+            v-model="genre"
+            type="text"
+            placeholder="Enter genre"
+            class="input"
+          />
+  
+          <!-- Music File Input -->
+          <input
+            id="music"
+            type="file"
+            accept="audio/*"
+            @change="handleMusicUpload"
+            class="input"
+          />
+  
+          <!-- Submit Button -->
+          <button @click="uploadTrack" type="submit" class="submit-btn happyBtn">Submit</button>
+        </form>
+      </div>
+    </div>
+</template>
+  
+<script setup>
+import { ref, defineEmits } from 'vue';
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion } from "firebase/firestore";
+
+// Firebase setup
+const db = getFirestore();
+const auth = getAuth();
+
+const emit = defineEmits(['close']);
+const currentUser = auth.currentUser;
+
+// Track details
+const name = ref('');
+const genre = ref('');
+const artwork = ref('');
+const musicFile = ref('');
+
+const handleArtworkUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      artwork.value = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handleSubmit = async () => {
+  if (!name.value || !genre.value || !artwork.value) {
+    alert('Please fill in all the fields!');
+    return;
+  }
+
+  try {
+    // Add track data to 'track' collection
+    const trackRef = await addDoc(collection(db, "track"), {
+      artist: currentUser ? currentUser.uid : "unknown",
+      name: name.value,
+      genre: genre.value,
+      artwork: artwork.value,
+      createdAt: new Date(),
+    });
+
+    const trackId = trackRef.id; // Fetch the generated unique ID
+
+    // Add the track ID to the user's 'tracks' array
+    const userRef = doc(db, "user", currentUser.uid);
+    await updateDoc(userRef, {
+      tracks: arrayUnion(trackId),
+    });
+
+    alert('Track uploaded successfully!');
+    closeModal();
+  } catch (error) {
+    console.error('Error uploading track:', error);
+    alert('Failed to upload the track. Please try again.');
+  }
+};
+
+const closeModal = () => {
+  // Clear inputs
+  name.value = '';
+  genre.value = '';
+  artwork.value = '';
+  musicFile.value = '';
+  emit('close');
+};
+</script>
+
+  
+<style scoped>
+  /* Modal Overlay */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Dark transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal Container */
+  .modal-container {
+    background-color: #2c2c2c; /* Dark mode modal */
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    color: #f0f0f0; /* Light text */
+    position: relative;
+  }
+  
+  /* Close Button */
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #f0f0f0;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  /* Artwork Input */
+  .artwork-container {
+    margin: 20px 0;
+    position: relative;
+  }
+  
+  .artwork-label {
+    display: block;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .artwork-placeholder,
+  .artwork-preview {
+    width: 200px;
+    height: 200px;
+    display: inline;
+    object-fit: cover;
+    border: 2px dashed #555;
+    border-radius: 10px;
+    transition: opacity 0.3s;
+  }
+  
+  .artwork-placeholder:hover,
+  .artwork-preview:hover {
+    opacity: 0.8;
+  }
+  
+  .hidden-input {
+    display: none;
+  }
+  
+  /* Input Fields */
+  .input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #555;
+    border-radius: 5px;
+    font-size: 14px;
+    background-color: #3c3c3c;
+    color: #f0f0f0;
+  }
+  
+  /* Submit Button */
+  .submit-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .submit-btn:hover {
+    background-color: #45a049;
+  }
+</style>

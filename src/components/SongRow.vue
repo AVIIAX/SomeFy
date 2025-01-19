@@ -22,7 +22,7 @@ const props = defineProps({
 
 const { trackId, index } = toRefs(props);
 const track = ref([]);
-const artist = ref([]);
+const trackArtist = ref([]);
 
 onMounted(async () => {
 
@@ -32,11 +32,20 @@ onMounted(async () => {
 try {
     const trackRef = doc(db, 'track', trackId.value); // Replace trackID with the actual track ID
     const trackDoc = await getDoc(trackRef);
+    
 
     if (trackDoc.exists()) {
       const trackData = trackDoc.data();
       track.value = trackData;
-      
+
+      const artistRef = doc(db, 'user', trackData.artist);
+    const artistDoc = await getDoc(artistRef);
+
+    if (artistDoc.exists()) {
+      const artistData = artistDoc.data();
+      trackArtist.value = artistData.name
+    }
+
     } else {
       console.log('No such track document!');
     }
@@ -113,7 +122,7 @@ try {
         >
           {{ track.name }}
         </div>
-        <div class="text-sm font-semibold text-gray-400">{{ track.artist }}</div>
+        <div class="text-sm font-semibold text-gray-400">{{ trackArtist }}</div>
       </div>
     </div>
 
