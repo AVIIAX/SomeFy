@@ -4,15 +4,15 @@
     <div class="profile-banner">
       <div class="banner-content">
         <h1 class="user-name">
-          {{ userName }}
+          {{ userName.length > 20 ? userName.slice(0, 20) + '...' : userName }}
           <span v-if="isAuthUser" class="edit-icon" @click="editName">
-            <i class="material-icons">𓂃🖊</i>
+            <Pencil fillColor="#FFFFFF" :size="20" />
           </span>
         </h1>
-        
+        <span v-if="isArtist">~ Artist</span>
         <p v-if="isAuthUser" class="credits">
           <strong>Credits:</strong> {{ userCredits || '0' }}
-        </p><span v-if="isArtist">~ Artist</span>
+        </p>
       </div>
     </div>
 
@@ -26,27 +26,27 @@
         <!-- File Input -->
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>
-      <div class="profile-info">
+      
+      
+      
+    </div><div class="profile-info">
         <p class="about">
-          {{ userAbout || 'No description available' }}
+          {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
+
           <span v-if="isAuthUser" class="edit-icon" @click="editAbout">
-            <i class="material-icons">𓂃🖊</i>
+            <Pencil fillColor="#FFFFFF" :size="20" />
           </span>
         </p>
       </div>
-      
-    </div><div v-if="isAuthUser" :style="{width: '100%'}">
+    
+    
+    <div v-if="isAuthUser" :style="{width: '100%'}">
       <button v-if="!isArtist" id="beArtist" @click="beArtist">Switch To Artist Page</button>
 </div>
   </div>
 
   <!-- My Tracks -->
    <div v-if="isArtist"></div>
-   <!-- <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
-      <SongRow :artist="artist" :track="track" :index="++index" />
-    </ul> -->
-
-
    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
    
    <!-- Liked Tracks -->
@@ -117,6 +117,7 @@ import axios from 'axios';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/UploadTrackModal.vue'
 import artist from '../artist.json'
+import Pencil from 'vue-material-design-icons/Pencil.vue';
 
 const route = useRoute();
 const userID = route.params.userID;
@@ -263,6 +264,7 @@ const beArtist = async () => {
 .user-name {
   font-size: 2.5rem;
   font-weight: bold;
+  display: flex;
 }
 
 .credits {
@@ -297,12 +299,17 @@ const beArtist = async () => {
   margin-left: 20px;
   color: white;
   text-align: center;
+  padding: 1rem;
+  padding-top: 0;
 }
 
 .about {
+  display: flex;
   font-size: 1.2rem;
   font-style: italic;
   margin-top: 10px;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .edit-icon {
