@@ -43,6 +43,14 @@
             placeholder="Enter genre"
             class="input"
           />
+
+          <!-- Year Input -->
+          <input
+            v-model="year"
+            type="text"
+            placeholder="Release year"
+            class="input"
+          />
   
           <!-- Music File Input -->
           <input
@@ -75,6 +83,7 @@ const currentUser = auth.currentUser;
 // Track details
 const name = ref('');
 const genre = ref('');
+const year = ref('');
 const artwork = ref('');
 const musicFile = ref('');
 
@@ -90,7 +99,7 @@ const handleArtworkUpload = (e) => {
 };
 
 const handleSubmit = async () => {
-  if (!name.value || !genre.value || !artwork.value) {
+  if (!name.value || !genre.value || !year.value || !artwork.value) {
     alert('Please fill in all the fields!');
     return;
   }
@@ -101,6 +110,7 @@ const handleSubmit = async () => {
       artist: currentUser ? currentUser.uid : "unknown",
       name: name.value,
       genre: genre.value,
+      year: year.value,
       artwork: artwork.value,
       createdAt: new Date(),
     });

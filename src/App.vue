@@ -266,4 +266,5 @@ let openMenu = ref(false);
 .happyBtn:hover {
   transform: scale(1.1) rotateZ(10deg);
 }
+
 </style>
