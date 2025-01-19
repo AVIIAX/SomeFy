@@ -2,6 +2,7 @@
     import BoostCard from '../components/BoostCard.vue';
     import HomeCard from '../components/HomeCard.vue';
     import SongRow from '../components/SongRow.vue'
+    import Test from '../components/Test.vue'
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';

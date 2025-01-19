@@ -42,7 +42,9 @@
 
   <!-- My Tracks -->
    <div v-if="isArtist"></div>
-
+   <!-- <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
+      <SongRow :artist="artist" :track="track" :index="++index" />
+    </ul> -->
 
   <!-- Liked Tracks -->
    <div v-if="!isArtist"></div>

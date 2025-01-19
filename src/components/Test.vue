@@ -1,6 +1,6 @@
 <template>
     <div>
-      <h1>Upload an Image to Discord</h1>
+      <h1>Upload an Image to Imgur</h1>
       <input type="file" @change="onFileChange" accept="image/*" />
       <p v-if="fileUrl">
         Uploaded successfully! <a :href="fileUrl" target="_blank">View Image</a>
@@ -14,17 +14,12 @@
   import { ref } from "vue";
   import axios from "axios";
   
-  // Replace this with your actual Discord webhook URL
-  const webhookUrl = "https://discord.com/api/webhooks/1329746552008212523/_3YiBZAKs8yCECE12IVBUBVP7UiGemGageDp0QbXD6b1X0w6pJ--Nmd9G2WpfUSFHKHK"; 
-  
-  // Reactive variables to store the file URL and error messages
+  // Reactive variables
   const fileUrl = ref(null);
   const errorMessage = ref("");
+  const uploading = ref(false);
   
-  /**
-   * Handles the file upload process when a file is selected.
-   * @param {Event} event - The file input change event.
-   */
+  // Function to handle image file change
   async function onFileChange(event) {
     const file = event.target.files[0];
   
@@ -33,32 +28,40 @@
       return;
     }
   
-    try {
-      // Prepare the form data for the Discord webhook
-      const formData = new FormData();
-      formData.append("file", file); // Attach the file
-      formData.append(
-        "payload_json",
-        JSON.stringify({ content: "User uploaded an image" }) // Optional message
-      );
+    uploading.value = true;
+    errorMessage.value = "";
   
-      // Send the file to the Discord webhook
-      const response = await axios.post(webhookUrl, formData, {
+    try {
+      // Prepare the form data for the Imgur API
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("type", "file");
+      formData.append("name", file.name); // Optional: you can specify a name
+  
+      // Imgur API URL and Client ID
+      const uploadUrl = "https://api.imgur.com/3/upload";
+      const clientId = "546c25a59c58ad7"; // Replace with your Imgur API Client ID
+  
+      // Send POST request to Imgur API
+      const response = await axios.post(uploadUrl, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Client-ID ${clientId}`, // Add your Client ID here
         },
       });
   
-      // Extract and store the file's CDN URL
-      if (response.data.attachments && response.data.attachments.length > 0) {
-        fileUrl.value = response.data.attachments[0].url;
-        errorMessage.value = ""; // Clear any error message
+      // Check if the response was successful
+      if (response.data.success) {
+        fileUrl.value = response.data.data.link; // Get the image link from the response
+        errorMessage.value = ""; // Clear any previous errors
       } else {
-        throw new Error("No attachment URL found in the response.");
+        throw new Error("Upload failed");
       }
     } catch (error) {
-      console.error("Error uploading file to Discord webhook:", error);
+      console.error("Error uploading file:", error);
       errorMessage.value = "Failed to upload file. Please try again.";
+    } finally {
+      uploading.value = false;
     }
   }
   </script>

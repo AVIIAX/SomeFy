@@ -4,7 +4,6 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
 import Register from './components/Register.vue';
 import Login from './components/Login.vue';
-import Test from './components/Test.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
@@ -87,7 +86,7 @@ const logout = async () => {
 let openMenu = ref(false);
 </script>
 
-<template>
+<template> 
      <!-- NOT LOGGED IN -->
   <div
     v-if="!isLoggedIn"
