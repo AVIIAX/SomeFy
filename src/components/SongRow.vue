@@ -3,7 +3,7 @@ import { ref, toRefs, onMounted } from 'vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
-
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
 
@@ -13,15 +13,39 @@ const { isPlaying, currentTrack } = storeToRefs(useSong);
 let isHover = ref(false);
 let isTrackTime = ref(null);
 
+const db = getFirestore();
+
 const props = defineProps({
-  track: Object,
-  artist: Object,
+  trackId: String,
   index: Number,
 });
 
-const { track, artist, index } = toRefs(props);
+const { trackId, index } = toRefs(props);
+const track = ref([]);
+const artist = ref([]);
 
-onMounted(() => {
+onMounted(async () => {
+
+  console.log(trackId.value);
+  
+  //Get track details
+try {
+    const trackRef = doc(db, 'track', trackId.value); // Replace trackID with the actual track ID
+    const trackDoc = await getDoc(trackRef);
+
+    if (trackDoc.exists()) {
+      const trackData = trackDoc.data();
+      track.value = trackData;
+      
+    } else {
+      console.log('No such track document!');
+    }
+  } catch (error) {
+    console.error('Error fetching track data:', error);
+  }
+
+
+
   const audio = new Audio(track.value.path);
   audio.addEventListener('loadedmetadata', function () {
     const duration = audio.duration;
@@ -29,6 +53,8 @@ onMounted(() => {
     const seconds = Math.floor(duration % 60);
     isTrackTime.value = minutes + ':' + seconds.toString().padStart(2, '0');
   });
+
+
 });
 </script>
 
@@ -41,7 +67,7 @@ onMounted(() => {
     <!-- Image with Glass Effect -->
     <div class="absolute inset-0 rounded-md overflow-hidden">
       <img
-        :src="track.img"
+        :src="track.image"
         alt="Track Image"
         class="object-cover w-full h-full"
         :style="{

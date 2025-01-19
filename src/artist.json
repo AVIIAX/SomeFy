@@ -6,7 +6,7 @@
             "artist": "Devasiri 💀",
             "Boost": "yes",
             "likes": "0",
-            "path": "assets/song.mp3",
+            "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
             "img": "https://i.imgur.com/WzQxeTM.png"
 
     },
@@ -19,7 +19,7 @@
                 "artist": "Devasiri 💀",
                 "Boost": "yes",
                 "likes": "0",
-                "path": "assets/song.mp3",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
                 "img": "https://i.imgur.com/WzQxeTM.png"
     
         },
@@ -30,7 +30,57 @@
                 "artist": "Devasiri 💀",
                 "Boost": "yes",
                 "likes": "0",
-                "path": "assets/song.mp3",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
+                "img": "https://i.imgur.com/WzQxeTM.png"
+    
+        }
+    ],
+    "liked": [
+    
+        {
+        
+            "id": 1,
+                "name": "Liked 1",
+                "artist": "Me",
+                "Boost": "yes",
+                "likes": "0",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
+                "img": "https://i.imgur.com/WzQxeTM.png"
+    
+        },
+        {
+        
+            "id": 1,
+                "name": "Liked 2",
+                "artist": "💀",
+                "Boost": "yes",
+                "likes": "0",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
+                "img": "https://i.imgur.com/WzQxeTM.png"
+    
+        }
+    ],
+    "my": [
+    
+        {
+        
+            "id": 1,
+                "name": "My 1",
+                "artist": "Tom",
+                "Boost": "yes",
+                "likes": "0",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
+                "img": "https://i.imgur.com/WzQxeTM.png"
+    
+        },
+        {
+        
+            "id": 1,
+                "name": "My 2",
+                "artist": "Tom",
+                "Boost": "yes",
+                "likes": "0",
+                "path": "https://cdn.discordapp.com/attachments/1329483794738184313/1330532471959195768/Naadagam_Geeya___-_Ridma_Weerawardena_ft.Charitha_Attalage_Official_Audio.mp3?ex=678e526d&is=678d00ed&hm=749df156e412ea25c0f8700311c5941e8f881e9a46dfdce1c1f20d7c6f555fcf&",
                 "img": "https://i.imgur.com/WzQxeTM.png"
     
         }

@@ -19,7 +19,7 @@
     <div class="profile-header">
       <div class="profile-img-container cursor-pointer">
         <!-- Avatar -->
-        <img :src="userAvatar || 'default-avatar.jpg'" alt="User Avatar" class="profile-img" @click="triggerFileInput" />
+        <img :src="userAvatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg'" alt="User Avatar" class="profile-img" @click="triggerFileInput" />
         <div class="edit-icon-container" v-if="isAuthUser">
           <i class="material-icons">✏</i>
         </div>
@@ -46,18 +46,75 @@
       <SongRow :artist="artist" :track="track" :index="++index" />
     </ul> -->
 
-  <!-- Liked Tracks -->
-   <div v-if="!isArtist"></div>
+
+   <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+   
+   <!-- Liked Tracks -->
+   <div v-if="!isArtist && likedTracks" class="p-8">
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Liked
+    </button>
+
+    <div class="mt-6"></div>
+    <div class="flex items-center justify-between px-5 pt-2">
+      <div>
+        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+      </div>
+    </div>
+
+    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+    <div class="mb-4"></div>
+
+    <!-- No grid layout for Music Section -->
+    <ul class="w-full" v-for="(track, index) in artist.liked" :key="track">
+      <SongRow :artist="artist" :track="track" :index="++index" />
+    </ul>
+  </div>
+
+   <!-- My Tracks -->
+   <div v-if="isArtist" class="p-8">
+    
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Tracks
+    </button>
+  <div v-if="myTracks">
+    <div class="mt-6"></div>
+    <div class="flex items-center justify-between px-5 pt-2">
+      <div>
+        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+      </div>
+    </div>
+
+    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+    <div class="mb-4"></div>
+
+    <!-- No grid layout for Music Section -->
+    <ul class="w-full" v-for="(track, index) in myTracks" :key="track">
+      <SongRow :trackId="track" :index="++index" />
+    </ul>
+    </div>
+    <div v-if="!myTracks" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
+      <div v-if="isAuthUser" :style="{textAlign: 'center'}">
+        <button class="happyBtn" v-if="!myTracks" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+    </div>
+  </div>
 
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 import SongRow from '../components/SongRow.vue';
+import artist from '../artist.json'
 
 const route = useRoute();
 const userID = route.params.userID;
@@ -67,15 +124,18 @@ const userAbout = ref('');
 const userCredits = ref('');
 const isAuthUser = ref(false);
 const isArtist = ref(false);
+const myTracks = ref('');
+const likedTracks = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
 
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 
+
 onMounted(async () => {
   try {
-    const userRef = doc(db, 'user', userID);
+    const userRef = doc(db, 'user', userID); // Replace userID with the actual user ID
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
@@ -88,11 +148,19 @@ onMounted(async () => {
       userCredits.value = userData.credits || '0';
       isAuthUser.value = currentUser && currentUser.uid === userID;
       isArtist.value = userData.artist;
+
+       // Handle tracks
+       if (isArtist && userData.tracks && Array.isArray(userData.tracks)) {
+        myTracks.value = userData.tracks;
+        
+      }
+
     } else {
       console.log('No such user document!');
     }
   } catch (error) {
     console.error('Error fetching user data:', error);
+    errorMessage.value = 'Failed to fetch user data.';
   }
 });
 
