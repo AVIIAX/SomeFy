@@ -1,16 +1,24 @@
 import { defineStore } from 'pinia'
 import artist from '../artist.json'
+// import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
+// const db = getFirestore();
 
 export const useSongStore = defineStore('song', {
   state: () => ({
     isPlaying: false,
     audio: null,
-    currentTrack: null
+    currentTrack: null,
+    currentPlaylist: null
   }),
   actions: {
-    loadSong(artist, track) {
+    loadSong(artist, track, playList) {
         this.currentArtist = artist
         this.currentTrack = track
+        this.currentPlaylist = playList
+
+        console.log("Playlist" + this.currentPlaylist);
+        
 
         if (this.audio && this.audio.src) {
             this.audio.pause()
@@ -19,7 +27,7 @@ export const useSongStore = defineStore('song', {
         }
 
         this.audio = new Audio()
-        this.audio.src = track.path
+        this.audio.src = track.url
 
         setTimeout(() => {
             this.isPlaying = true
@@ -31,6 +39,7 @@ export const useSongStore = defineStore('song', {
         if (this.audio.paused) {
             this.isPlaying = true
             this.audio.play()
+
         } else {
             this.isPlaying = false
             this.audio.pause()

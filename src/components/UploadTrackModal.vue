@@ -71,7 +71,7 @@
 <script setup>
 import { ref, defineEmits } from 'vue';
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion } from "firebase/firestore";
+import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion, runTransaction } from "firebase/firestore";
 
 // Firebase setup
 const db = getFirestore();
@@ -117,10 +117,26 @@ const handleSubmit = async () => {
 
     const trackId = trackRef.id; // Fetch the generated unique ID
 
-    // Add the track ID to the user's 'tracks' array
+    // Use a transaction to update the user's credits and tracks atomically
     const userRef = doc(db, "user", currentUser.uid);
-    await updateDoc(userRef, {
-      tracks: arrayUnion(trackId),
+    await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+
+      if (!userDoc.exists()) {
+        throw new Error("User document does not exist!");
+      }
+
+      const userData = userDoc.data();
+      const currentCredits = userData.credits || 0;
+
+      if (currentCredits < 5) {
+        throw new Error("Not enough credits!");
+      }
+
+      transaction.update(userRef, {
+        tracks: arrayUnion(trackId),
+        credits: currentCredits - 5,
+      });
     });
 
     alert('Track uploaded successfully!');
@@ -130,6 +146,7 @@ const handleSubmit = async () => {
     alert('Failed to upload the track. Please try again.');
   }
 };
+
 
 const closeModal = () => {
   // Clear inputs

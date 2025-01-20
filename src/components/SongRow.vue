@@ -3,6 +3,7 @@ import { ref, toRefs, onMounted } from 'vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
+import MusicNote from 'vue-material-design-icons/MusicNote.vue';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
@@ -12,18 +13,24 @@ const { isPlaying, currentTrack } = storeToRefs(useSong);
 
 let isHover = ref(false);
 let isTrackTime = ref(null);
+const isTrackPlays = ref(null);
 
 const db = getFirestore();
 
 const props = defineProps({
   trackId: String,
+  playList: Object,
   index: Number,
 });
 
-const { trackId, index } = toRefs(props);
+
+
+const { trackId, playList, index } = toRefs(props);
+
+console.log(playList.value);
+
 const track = ref([]);
 const trackArtist = ref([]);
-
 onMounted(async () => {
 
   console.log(trackId.value);
@@ -38,12 +45,17 @@ try {
       const trackData = trackDoc.data();
       track.value = trackData;
 
+      if (trackData.views) {
+        isTrackPlays.value = trackData.views;
+      } 
+      
+
       const artistRef = doc(db, 'user', trackData.artist);
     const artistDoc = await getDoc(artistRef);
 
     if (artistDoc.exists()) {
       const artistData = artistDoc.data();
-      trackArtist.value = artistData.name
+      trackArtist.value = artistData
     }
 
     } else {
@@ -55,7 +67,7 @@ try {
 
 
 
-  const audio = new Audio(track.value.path);
+  const audio = new Audio(track.value.url);
   audio.addEventListener('loadedmetadata', function () {
     const duration = audio.duration;
     const minutes = Math.floor(duration / 60);
@@ -106,7 +118,7 @@ try {
           v-else-if="isPlaying && currentTrack.name !== track.name"
           fillColor="#FFFFFF"
           :size="25"
-          @click="useSong.loadSong(artist, track)"
+          @click="useSong.loadSong(trackArtist, track, playList)"
         />
         <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()" />
       </div>
@@ -122,7 +134,7 @@ try {
         >
           {{ track.name }}
         </div>
-        <div class="text-sm font-semibold text-gray-400">{{ trackArtist }}</div>
+        <div class="text-sm font-semibold text-gray-400">{{ trackArtist.name }}</div>
       </div>
     </div>
 
@@ -131,8 +143,16 @@ try {
       <button type="button" v-if="isHover">
         <Heart fillColor="#1BD760" :size="22" />
       </button>
-      <div v-if="isTrackTime" class="text-xs mx-5 text-gray-400">
-        {{ isTrackTime }}
+
+      <div class="text-xs mx-5 text-gray-400 flex">
+        <MusicNote :size="15" />
+        {{ isTrackPlays || '0' }}
+      </div>
+
+<!-- v-if="isTrackTime" -->
+ 
+      <div  class="text-xs mx-5 text-gray-400">
+        {{ isTrackTime || '00:00' }}
       </div>
     </div>
   </li>

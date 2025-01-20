@@ -11,8 +11,12 @@
         </h1>
         <span v-if="isArtist">~ Artist</span>
         <p v-if="isAuthUser" class="credits">
-          <strong>Credits:</strong> {{ userCredits || '0' }}
-        </p>
+  <strong>Credits : </strong> 
+  <span :class="{ 'low-credits': userCredits <= 5 }">
+    {{ userCredits || '0' }}
+  </span>
+</p>
+
       </div>
     </div>
 
@@ -45,7 +49,7 @@
 </div>
   </div>
 
-  <!-- My Tracks -->
+  <!-- Tracks -->
    <div v-if="isArtist"></div>
    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
    
@@ -94,11 +98,29 @@
     <div class="border-b border-b-[#2A2A2A] mt-2"></div>
     <div class="mb-4"></div>
 
-    <!-- No grid layout for Music Section -->
-    <ul class="w-full" v-for="(track, index) in myTracks" :key="track">
-      <SongRow :trackId="track" :index="++index" />
+    
+    <!-- Music Section -->
+    <div>
+    <ul class="w-full">
+      <li v-for="(track, index) in visibleTracks" :key="track">
+        <SongRow :trackId="track.id" :playList="myTracks" :index="index + 1" />
+      </li>
     </ul>
+    <button 
+      v-if="myTracks.length > 3 && !showAllTracks" 
+      @click="showAllTracks = true" 
+      class="see-more-button"
+    >
+      Show More
+    </button>
+  </div>
+
+
+
+
     </div>
+
+    
     <div v-if="!myTracks" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
       <div v-if="isAuthUser" :style="{textAlign: 'center'}">
         <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
@@ -109,15 +131,12 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { getFirestore, doc, getDoc, updateDoc, } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import axios from 'axios';
 import SongRow from '../components/SongRow.vue';
-import ModalComponent from '../components/UploadTrackModal.vue'
-import artist from '../artist.json'
-import Pencil from 'vue-material-design-icons/Pencil.vue';
+import ModalComponent from '../components/UploadTrackModal.vue';
 
 const route = useRoute();
 const userID = route.params.userID;
@@ -127,18 +146,17 @@ const userAbout = ref('');
 const userCredits = ref('');
 const isAuthUser = ref(false);
 const isArtist = ref(false);
-const myTracks = ref('');
-const likedTracks = ref([]);
+const myTracks = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
 const showModal = ref(false);
+const showAllTracks = ref(false);
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 
-
 onMounted(async () => {
   try {
-    const userRef = doc(db, 'user', userID); // Replace userID with the actual user ID
+    const userRef = doc(db, 'user', userID);
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
@@ -152,12 +170,32 @@ onMounted(async () => {
       isAuthUser.value = currentUser && currentUser.uid === userID;
       isArtist.value = userData.artist;
 
-       // Handle tracks
-       if (isArtist && userData.tracks && Array.isArray(userData.tracks)) {
-        myTracks.value = userData.tracks;
-        
-      }
+      // Handle tracks
+      if (isArtist && userData.tracks && Array.isArray(userData.tracks)) {
+        // Fetch tracks with additional data (views, boost)
+        const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
+          const trackRef = doc(db, 'track', trackId);
+          const trackDoc = await getDoc(trackRef);
+          if (trackDoc.exists()) {
+            return { id: trackId, ...trackDoc.data() };
+          }
+          return null;
+        }));
 
+        // Filter out any null values (tracks that couldn't be fetched)
+        const filteredTracks = tracksWithDetails.filter(track => track !== null);
+
+        // Sort tracks: First by boost (ascending), then by views (descending)
+        myTracks.value = filteredTracks
+          .sort((a, b) => {
+            // Boost first in ascending order
+            if (a.boost && b.boost) return a.boost - b.boost;
+            if (a.boost) return -1; // Move boosted tracks to the top
+            if (b.boost) return 1; // Move boosted tracks to the top
+            // Then sort by views (descending)
+            return (b.views || 0) - (a.views || 0);
+          });
+      }
     } else {
       console.log('No such user document!');
     }
@@ -165,6 +203,10 @@ onMounted(async () => {
     console.error('Error fetching user data:', error);
     errorMessage.value = 'Failed to fetch user data.';
   }
+});
+
+const visibleTracks = computed(() => {
+  return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);
 });
 
 const editName = async () => {
@@ -343,5 +385,28 @@ const beArtist = async () => {
   background-color: rgb(155, 143, 143);
   border-radius: 10px;
   width: 100%;
+}
+.low-credits {
+  color: rgb(223, 68, 68);
+}
+
+.see-more-button {
+  color: rgb(163, 163, 163);
+  border: none;
+  padding: 12px 24px;
+  margin-top: 15px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.see-more-button:hover {
+  color: rgb(202, 202, 202);
+  transform: scale(1.05);
+}
+
+.see-more-button:focus {
+  outline: none;
 }
 </style>
