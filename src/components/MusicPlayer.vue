@@ -134,7 +134,7 @@ watch(() => isTrackTimeCurrent.value, (time) => {
                         <Pause v-else fillColor="#181818" :size="25" />
                     </button>
                     <button class="mx-2">
-                        <SkipForward fillColor="#FFFFFF" :size="25" @click="useSong.nextSong(currentTrack)"/>
+                        <SkipForward v-if="useSong.nextSong(currentTrack)" fillColor="#FFFFFF" :size="25" @click="useSong.nextSong(currentTrack)"/>
                     </button>
                 </div>
 

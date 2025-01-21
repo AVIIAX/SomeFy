@@ -121,9 +121,9 @@
     </div>
 
     
-    <div v-if="!myTracks" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
+    <div v-if="!myTracks.value" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
       <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks.value" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
         <ModalComponent v-if="showModal" @close="showModal = false" />
     </div>
   </div>
@@ -131,12 +131,13 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/UploadTrackModal.vue';
+import Pencil from 'vue-material-design-icons/Pencil.vue';
 
 const route = useRoute();
 const userID = route.params.userID;
@@ -156,7 +157,7 @@ const currentUser = getAuth().currentUser;
 
 onMounted(async () => {
   try {
-    const userRef = doc(db, 'user', userID);
+    const userRef = doc(db, 'user', userID); // Ensure 'doc' is imported from 'firebase/firestore'
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
@@ -166,15 +167,13 @@ onMounted(async () => {
         userData.avatar ||
         'https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png';
       userAbout.value = userData.about || 'No description available';
-      userCredits.value = userData.credits || '0';
+      
       isAuthUser.value = currentUser && currentUser.uid === userID;
       isArtist.value = userData.artist;
 
-      // Handle tracks
-      if (isArtist && userData.tracks && Array.isArray(userData.tracks)) {
-        // Fetch tracks with additional data (views, boost)
+      if (isArtist.value && Array.isArray(userData.tracks)) {
         const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
-          const trackRef = doc(db, 'track', trackId);
+          const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
             return { id: trackId, ...trackDoc.data() };
@@ -182,17 +181,12 @@ onMounted(async () => {
           return null;
         }));
 
-        // Filter out any null values (tracks that couldn't be fetched)
-        const filteredTracks = tracksWithDetails.filter(track => track !== null);
-
-        // Sort tracks: First by boost (ascending), then by views (descending)
-        myTracks.value = filteredTracks
+        myTracks.value = tracksWithDetails
+          .filter(track => track !== null)
           .sort((a, b) => {
-            // Boost first in ascending order
             if (a.boost && b.boost) return a.boost - b.boost;
-            if (a.boost) return -1; // Move boosted tracks to the top
-            if (b.boost) return 1; // Move boosted tracks to the top
-            // Then sort by views (descending)
+            if (a.boost) return -1;
+            if (b.boost) return 1;
             return (b.views || 0) - (a.views || 0);
           });
       }
@@ -203,7 +197,40 @@ onMounted(async () => {
     console.error('Error fetching user data:', error);
     errorMessage.value = 'Failed to fetch user data.';
   }
+
+  const unsubscribe = onSnapshot(doc(db, 'user', userID), (docSnapshot) => {
+    if (docSnapshot.exists()) {
+      const userData = docSnapshot.data();
+      userCredits.value = userData.credits || '0';
+
+      if (isArtist.value && Array.isArray(userData.tracks)) {
+        Promise.all(userData.tracks.map(async (trackId) => {
+          const trackRef = doc(db, 'track', trackId);
+          const trackDoc = await getDoc(trackRef);
+          if (trackDoc.exists()) {
+            return { id: trackId, ...trackDoc.data() };
+          }
+          return null;
+        })).then((tracksWithDetails) => {
+          myTracks.value = tracksWithDetails
+            .filter(track => track !== null)
+            .sort((a, b) => {
+              if (a.boost && b.boost) return a.boost - b.boost;
+              if (a.boost) return -1;
+              if (b.boost) return 1;
+              return (b.views || 0) - (a.views || 0);
+            });
+        });
+      }
+    }
+  });
+
+  onUnmounted(() => {
+    unsubscribe();
+  });
 });
+
+
 
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);
@@ -290,7 +317,7 @@ const beArtist = async () => {
 .profile-banner {
   width: 100%;
   height: 180px;
-  background-color: #1db954;
+  background-color: #838383;
   display: flex;
   align-items: flex-end;
   padding: 20px;

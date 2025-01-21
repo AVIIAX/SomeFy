@@ -86,6 +86,7 @@ const genre = ref('');
 const year = ref('');
 const artwork = ref('');
 const musicFile = ref('');
+const isSubmitting = ref(false); // Track the submission state
 
 const handleArtworkUpload = (e) => {
   const file = e.target.files[0];
@@ -99,23 +100,16 @@ const handleArtworkUpload = (e) => {
 };
 
 const handleSubmit = async () => {
+  if (isSubmitting.value) return; // Prevent duplicate submissions
+
   if (!name.value || !genre.value || !year.value || !artwork.value) {
     alert('Please fill in all the fields!');
     return;
   }
 
-  try {
-    // Add track data to 'track' collection
-    const trackRef = await addDoc(collection(db, "track"), {
-      artist: currentUser ? currentUser.uid : "unknown",
-      name: name.value,
-      genre: genre.value,
-      year: year.value,
-      artwork: artwork.value,
-      createdAt: new Date(),
-    });
+  isSubmitting.value = true; // Lock submission
 
-    const trackId = trackRef.id; // Fetch the generated unique ID
+  try {
 
     // Use a transaction to update the user's credits and tracks atomically
     const userRef = doc(db, "user", currentUser.uid);
@@ -133,19 +127,47 @@ const handleSubmit = async () => {
         throw new Error("Not enough credits!");
       }
 
+       // Add track data to 'track' collection
+    const trackRef = await addDoc(collection(db, "track"), {
+      artist: currentUser ? currentUser.uid : "unknown",
+      name: name.value,
+      genre: genre.value,
+      year: year.value,
+      artwork: artwork.value,
+      id: '', // Temporary placeholder for the ID
+      views: 0,
+      createdAt: new Date(),
+    });
+
+    const trackId = trackRef.id; // Fetch the generated unique ID
+
+    // Update the track document to include the ID
+    await updateDoc(trackRef, {
+      id: trackId,
+    });
+
+
       transaction.update(userRef, {
         tracks: arrayUnion(trackId),
         credits: currentCredits - 5,
       });
     });
 
+    
+   
+
+    
+
     alert('Track uploaded successfully!');
     closeModal();
   } catch (error) {
     console.error('Error uploading track:', error);
     alert('Failed to upload the track. Please try again.');
+  } finally {
+    isSubmitting.value = false; // Unlock submission
   }
 };
+
 
 
 const closeModal = () => {

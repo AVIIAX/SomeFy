@@ -1,19 +1,21 @@
 <script setup>
-import { ref, toRefs, onMounted } from 'vue';
+import { ref, toRefs, onMounted, onUnmounted } from 'vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
+import noHeart from 'vue-material-design-icons/HeartOutline.vue';
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
 import MusicNote from 'vue-material-design-icons/MusicNote.vue';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
-
+import { getAuth } from "firebase/auth";
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
-
+const currentUser = getAuth().currentUser;
 let isHover = ref(false);
 let isTrackTime = ref(null);
 const isTrackPlays = ref(null);
+const isTrackLikes = ref(null);
 
 const db = getFirestore();
 
@@ -23,23 +25,21 @@ const props = defineProps({
   index: Number,
 });
 
-
-
 const { trackId, playList, index } = toRefs(props);
 
-console.log(playList.value);
+const trackIDs = playList.value.map(track => track.id);
+
+console.log(trackIDs);
 
 const track = ref([]);
 const trackArtist = ref([]);
-onMounted(async () => {
+const trackLiked = ref(false);  // Local state for liked status of this specific track
 
-  console.log(trackId.value);
-  
-  //Get track details
-try {
-    const trackRef = doc(db, 'track', trackId.value); // Replace trackID with the actual track ID
+onMounted(async () => {
+  // Get track details
+  try {
+    const trackRef = doc(db, 'track', trackId.value);
     const trackDoc = await getDoc(trackRef);
-    
 
     if (trackDoc.exists()) {
       const trackData = trackDoc.data();
@@ -47,25 +47,29 @@ try {
 
       if (trackData.views) {
         isTrackPlays.value = trackData.views;
-      } 
-      
+      }
+
+      if (trackData.liked && Array.isArray(trackData.liked) ) {
+        isTrackLikes.value = trackData.liked.length;
+  
+          trackLiked.value = trackData.liked.includes(currentUser.uid);
+  
+          // Check if this track is liked by the current user
+      }
 
       const artistRef = doc(db, 'user', trackData.artist);
-    const artistDoc = await getDoc(artistRef);
+      const artistDoc = await getDoc(artistRef);
 
-    if (artistDoc.exists()) {
-      const artistData = artistDoc.data();
-      trackArtist.value = artistData
-    }
-
+      if (artistDoc.exists()) {
+        const artistData = artistDoc.data();
+        trackArtist.value = artistData;
+      }
     } else {
       console.log('No such track document!');
     }
   } catch (error) {
     console.error('Error fetching track data:', error);
   }
-
-
 
   const audio = new Audio(track.value.url);
   audio.addEventListener('loadedmetadata', function () {
@@ -75,8 +79,27 @@ try {
     isTrackTime.value = minutes + ':' + seconds.toString().padStart(2, '0');
   });
 
+  // Listen for real-time updates to the track's liked field
+  const unsubscribe = onSnapshot(doc(db, 'track', trackId.value), (doc) => {
+    if (doc.exists()) {
+      const updatedTrackData = doc.data();
 
+      if(Array.isArray(updatedTrackData.liked)){
+      trackLiked.value = updatedTrackData.liked.includes(currentUser.uid);
+      }
+
+      if(Array.isArray(updatedTrackData.liked)) {
+      isTrackLikes.value = updatedTrackData.liked.length;
+      }
+    }
+  });
+
+  // Clean up listener on component unmount
+  onUnmounted(() => {
+    unsubscribe();
+  });
 });
+
 </script>
 
 <template>
@@ -99,7 +122,7 @@ try {
       />
     </div>
 
-    <!-- Glass Effect Overlay (Optional) -->
+    <!-- Glass Effect Overlay -->
     <div
       class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
       :style="{ zIndex: '-1', backgroundColor: '#0d0d0d', border: 'none', outline: 'none' }"
@@ -113,12 +136,6 @@ try {
           fillColor="#FFFFFF"
           :size="25"
           @click="useSong.playOrPauseThisSong(artist, track)"
-        />
-        <Play
-          v-else-if="isPlaying && currentTrack.name !== track.name"
-          fillColor="#FFFFFF"
-          :size="25"
-          @click="useSong.loadSong(trackArtist, track, playList)"
         />
         <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()" />
       </div>
@@ -141,16 +158,19 @@ try {
     <!-- Right-Side Controls -->
     <div class="flex items-center relative z-10">
       <button type="button" v-if="isHover">
-        <Heart fillColor="#1BD760" :size="22" />
+        <noHeart v-if="!trackLiked" fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />
+        <Heart v-else fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />
       </button>
+
+      <div class="text-xs mx-5 text-gray-400 flex">
+        {{ isTrackLikes || '0' }}
+      </div>
 
       <div class="text-xs mx-5 text-gray-400 flex">
         <MusicNote :size="15" />
         {{ isTrackPlays || '0' }}
       </div>
 
-<!-- v-if="isTrackTime" -->
- 
       <div  class="text-xs mx-5 text-gray-400">
         {{ isTrackTime || '00:00' }}
       </div>
@@ -159,31 +179,5 @@ try {
 </template>
 
 <style scoped>
-/* Prevent content from being affected by blur */
-.relative {
-  position: relative;
-}
-
-.z-10 {
-  z-index: 10;
-}
-
-.-z-10 {
-  z-index: -10;
-}
-
-/* Ensuring image is inside the list item, not overlaying */
-#litem {
-  position: relative;
-  overflow: hidden;
-}
-
-#litem div.absolute {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-}
+/* Styles */
 </style>
