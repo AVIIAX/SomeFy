@@ -53,31 +53,6 @@
    <div v-if="isArtist"></div>
    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
    
-   <!-- Liked Tracks -->
-   <div v-if="!isArtist && likedTracks" class="p-8">
-    <button
-      type="button"
-      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-    >
-      Liked
-    </button>
-
-    <div class="mt-6"></div>
-    <div class="flex items-center justify-between px-5 pt-2">
-      <div>
-        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
-      </div>
-    </div>
-
-    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
-    <div class="mb-4"></div>
-
-    <!-- No grid layout for Music Section -->
-    <ul class="w-full" v-for="(track, index) in artist.liked" :key="track">
-      <SongRow :artist="artist" :track="track" :index="++index" />
-    </ul>
-  </div>
-
    <!-- My Tracks -->
    <div v-if="isArtist" class="p-8">
     
@@ -121,10 +96,55 @@
     </div>
 
     
-    <div v-if="!myTracks.value" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
+    <div v-if="!myTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
       <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks.value" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks.length" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
         <ModalComponent v-if="showModal" @close="showModal = false" />
+    </div>
+  </div>
+
+     <!-- Liked Tracks -->
+     <div v-if=" likedTracks" class="p-8">
+    
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Liked Tracks
+    </button>
+  <div v-if="likedTracks">
+    <div class="mt-6"></div>
+    <div class="flex items-center justify-between px-5 pt-2">
+      <div>
+        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+      </div>
+    </div>
+
+    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+    <div class="mb-4"></div>
+
+    
+    <!-- Music Section -->
+    <div>
+    <ul class="w-full">
+      <li v-for="(track, index) in visibleLikedTracks" :key="track">
+        <SongRow :trackId="track.id" :playList="likedTracks" :index="index + 1" />
+      </li>
+    </ul>
+    <button 
+      v-if="likedTracks.length > 3 && !showAllLikedTracks" 
+      @click="showAllLikedTracks = true" 
+      class="see-more-button"
+    >
+      Show More
+    </button>
+  </div>
+
+    </div>
+
+    
+    <div v-if="!likedTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No liked tracks</div>
+      <div v-if="isAuthUser" :style="{textAlign: 'center'}">
     </div>
   </div>
 
@@ -148,10 +168,12 @@ const userCredits = ref('');
 const isAuthUser = ref(false);
 const isArtist = ref(false);
 const myTracks = ref([]);
+const likedTracks = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
 const showModal = ref(false);
 const showAllTracks = ref(false);
+const showAllLikedTracks = ref(false);
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 
@@ -190,6 +212,28 @@ onMounted(async () => {
             return (b.views || 0) - (a.views || 0);
           });
       }
+
+      if (Array.isArray(userData.liked)) {
+        const tracksWithDetails = await Promise.all(userData.liked.map(async (trackId) => {
+          const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
+          const trackDoc = await getDoc(trackRef);
+          if (trackDoc.exists()) {
+            return { id: trackId, ...trackDoc.data() };
+          }
+          return null;
+        }));
+
+        likedTracks.value = tracksWithDetails
+          .filter(track => track !== null)
+          .sort((a, b) => {
+            if (a.boost && b.boost) return a.boost - b.boost;
+            if (a.boost) return -1;
+            if (b.boost) return 1;
+            return (b.views || 0) - (a.views || 0);
+          });
+      }
+
+      
     } else {
       console.log('No such user document!');
     }
@@ -235,6 +279,11 @@ onMounted(async () => {
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);
 });
+
+const visibleLikedTracks = computed(() => {
+  return showAllLikedTracks.value ? likedTracks.value : likedTracks.value.slice(0, 3);
+});
+
 
 const editName = async () => {
   const newName = prompt('Edit your name:', userName.value);

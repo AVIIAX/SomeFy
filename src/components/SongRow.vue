@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs, onMounted, onUnmounted } from 'vue';
-import Heart from 'vue-material-design-icons/Heart.vue';
-import noHeart from 'vue-material-design-icons/HeartOutline.vue';
+import Heart from 'vue-material-design-icons/HeartMultiple.vue';
+import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
 import MusicNote from 'vue-material-design-icons/MusicNote.vue';
