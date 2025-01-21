@@ -1,4 +1,5 @@
 <script setup>
+import { ref, onMounted } from 'vue';
     import BoostCard from '../components/BoostCard.vue';
     import HomeCard from '../components/HomeCard.vue';
     import SongRow from '../components/SongRow.vue'
@@ -9,12 +10,41 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
 import artist from '../artist.json'
-
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
+
+const db = getFirestore();
+const topHits = ref([]);
+const topBoost = ref([]);
+
 const useSong = useSongStore()
-const { isPlaying, currentTrack } = storeToRefs(useSong)
+const { isPlaying, currentTrack } = storeToRefs(useSong);
+
+const getTracks = async (playList) => {
+  try {
+    const pListRef = doc(db, 'playlists', playList); 
+    const pListDoc = await getDoc(pListRef);
+    if (pListDoc.exists()) {
+      const data = pListDoc.data(); // Assuming the document contains an array of track IDs
+      return data.tracks || []; // Replace 'tracks' with the actual field name containing the array
+    } else {
+      console.log('No such playlist exists.');
+      return [];
+    }
+  } catch (error) {
+    console.log('Error fetching playlist:', error);
+    return [];
+  }
+};
+
+onMounted(async () => {
+  topHits.value = await getTracks('topHits'); 
+  topBoost.value = await getTracks('boosted');
+});
+
+
 </script>
 
 <template>
@@ -48,9 +78,37 @@ const { isPlaying, currentTrack } = storeToRefs(useSong)
         gap-4
       "
     >
-      <div v-for="(track, index) in artist.tracks" :key="track.id">
-        <HomeCard :track="track" />
-      </div>
+    <div v-for="track in topHits" :key="track">
+      <HomeCard :trackId="track" :playList="topHits" />
+    </div>
+    </div>
+  </div>
+
+  <!-- Top Hits Section -->
+  <div class="relative p-8">
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Boosted
+    </button>
+
+    <div class="py-1.5"></div>
+
+    <!-- Responsive Grid Layout for Top Hits -->
+    <div
+      class="
+        grid 
+        grid-cols-2 
+        sm:grid-cols-3 
+        md:grid-cols-4 
+        lg:grid-cols-5 
+        gap-4
+      "
+    >
+    <div v-for="track in topBoost" :key="track">
+      <HomeCard :trackId="track" :playList="topBoost" />
+    </div>
     </div>
   </div>
 
@@ -78,9 +136,7 @@ const { isPlaying, currentTrack } = storeToRefs(useSong)
     <div class="mb-4"></div>
 
     <!-- No grid layout for Music Section -->
-    <ul class="w-full" v-for="(track, index) in artist.tracks" :key="track">
-      <SongRow :artist="artist" :track="track" :index="++index" />
-    </ul>
+    
   </div>
 </template>
 

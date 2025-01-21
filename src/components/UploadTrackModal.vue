@@ -133,7 +133,7 @@ const handleSubmit = async () => {
       name: name.value,
       genre: genre.value,
       year: year.value,
-      artwork: artwork.value,
+      image: artwork.value,
       id: '', // Temporary placeholder for the ID
       views: 0,
       createdAt: new Date(),

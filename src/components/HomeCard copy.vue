@@ -2,11 +2,10 @@
 import { ref, toRefs, onMounted } from 'vue';
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
-import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
+
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
 
-const db = getFirestore();
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
 
@@ -14,45 +13,15 @@ let isHover = ref(false);
 let isTrackTime = ref(null);
 
 const props = defineProps({
-  trackId: String,
-  playList: Object,
+  track: Object,
+  artist: Object,
   index: Number,
 });
 
-const { trackId, playList } = toRefs(props);
-const track = ref([]);
-const artist = ref([]);
-const trackIDs = playList.value.map(track => track.id);
+const { track } = toRefs(props);
 
-onMounted(async () => {
-
-  try {
-    
-    const trackRef = doc(db, 'track', trackId.value);
-    const trackDoc = await getDoc(trackRef);
-
-    if (trackDoc.exists()) {
-      const trackData = trackDoc.data();
-      track.value = trackData;
-
-      const userRef = doc(db, 'user', trackData.artist);
-      const userDoc = await getDoc(userRef);
-      
-      if (trackDoc.exists()) {
-        const userData = userDoc.data();
-        artist.value = userData;
-      }
-      
-    } else {
-      console.log("na bn");
-      
-    }
-
-  } catch (error) {
-    console.log(error);
-    
-  }
-  const audio = new Audio(track.value.url);
+onMounted(() => {
+  const audio = new Audio(track.value.path);
   audio.addEventListener('loadedmetadata', function () {
     const duration = audio.duration;
     const minutes = Math.floor(duration / 60);
@@ -72,7 +41,7 @@ onMounted(async () => {
       <img
         class="rounded-sm transition-all duration-300"
         :class="{ 'blur-sm': isHover }"
-        :src="track.image"
+        :src="track.img"
         :style="{ borderRadius: '15px'}"
       />
       <div
@@ -83,7 +52,7 @@ onMounted(async () => {
           v-if="!isPlaying || currentTrack.name !== track.name"
           fillColor="#FFFFFF"
           :size="60"
-          @click="useSong.loadSong(track, playList)"
+          @click="useSong.loadSong(null, track)"
         />
         <Pause
           v-else
@@ -94,7 +63,7 @@ onMounted(async () => {
       </div>
     </div>
     <div class="text-white pt-4 font-semibold text-[17px]">{{ track.name }}</div>
-    <RouterLink :to="`/user/${track.artist}`"><div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ artist.name }}</div></RouterLink>
+    <div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ track.artist }}</div>
     <div v-if="isTrackTime" class="text-gray-400 pt-1 pb-3 text-[14px]">{{ isTrackTime }}</div>
   </div>
 </template>
