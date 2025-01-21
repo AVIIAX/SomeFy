@@ -6,6 +6,7 @@ import Register from './components/Register.vue';
 import Login from './components/Login.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
+import SearchBar from './components/SearchBar.vue';
 import UploadTrackModal from './components/UploadTrackModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
@@ -192,14 +193,9 @@ let openMenu = ref(false);
             <div class="py-3.5"></div>
           </ul>
           <div class="border-b border-b-gray-700"></div>
-          <ul>
-            <li
-              class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white"
-            >
-              My Playlist #1
-            </li>
-          </ul>
-        </div>
+          <div class="mt-4">
+      <SearchBar /></div>
+    </div>
       </div>
   
       <!-- MainComp -->

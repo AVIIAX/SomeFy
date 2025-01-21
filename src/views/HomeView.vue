@@ -52,7 +52,7 @@ onMounted(async () => {
     <!-- Boost Section -->
     <div class="py-1.5"></div>
     <div class="flex items-center">
-      <BoostCard :track="artist.boost" />
+      <BoostCard :trackId="topBoost.value" :playList="topBoost" />
     </div>
   </div>
 
@@ -84,7 +84,7 @@ onMounted(async () => {
     </div>
   </div>
 
-  <!-- Top Hits Section -->
+  <!-- Boosted Section -->
   <div class="relative p-8">
     <button
       type="button"
