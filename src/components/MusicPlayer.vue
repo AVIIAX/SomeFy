@@ -11,7 +11,7 @@ import SkipForward from 'vue-material-design-icons/SkipForward.vue';
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
 const useSong = useSongStore()
-const { isPlaying, audio, currentTrack, currentArtist } = storeToRefs(useSong)
+const { isPlaying, audio, currentTrack, trackQueue } = storeToRefs(useSong)
 
 let isHover = ref(false)
 let isTrackTimeCurrent = ref(null)
@@ -127,15 +127,21 @@ watch(() => isTrackTimeCurrent.value, (time) => {
             <div class="flex-col items-center justify-center">
                 <div class="buttons flex items-center justify-center h-[30px]">
                     <button class="mx-2">
-                        <SkipBackward fillColor="#FFFFFF" :size="25" @click="useSong.prevSong(currentTrack)"/>
-                    </button>
-                    <button class="p-1 rounded-full mx-3 bg-white" @click="useSong.playOrPauseThisSong(currentTrack.artist, currentTrack)">
-                        <Play v-if="!isPlaying" fillColor="#181818" :size="25" />
-                        <Pause v-else fillColor="#181818" :size="25" />
-                    </button>
-                    <button class="mx-2">
-                        <SkipForward v-if="useSong.nextSong(currentTrack)" fillColor="#FFFFFF" :size="25" @click="useSong.nextSong(currentTrack)"/>
-                    </button>
+  <SkipBackward fillColor="#FFFFFF" :size="25" @click="useSong.prevSong()" />
+</button>
+
+
+                    <button
+  class="p-1 rounded-full mx-3 bg-white"
+  @click="useSong.playOrPauseThisSong(currentTrack.artist, currentTrack, trackQueue.map((t) => t.id))"
+>
+  <Play v-if="!isPlaying" fillColor="#181818" :size="25" />
+  <Pause v-else fillColor="#181818" :size="25" />
+</button>
+<button class="mx-2">
+  <SkipForward fillColor="#FFFFFF" :size="25" @click="useSong.nextSong()" />
+</button>
+
                 </div>
 
 

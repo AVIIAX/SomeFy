@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { db } from '../main'; // Ensure db is imported from your main.js
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 
 export const useSongStore = defineStore('song', {
@@ -15,12 +15,13 @@ export const useSongStore = defineStore('song', {
   }),
 
   actions: {
-    async loadSong(artist, track, trackIDs = null) {
+    async loadSong(track, trackIDs = null) {
+      // Set the track queue based on trackIDs or use a fallback
+      console.log(trackIDs);
+      
       if (trackIDs && Array.isArray(trackIDs)) {
-        console.log('trackIDs is an array:', trackIDs);
-
         try {
-          // Fetch all track data for the given IDs
+          // Fetch track details for all trackIDs
           const tracks = await Promise.all(
             trackIDs.map(async (trackId) => {
               const trackRef = doc(db, 'track', trackId);
@@ -30,34 +31,31 @@ export const useSongStore = defineStore('song', {
                 const trackData = trackDoc.data();
                 return { id: trackId, ...trackData };
               } else {
-                console.log('Track not found for ID:', trackId);
+                console.log(`Track not found for ID: ${trackId}`);
                 return null;
               }
             })
           );
 
-          // Filter out null values and populate the queue
+          // Filter valid tracks and assign to queue
           this.trackQueue = tracks.filter((track) => track);
-
-          console.log('Final trackQueue:', this.trackQueue);
-
-          // Set the current track index to the one matching the passed track ID
-          this.currentIndex = this.trackQueue.findIndex((t) => t.id === track.id);
+          console.log('Track queue set:', this.trackQueue);
         } catch (error) {
           console.error('Error fetching track data:', error);
         }
       } else {
-        console.log('No valid trackIDs, playing only the current track.');
-        // If no queue, clear the queue and play the single track
-        this.trackQueue = [track];
-        this.currentIndex = 0;
+        console.log('No valid trackIDs provided, using fallback queue.');
+        this.trackQueue = [track]; // Fallback to play only the current track
       }
 
-      // Set the current track
+      // Set the current track index
+      this.currentIndex = this.trackQueue.findIndex((t) => t.id === track.id);
+
+      // Play the current track
       this.currentTrack = track;
       this.currentTrackID = track.id;
 
-      // Audio setup logic
+      // Audio setup
       if (this.audio && this.audio.src) {
         this.audio.pause();
         this.isPlaying = false;
@@ -108,9 +106,9 @@ export const useSongStore = defineStore('song', {
       }
     },
 
-    async playOrPauseThisSong(artist, track, trackIDs = null) {
+    async playOrPauseThisSong(track, trackIDs = null) {
       if (!this.audio || !this.audio.src || this.currentTrackID !== track.id) {
-        await this.loadSong(artist, track, trackIDs);
+        await this.loadSong(track, trackIDs);
         return;
       }
 
@@ -123,11 +121,12 @@ export const useSongStore = defineStore('song', {
         return;
       }
 
-      const prevIndex = this.currentIndex - 1;
-      const prevTrack = this.trackQueue[prevIndex];
-      this.currentIndex = prevIndex;
+      // Move to the previous track
+      this.currentIndex -= 1;
+      const prevTrack = this.trackQueue[this.currentIndex];
 
-      await this.loadSong(prevTrack.artist, prevTrack, this.trackQueue.map((t) => t.id));
+      // Play the previous track
+      await this.loadSong(prevTrack, this.trackQueue.map((t) => t.id));
     },
 
     async nextSong() {
@@ -136,11 +135,12 @@ export const useSongStore = defineStore('song', {
         return;
       }
 
-      const nextIndex = this.currentIndex + 1;
-      const nextTrack = this.trackQueue[nextIndex];
-      this.currentIndex = nextIndex;
+      // Move to the next track
+      this.currentIndex += 1;
+      const nextTrack = this.trackQueue[this.currentIndex];
 
-      await this.loadSong(nextTrack.artist, nextTrack, this.trackQueue.map((t) => t.id));
+      // Play the next track
+      await this.loadSong(nextTrack, this.trackQueue.map((t) => t.id));
     },
 
     async playFromFirst() {
@@ -152,7 +152,7 @@ export const useSongStore = defineStore('song', {
       const firstTrack = this.trackQueue[0];
       this.currentIndex = 0;
 
-      await this.loadSong(firstTrack.artist, firstTrack, this.trackQueue.map((t) => t.id));
+      await this.loadSong(firstTrack, this.trackQueue.map((t) => t.id));
     },
 
     resetState() {
@@ -169,10 +169,10 @@ export const useSongStore = defineStore('song', {
         console.error('User not authenticated');
         return;
       }
-    
+
       const userRef = doc(db, 'user', currentUser.uid); // Reference to the current user's document
       const trackRef = doc(db, 'track', id); // Reference to the specific track document
-    
+
       try {
         // Fetch the current user's data
         const userDoc = await getDoc(userRef);
@@ -180,20 +180,20 @@ export const useSongStore = defineStore('song', {
           console.error('User document does not exist');
           return;
         }
-    
+
         const userData = userDoc.data();
         const likedTracks = userData.liked || []; // Get the liked tracks array, default to empty
-    
+
         this.isLiked = likedTracks.includes(id); // Check if the track is already liked
-    
+
         if (this.isLiked) {
           // Unlike the track
           this.isLiked = false;
-    
+
           // Remove the track ID from the user's liked array
           const updatedLikedTracks = likedTracks.filter((trackId) => trackId !== id);
           await updateDoc(userRef, { liked: updatedLikedTracks });
-    
+
           // Remove the user ID from the track's liked array
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
@@ -204,11 +204,11 @@ export const useSongStore = defineStore('song', {
         } else {
           // Like the track
           this.isLiked = true;
-    
+
           // Add the track ID to the user's liked array
           const updatedLikedTracks = [...likedTracks, id];
           await updateDoc(userRef, { liked: updatedLikedTracks });
-    
+
           // Add the user ID to the track's liked array (ensure no duplicates)
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
@@ -220,9 +220,7 @@ export const useSongStore = defineStore('song', {
       } catch (error) {
         console.error('Error liking/unliking the song:', error);
       }
-    }
-    
-    
+    },
   },
 
   persist: true,

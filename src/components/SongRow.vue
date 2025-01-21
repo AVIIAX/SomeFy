@@ -29,7 +29,8 @@ const { trackId, playList, index } = toRefs(props);
 
 const trackIDs = playList.value.map(track => track.id);
 
-console.log(trackIDs);
+//console.log(trackIDs);
+
 
 const track = ref([]);
 const trackArtist = ref([]);
@@ -132,12 +133,19 @@ onMounted(async () => {
     <div class="flex items-center w-full py-1.5 relative z-10 px-4">
       <div v-if="isHover" class="w-[40px] ml-[14px] mr-[6px] cursor-pointer">
         <Play
-          v-if="!isPlaying"
-          fillColor="#FFFFFF"
-          :size="25"
-          @click="useSong.playOrPauseThisSong(artist, track)"
-        />
-        <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()" />
+                    v-if="!isPlaying"
+                    fillColor="#FFFFFF"
+                    :size="25"
+                    @click="useSong.playOrPauseThisSong(track, trackIDs)"
+                />
+                <Play
+                    v-else-if="isPlaying && currentTrack.name !== track.name"
+                    fillColor="#FFFFFF"
+                    :size="25"
+                    @click="useSong.loadSong(track, trackIDs)"
+                />
+
+                <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()"/>
       </div>
       <div v-else class="text-white font-semibold w-[40px] ml-5">
         <span :class="{'text-green-500': currentTrack && currentTrack.name === track.name}">
