@@ -72,6 +72,7 @@
 import { ref, defineEmits } from 'vue';
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion, runTransaction } from "firebase/firestore";
+import { cropImageToSquare  } from "../main";
 
 // Firebase setup
 const db = getFirestore();
@@ -88,14 +89,22 @@ const artwork = ref('');
 const musicFile = ref('');
 const isSubmitting = ref(false); // Track the submission state
 
-const handleArtworkUpload = (e) => {
+const handleArtworkUpload = async (e) => {
   const file = e.target.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      artwork.value = event.target.result;
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Crop the image to a square
+      const croppedBlob = await cropImageToSquare(file);
+
+      // Convert the cropped blob to a Data URL
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        artwork.value = event.target.result; // Assign the cropped image as a Data URL
+      };
+      reader.readAsDataURL(croppedBlob); // Read the cropped Blob
+    } catch (error) {
+      console.error('Error processing the image:', error);
+    }
   }
 };
 

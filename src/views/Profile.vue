@@ -228,10 +228,44 @@ const handleLiveUpdates = (id) => {
       const userData = docSnapshot.data();
       userCredits.value = userData.credits || '0';
 
-      if (isArtist.value) {
-        myTracks.value = await fetchTrackDetails(userData.tracks || []);
-      }
-      likedTracks.value = await fetchTrackDetails(userData.liked || []);
+      if (isArtist.value && Array.isArray(userData.tracks)) {
+          const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
+            const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
+            const trackDoc = await getDoc(trackRef);
+            if (trackDoc.exists()) {
+              return { id: trackId, ...trackDoc.data() };
+            }
+            return null;
+          }));
+  
+          myTracks.value = tracksWithDetails
+            .filter(track => track !== null)
+            .sort((a, b) => {
+              if (a.boost && b.boost) return a.boost - b.boost;
+              if (a.boost) return -1;
+              if (b.boost) return 1;
+              return (b.views || 0) - (a.views || 0);
+            });
+        }
+        if (Array.isArray(userData.liked)) {
+          const tracksWithDetails = await Promise.all(userData.liked.map(async (trackId) => {
+            const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
+            const trackDoc = await getDoc(trackRef);
+            if (trackDoc.exists()) {
+              return { id: trackId, ...trackDoc.data() };
+            }
+            return null;
+          }));
+  
+          likedTracks.value = tracksWithDetails
+            .filter(track => track !== null)
+            .sort((a, b) => {
+              if (a.boost && b.boost) return a.boost - b.boost;
+              if (a.boost) return -1;
+              if (b.boost) return 1;
+              return (b.views || 0) - (a.views || 0);
+            });
+        }
     }
   });
 

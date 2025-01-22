@@ -10,7 +10,7 @@ import SearchBar from './components/SearchBar.vue';
 import UploadTrackModal from './components/UploadTrackModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
-import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
+import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import PlusIcon from 'vue-material-design-icons/Plus.vue';
 import { useSongStore } from './stores/song';
@@ -27,6 +27,7 @@ const userID = ref("null");
 const userEmail = ref("null");
 const userName = ref("");
 const userAV = ref("");
+const userCredits = ref("");
 
 onMounted(() => {
   auth = getAuth();
@@ -47,7 +48,8 @@ onMounted(() => {
           // If the document exists, extract the 'name' field from it
           const userData = userDoc.data();
           userName.value = userData.name || "No name available"; // If name exists, use it, otherwise display fallback
-          userAV.value = userData.avatar || "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&"
+          userAV.value = userData.avatar || "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
+          userCredits.value = userData.credits
           isArtist.value = userData.artist;
         } else {
           console.log("No such document!");
@@ -123,17 +125,17 @@ let openMenu = ref(false);
             justify-between
           "
         >
+        <RouterLink to="/Shop">
           <div class="flex items-center ml-6">
-            <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer">
-              <ChevronLeft fillColor="#FFFFFF" :size="30" />
+            <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
+              <CircleMultiple fillColor="#FFFFFF" :size="30" />
             </button>
-            <button
-              type="button"
-              class="rounded-full bg-black p-[1px] hover:bg-[#] ml-4 cursor-pointer"
-            >
-              <ChevronRight fillColor="#FFFFFF" :size="30" />
+
+            <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
+              {{userCredits}}
             </button>
-          </div>
+            
+          </div></RouterLink>
   
           <button
             @click="openMenu = !openMenu"
@@ -185,9 +187,16 @@ let openMenu = ref(false);
             <RouterLink to="/">
               <MenuItem
                 class="ml-[1px]"
-                :iconSize="23"
-                name="Profile"
-                pageUrl="/profile"
+                name="Home"
+                pageUrl="/"
+              />
+            </RouterLink>
+
+            <RouterLink to="/shop">
+              <MenuItem
+                class="ml-[1px]"
+                name="Get More Credits"
+                pageUrl="/shop"
               />
             </RouterLink>
             <div class="py-3.5"></div>

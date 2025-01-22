@@ -64,20 +64,20 @@ onMounted(async () => {
 
 <template>
   <div
-    class="relative bg-[#111111] p-4 rounded-md m-2 hover:bg-[#252525] cursor-pointer max-w-fit"
+    class="card"
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
   >
-    <div class="relative">
+    <div class="image-container">
       <img
-        class="rounded-sm transition-all duration-300"
+        class="image"
         :class="{ 'blur-sm': isHover }"
         :src="track.image"
-        :style="{ borderRadius: '15px'}"
+        :style="{ borderRadius: '15px', objectFit: 'cover'}"
       />
       <div
         v-if="isHover"
-        class="absolute inset-0 flex items-center justify-center"
+        class="play-pause-container"
       >
         <Play
           v-if="!isPlaying || currentTrack.name !== track.name"
@@ -93,8 +93,72 @@ onMounted(async () => {
         />
       </div>
     </div>
-    <div class="text-white pt-4 font-semibold text-[17px]">{{ track.name }}</div>
-    <RouterLink :to="`/user/${track.artist}`"><div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ artist.name }}</div></RouterLink>
-    <div v-if="isTrackTime" class="text-gray-400 pt-1 pb-3 text-[14px]">{{ isTrackTime }}</div>
+    <div class="track-name">{{ track.name }}</div>
+    <RouterLink :to="`/user/${track.artist}`">
+      <div class="artist-name">{{ artist.name }}</div>
+    </RouterLink>
+    <div v-if="isTrackTime" class="track-time">{{ isTrackTime }}</div>
   </div>
 </template>
+
+
+
+<style scoped>
+.card {
+  background-color: #111111;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  max-width: fit-content;
+  height: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.card:hover {
+  background-color: #252525;
+}
+
+.image-container {
+  position: relative;
+}
+
+.image {
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+}
+
+.play-pause-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.track-name {
+  color: white;
+  padding-top: 1rem;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.artist-name {
+  color: #9e9e9e;
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+  font-size: 14px;
+}
+
+.artist-name:hover {
+  text-decoration: underline;
+}
+
+.track-time {
+  color: #9e9e9e;
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+  font-size: 14px;
+}
+</style>
+

@@ -106,28 +106,37 @@ onMounted(async () => {
 <template>
   <li
     class="relative flex items-center justify-between rounded-md mx-2 my-4"
+    :style="{
+           border: track.boost ? 'solid 2px' : 'none',
+    borderImage: track.boost ? 'linear-gradient(to right, #3acfd5 0%, #3a4ed5 100%) 1' : 'none',
+    outline: 'none'
+    }"
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
   >
     <!-- Image with Glass Effect -->
-    <div class="absolute inset-0 rounded-md overflow-hidden">
-      <img
-        :src="track.image"
-        alt="Track Image"
-        class="object-cover w-full h-full"
-        :style="{
-          filter: 'blur(8px)',
-          opacity: isHover ? '0.1' : '0.2',
-          transition: 'opacity 0.3s ease',
-        }"
-      />
-    </div>
+    <div
+  class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
+  :style="{
+    zIndex: '-1',
+    backgroundColor: '#0d0d0d',
+    outline: 'none'
+  }"
+></div>
+
 
     <!-- Glass Effect Overlay -->
     <div
-      class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
-      :style="{ zIndex: '-1', backgroundColor: '#0d0d0d', border: 'none', outline: 'none' }"
-    ></div>
+  class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
+  :style="{
+    zIndex: '-1',
+    backgroundColor: '#0d0d0d',
+    border: 'none',
+    outline: 'none',
+    
+  }"
+></div>
+
 
     <!-- Content -->
     <div class="flex items-center w-full py-1.5 relative z-10 px-4">
