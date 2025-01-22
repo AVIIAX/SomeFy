@@ -192,11 +192,11 @@ let openMenu = ref(false);
               />
             </RouterLink>
 
-            <RouterLink to="/shop">
+            <RouterLink to="/Shop">
               <MenuItem
                 class="ml-[1px]"
                 name="Get More Credits"
-                pageUrl="/shop"
+                pageUrl="/Shop"
               />
             </RouterLink>
             <div class="py-3.5"></div>
@@ -221,7 +221,7 @@ let openMenu = ref(false);
           to-black
         "
       >
-        <div class="mt-[70px]"></div>
+        <div class="mt-[60px]"></div>
         <RouterView />
         <div class="mb-[100px]"></div>
       </div>
@@ -252,17 +252,17 @@ let openMenu = ref(false);
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: transparent;border-radius: 20px;
+  border-radius: 20px;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #888;border-radius: 20px;
+  background: #ffffff;border-radius: 20px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;border-radius: 20px;
+  background: #ffffff;border-radius: 20px;
 }
 
 .happyBtn {

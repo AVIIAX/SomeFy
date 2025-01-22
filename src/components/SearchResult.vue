@@ -131,6 +131,20 @@ div {
   background-color: #1f2937;
 }
 
+
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%); /* Start off-screen */
+  }
+  100% {
+    transform: translateX(-100%); /* End off-screen */
+  }
+}
+
+</style>
+
+<style>
 .toArtist {
   display: inline-block;
   white-space: nowrap; 
@@ -143,14 +157,4 @@ div {
 .toArtist:hover {
   text-decoration: underline;
 }
-
-@keyframes marquee {
-  0% {
-    transform: translateX(100%); /* Start off-screen */
-  }
-  100% {
-    transform: translateX(-100%); /* End off-screen */
-  }
-}
-
 </style>

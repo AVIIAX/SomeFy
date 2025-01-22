@@ -27,7 +27,7 @@ const trackIDs = playList.value.map(track => track.id);
 onMounted(async () => {
 
   try {
-    
+
     const trackRef = doc(db, 'track', trackId.value);
     const trackDoc = await getDoc(trackRef);
 
@@ -37,20 +37,20 @@ onMounted(async () => {
 
       const userRef = doc(db, 'user', trackData.artist);
       const userDoc = await getDoc(userRef);
-      
+
       if (trackDoc.exists()) {
         const userData = userDoc.data();
         artist.value = userData;
       }
-      
+
     } else {
       console.log("na bn");
-      
+
     }
 
   } catch (error) {
     console.log(error);
-    
+
   }
   const audio = new Audio(track.value.url);
   audio.addEventListener('loadedmetadata', function () {
@@ -63,49 +63,40 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :style=" {
-    height: '400px'
+  <div class="p-8" :style="{
+    position: 'relative',
+    width: '100%',
+    height: '400px',
+    backgroundColor: '#0000009e',
   }">
-    <img 
-        :src="track.image"
-        :style="{
-          filter: 'blur(5px)',
-          width: '100%',
-          height: '100%',
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          zIndex: '-1',
-          objectFit: 'cover',
-        }"
-      />
-      
+    <img :src="track.image" :style="{
+      filter: 'blur(15px)',
+      width: '100%',
+      height: '100%',
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      zIndex: '-1',
+      objectFit: 'cover',
+    }" />
 
-      <div :style="{position: 'relative'}" class="text-white pt-4 font-semibold text-[900%]">{{ track.name }}</div>
-    <div class="text-gray-400 pt-1 pb-3 text-[44px]">{{ artist.name }}</div>
-    <div
-        class="items-center justify-center "
-        :style=" {
-          border: 'solid 1px #FFFFFF',
-          borderRadius: '100%',
-          width: 'fit-content',
-          padding: '0.5rem'
-        }"
-      >
-        <Play class="cursor-pointer"
-          v-if="!isPlaying || currentTrack.name !== track.name"
-          fillColor="#FFFFFF"
-          :size="60"
-          @click="useSong.loadSong(null, track)"
-        />
-        <Pause class="cursor-pointer"
-          v-else
-          fillColor="#FFFFFF"
-          :size="60"
-          @click="useSong.playOrPauseSong()"
-        />
-      </div>
-    
+
+    <div :style="{ position: 'relative' }" class="text-white pt-4 font-semibold text-[500%]">{{ track.name }}</div>
+    <RouterLink :to="`/user/${track.artist}`">
+      <div class="text-gray-400 pt-1 pb-3 text-[44px] toArtist">{{ artist.name }}</div>
+    </RouterLink>
+    <div class="items-center justify-center" :style="{
+      border: 'solid 1px #FFFFFF',
+      borderRadius: '100%',
+      width: 'fit-content',
+      padding: '0.5rem',
+      cursor: 'pointer',
+    }">
+      <Play v-if="!isPlaying || currentTrack.name !== track.name" fillColor="#FFFFFF" :size="60"
+        @click="useSong.loadSong(track, playList)" />
+      <Pause v-else fillColor="#FFFFFF" :size="60" @click="useSong.playOrPauseSong()" />
+    </div>
+
   </div>
- 
+
 </template>

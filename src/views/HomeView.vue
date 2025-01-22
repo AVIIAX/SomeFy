@@ -17,7 +17,8 @@ import { storeToRefs } from 'pinia';
 
 const db = getFirestore();
 const topHits = ref([]);
-const topBoost = ref([]);
+const boosted = ref([]);
+const topBoost = ref("");
 
 const useSong = useSongStore()
 const { isPlaying, currentTrack } = storeToRefs(useSong);
@@ -41,21 +42,28 @@ const getTracks = async (playList) => {
 
 onMounted(async () => {
   topHits.value = await getTracks('topHits'); 
-  topBoost.value = await getTracks('boosted');
+  boosted.value = await getTracks('boosted');
+  topBoost.value = '53LnKhGA495Z3m6VdXMM';
 });
 
 
 </script>
 
 <template>
-  <div class="relative p-8">
-    <!-- Boost Section -->
-    <div class="py-1.5"></div>
-    <div class="flex items-center">
-      <BoostCard :trackId="topBoost.value" :playList="topBoost" />
-    </div>
+  <!-- Top Boost Section -->
+  <div class="flex items-center" :style="{
+    position: 'sticky',
+    top: '60px',
+  }">
+  
+      <BoostCard trackId="mBmee0jelL3Iw35kE0vu" :playList="boosted" />
+
   </div>
 
+  <div :style="{
+    position: 'relative',
+    backgroundColor: '#000408',
+  }">
   <!-- Top Hits Section -->
   <div class="relative p-8">
     <button
@@ -106,8 +114,8 @@ onMounted(async () => {
         gap-4
       "
     >
-    <div v-for="track in topBoost" :key="track">
-      <HomeCard :trackId="track" :playList="topBoost" />
+    <div v-for="track in boosted" :key="track">
+      <HomeCard :trackId="track" :playList="boosted" />
     </div>
     </div>
   </div>
@@ -137,6 +145,7 @@ onMounted(async () => {
 
     <!-- No grid layout for Music Section -->
     
+  </div>
   </div>
 </template>
 
