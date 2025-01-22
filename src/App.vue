@@ -180,7 +180,7 @@ let openMenu = ref(false);
         <!-- NavBar -->
         <div id="SideNav" class="h-[100%] p-6 w-[240px] fixed z-50 bg-black">
           <RouterLink to="/">
-            <img width="125" src="https://cdn.discordapp.com/avatars/155149108183695360/b4fdfc64edff74c37e1574d34fad66c2.webp" />
+            <img width="125" src="https://i.postimg.cc/MKxHSbDN/AVII-trans.png" />
           </RouterLink>
           <div class="my-8"></div>
           <ul>
