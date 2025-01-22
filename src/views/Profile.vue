@@ -151,16 +151,20 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, onUnmounted } from 'vue';
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/UploadTrackModal.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
+import axios from 'axios';
 
 const route = useRoute();
-const userID = route.params.userID;
+const db = getFirestore();
+const currentUser = getAuth().currentUser;
+
+const userID = ref(route.params.userID);
 const userName = ref('');
 const userAvatar = ref('');
 const userAbout = ref('');
@@ -174,107 +178,88 @@ const errorMessage = ref('');
 const showModal = ref(false);
 const showAllTracks = ref(false);
 const showAllLikedTracks = ref(false);
-const db = getFirestore();
-const currentUser = getAuth().currentUser;
 
-onMounted(async () => {
+const fetchUserData = async (id) => {
   try {
-    const userRef = doc(db, 'user', userID); // Ensure 'doc' is imported from 'firebase/firestore'
+    const userRef = doc(db, 'user', id);
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
       const userData = userDoc.data();
       userName.value = userData.name;
-      userAvatar.value =
-        userData.avatar ||
-        'https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png';
+      userAvatar.value = userData.avatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg';
       userAbout.value = userData.about || 'No description available';
-      
-      isAuthUser.value = currentUser && currentUser.uid === userID;
-      isArtist.value = userData.artist;
+      isAuthUser.value = currentUser && currentUser.uid === id;
+      isArtist.value = userData.artist || false;
 
-      if (isArtist.value && Array.isArray(userData.tracks)) {
-        const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
-          const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
-          const trackDoc = await getDoc(trackRef);
-          if (trackDoc.exists()) {
-            return { id: trackId, ...trackDoc.data() };
-          }
-          return null;
-        }));
-
-        myTracks.value = tracksWithDetails
-          .filter(track => track !== null)
-          .sort((a, b) => {
-            if (a.boost && b.boost) return a.boost - b.boost;
-            if (a.boost) return -1;
-            if (b.boost) return 1;
-            return (b.views || 0) - (a.views || 0);
-          });
+      if (isArtist.value) {
+        myTracks.value = await fetchTrackDetails(userData.tracks || []);
       }
-
-      if (Array.isArray(userData.liked)) {
-        const tracksWithDetails = await Promise.all(userData.liked.map(async (trackId) => {
-          const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
-          const trackDoc = await getDoc(trackRef);
-          if (trackDoc.exists()) {
-            return { id: trackId, ...trackDoc.data() };
-          }
-          return null;
-        }));
-
-        likedTracks.value = tracksWithDetails
-          .filter(track => track !== null)
-          .sort((a, b) => {
-            if (a.boost && b.boost) return a.boost - b.boost;
-            if (a.boost) return -1;
-            if (b.boost) return 1;
-            return (b.views || 0) - (a.views || 0);
-          });
-      }
-
-      
+      likedTracks.value = await fetchTrackDetails(userData.liked || []);
     } else {
-      console.log('No such user document!');
+      console.error('No such user document!');
     }
   } catch (error) {
     console.error('Error fetching user data:', error);
     errorMessage.value = 'Failed to fetch user data.';
   }
+};
 
-  const unsubscribe = onSnapshot(doc(db, 'user', userID), (docSnapshot) => {
+const fetchTrackDetails = async (trackIds) => {
+  return Promise.all(trackIds.map(async (trackId) => {
+    try {
+      const trackRef = doc(db, 'track', trackId);
+      const trackDoc = await getDoc(trackRef);
+      if (trackDoc.exists()) {
+        return { id: trackId, ...trackDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching track with ID ${trackId}:`, error);
+      return null;
+    }
+  })).then(tracks => tracks.filter(Boolean));
+};
+
+// Handle live updates
+const handleLiveUpdates = (id) => {
+  const unsubscribe = onSnapshot(doc(db, 'user', id), async (docSnapshot) => {
     if (docSnapshot.exists()) {
       const userData = docSnapshot.data();
       userCredits.value = userData.credits || '0';
 
-      if (isArtist.value && Array.isArray(userData.tracks)) {
-        Promise.all(userData.tracks.map(async (trackId) => {
-          const trackRef = doc(db, 'track', trackId);
-          const trackDoc = await getDoc(trackRef);
-          if (trackDoc.exists()) {
-            return { id: trackId, ...trackDoc.data() };
-          }
-          return null;
-        })).then((tracksWithDetails) => {
-          myTracks.value = tracksWithDetails
-            .filter(track => track !== null)
-            .sort((a, b) => {
-              if (a.boost && b.boost) return a.boost - b.boost;
-              if (a.boost) return -1;
-              if (b.boost) return 1;
-              return (b.views || 0) - (a.views || 0);
-            });
-        });
+      if (isArtist.value) {
+        myTracks.value = await fetchTrackDetails(userData.tracks || []);
       }
+      likedTracks.value = await fetchTrackDetails(userData.liked || []);
     }
   });
 
-  onUnmounted(() => {
-    unsubscribe();
-  });
+  return unsubscribe;
+};
+
+let unsubscribe;
+onMounted(async () => {
+  await fetchUserData(userID.value);
+  unsubscribe = handleLiveUpdates(userID.value);
 });
 
+onUnmounted(() => {
+  if (unsubscribe) unsubscribe();
+});
 
+// Watch for route changes
+watch(
+  () => route.params.userID,
+  async (newID) => {
+    if (unsubscribe) unsubscribe();
+    userID.value = newID;
+    myTracks.value = [];
+    likedTracks.value = [];
+    await fetchUserData(newID);
+    unsubscribe = handleLiveUpdates(newID);
+  }
+);
 
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);
@@ -283,7 +268,6 @@ const visibleTracks = computed(() => {
 const visibleLikedTracks = computed(() => {
   return showAllLikedTracks.value ? likedTracks.value : likedTracks.value.slice(0, 3);
 });
-
 
 const editName = async () => {
   const newName = prompt('Edit your name:', userName.value);
@@ -337,7 +321,7 @@ const handleFileChange = async (event) => {
 
 const updateProfileField = async (field, value) => {
   try {
-    const userRef = doc(db, 'user', userID);
+    const userRef = doc(db, 'user', userID.value);
     await updateDoc(userRef, {
       [field]: value,
     });
@@ -348,9 +332,11 @@ const updateProfileField = async (field, value) => {
 };
 
 const beArtist = async () => {
-    await updateProfileField('artist', true);
+  await updateProfileField('artist', true);
 };
 </script>
+
+
 
 <style scoped>
 .user-profile {
