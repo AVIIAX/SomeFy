@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs, onMounted } from 'vue';
-import Play from 'vue-material-design-icons/Play.vue';
-import Pause from 'vue-material-design-icons/Pause.vue';
+import { mdilPlay } from '@mdi/light-js';
+import { mdilPause } from '@mdi/light-js';
 import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
@@ -86,15 +86,39 @@ onMounted(async () => {
       <div class="text-gray-400 pt-1 pb-3 text-[44px] toArtist">{{ artist.name }}</div>
     </RouterLink>
     <div class="items-center justify-center" :style="{
-      border: 'solid 1px #FFFFFF',
-      borderRadius: '100%',
+     
+      borderTopLeftRadius: '40%',
+      borderBottomRightRadius: '17%',
+      borderTopLeftRadius: '17%',
+      borderBottomRightRadius: '40%',
       width: 'fit-content',
-      padding: '0.5rem',
+      padding: '0.05em',
       cursor: 'pointer',
     }">
-      <Play v-if="!isPlaying || currentTrack.name !== track.name" fillColor="#FFFFFF" :size="60"
-        @click="useSong.loadSong(track, playList)" />
-      <Pause v-else fillColor="#FFFFFF" :size="60" @click="useSong.playOrPauseSong()" />
+     <svg
+        v-if="!isPlaying || currentTrack.name !== track.name"
+        xmlns="http://www.w3.org/2000/svg"
+        :width="60"
+        :height="60"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+        @click="useSong.loadSong(track, playList)"
+      >
+        <path :d="mdilPlay" />
+      </svg>
+      
+      <svg
+      v-else  
+        xmlns="http://www.w3.org/2000/svg"
+        :width="60"
+        :height="60"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+        @click="useSong.playOrPauseSong()"
+      >
+        <path :d="mdilPause" />
+      </svg>
+
     </div>
 
   </div>

@@ -1,17 +1,22 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, onUpdated } from 'vue'
 import MusicPlayerVolume from '../components/MusicPlayerVolume.vue'
-import Heart from 'vue-material-design-icons/Heart.vue';
+import Heart from 'vue-material-design-icons/HeartMultiple.vue';
+import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import PictureInPictureBottomRight from 'vue-material-design-icons/PictureInPictureBottomRight.vue';
-import Play from 'vue-material-design-icons/Play.vue';
-import Pause from 'vue-material-design-icons/Pause.vue';
-import SkipBackward from 'vue-material-design-icons/SkipBackward.vue';
-import SkipForward from 'vue-material-design-icons/SkipForward.vue';
-
+import { mdilPlay } from '@mdi/light-js';
+import { mdilPause } from '@mdi/light-js';
+import { mdilSkipPrevious } from '@mdi/light-js';
+import { mdilSkipNext } from '@mdi/light-js';
+import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
+
+const db = getFirestore();
 const useSong = useSongStore()
-const { isPlaying, audio, currentTrack, trackQueue } = storeToRefs(useSong)
+const { isPlaying, audio, currentTrack, trackQueue, currentArtist } = storeToRefs(useSong)
+const currentUser = getAuth().currentUser;
 
 let isHover = ref(false)
 let isTrackTimeCurrent = ref(null)
@@ -19,9 +24,14 @@ let isTrackTimeTotal = ref(null)
 let seeker = ref(null)
 let seekerContainer = ref(null)
 let range = ref(0)
+const trackLiked = ref(false);
+
+
+ 
+  
 
 onMounted(() => {
-
+    
     if (audio.value) {
         setTimeout(() => {
             timeupdate()
@@ -52,7 +62,14 @@ onMounted(() => {
             seeker.value.value = (100 / audio.value.duration) * audio.value.currentTime;
         });
     }
+
+
+    onUnmounted(() => {
+       
+    })
+  
 })
+
 
 const timeupdate = () => {
     audio.value.addEventListener("timeupdate", function () {
@@ -74,7 +91,10 @@ const loadmetadata = () => {
     });
 }
 
+ 
+
 watch(() => audio.value, () => {
+    
     timeupdate()
     loadmetadata()
 })
@@ -84,6 +104,41 @@ watch(() => isTrackTimeCurrent.value, (time) => {
         useSong.nextSong(currentTrack.value)
     }
 })
+
+watch( () => currentTrack.value.id, async() => {
+
+    try {
+    
+    const trackRef = doc(db, 'track', currentTrack.value.id);
+    const trackDoc = await getDoc(trackRef);
+
+    if (trackDoc.exists()) {
+      const trackData = trackDoc.data();
+
+        if (trackData && Array.isArray(trackData.liked)) {
+
+          trackLiked.value = trackData.liked.includes(currentUser.uid);
+          
+
+        } else {
+          console.warn(
+            "Invalid 'liked' field: expected an array, received:",
+            trackData?.liked
+          );
+
+          // Provide fallback values if `liked` is invalid
+          trackLiked.value = false;
+        }
+      } else {
+        console.warn('Document does not exist.');
+      }
+    } catch (error) {
+      console.error('Error processing document data:', error);
+    }
+
+
+})
+
 
 </script>
 
@@ -100,25 +155,30 @@ watch(() => isTrackTimeCurrent.value, (time) => {
             w-full
             z-50
             h-[90px]
-            bg-[#181818]
+            bg-[#121212]
             border-t
-            border-t-[#272727]
+            border-t-[#4b91db]
         "
     >
         <div class="flex items-center w-1/4">
             <div class="flex items-center ml-4">
-                <img class="rounded-sm shadow-2xl" width="55" :src="currentTrack.img">
+                <RouterLink :to="`/track/${currentTrack.id}`">
+                <img class="rounded-sm shadow-2xl" width="55" :src="currentTrack.image"></RouterLink>
                 <div class="ml-4">
+                    <RouterLink :to="`/track/${currentTrack.id}`">
                     <div class="text-[14px] text-white hover:underline cursor-pointer">
                         {{ currentTrack.name }}
-                    </div>
-                    <div class="text-[11px] text-gray-500 hover:underline hover:text-white cursor-pointer">
-                        {{ currentTrack.artist }}
-                    </div>
+                    </div> </RouterLink>
+                    <RouterLink :to="`/user/${currentTrack.artist}`"> <div class="text-[11px] text-gray-500 hover:underline hover:text-white cursor-pointer">
+                        {{ currentArtist.name }}
+                    </div> </RouterLink>
                 </div>
             </div>
             <div class="flex items-center ml-8">
-                <Heart fillColor="#1BD760" :size="20" />
+                <button type="button">
+        <noHeart v-if="!trackLiked" fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(currentTrack.id)" />
+        <Heart v-else fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(currentTrack.id)" />
+      </button>
                 <PictureInPictureBottomRight class="ml-4" fillColor="#FFFFFF" :size="18" />
             </div>
         </div>
@@ -127,19 +187,65 @@ watch(() => isTrackTimeCurrent.value, (time) => {
             <div class="flex-col items-center justify-center">
                 <div class="buttons flex items-center justify-center h-[30px]">
                     <button class="mx-2">
-  <SkipBackward fillColor="#FFFFFF" :size="25" @click="useSong.prevSong()" />
+  <!-- SkipBackward -->
+  <svg
+        xmlns="http://www.w3.org/2000/svg"
+        :width="25"
+        :height="25"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+        @click="useSong.prevSong()"
+      >
+        <path :d="mdilSkipPrevious" />
+      </svg>
 </button>
 
 
                     <button
-  class="p-1 rounded-full mx-3 bg-white"
-  @click="useSong.playOrPauseThisSong(currentTrack.artist, currentTrack, trackQueue.map((t) => t.id))"
+  class="p-1 rounded-full mx-3" :style="{
+    border: 'solid 1px white'
+
+  }"
+  @click="useSong.playOrPauseThisSong(currentTrack,trackQueue.map((t) => t.id))"
 >
-  <Play v-if="!isPlaying" fillColor="#181818" :size="25" />
-  <Pause v-else fillColor="#181818" :size="25" />
+
+  <svg
+        v-if="!isPlaying"
+        xmlns="http://www.w3.org/2000/svg"
+        :width="25"
+        :height="25"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+      >
+        <path :d="mdilPlay" />
+      </svg>
+
+      <svg
+        v-else
+        xmlns="http://www.w3.org/2000/svg"
+        :width="25"
+        :height="25"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+
+      >
+        <path :d="mdilPause" />
+      </svg>
+
+
 </button>
 <button class="mx-2">
-  <SkipForward fillColor="#FFFFFF" :size="25" @click="useSong.nextSong()" />
+    <!-- SkipForward -->
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        :width="25"
+        :height="25"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+        @click="useSong.nextSong()"
+      >
+        <path :d="mdilSkipNext" />
+      </svg>
 </button>
 
                 </div>

@@ -10,6 +10,7 @@ export const useSongStore = defineStore('song', {
     audio: null,
     currentTrack: null,
     currentTrackID: null,
+    currentArtist: null,
     trackQueue: [], // Queue of track details
     currentIndex: -1, // Tracks the index of the current track in the queue
   }),
@@ -72,6 +73,16 @@ export const useSongStore = defineStore('song', {
 
       // Update views in the database
       await this.updateTrackViews(track.id);
+
+      const userRef = doc(db, 'user', track.artist);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+          console.error('User document does not exist');
+          return;
+        }
+    const userData = userDoc.data();
+    this.currentArtist = userData
+
     },
 
     async updateTrackViews(trackID) {

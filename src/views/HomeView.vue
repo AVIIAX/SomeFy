@@ -56,7 +56,7 @@ onMounted(async () => {
     top: '60px',
   }">
   
-      <BoostCard trackId="mBmee0jelL3Iw35kE0vu" :playList="boosted" />
+      <BoostCard trackId="9yidIs3P16Hw5SXk5I98" :playList="boosted" />
 
   </div>
 

@@ -150,7 +150,7 @@ div {
   white-space: nowrap; 
   overflow: hidden; 
   text-overflow: ellipsis; 
-  width: 100%; 
+  width: auto; 
   /* animation: marquee 10s linear infinite; */
 }
 
