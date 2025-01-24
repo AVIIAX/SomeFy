@@ -9,7 +9,7 @@
         placeholder="Search..."
         class="w-full p-2 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-      <div v-if="results.length > 0" class="absolute mt-2 w-full bg-gray-900 rounded-lg shadow-lg">
+      <div v-if="results.length > 0" class="absolute overflow-auto mt-2 w-full bg-gray-900 rounded-lg shadow-lg h-[400px]">
         <SearchResult
           v-for="(result, index) in results"
           :key="index"

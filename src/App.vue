@@ -15,7 +15,7 @@ import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import PlusIcon from 'vue-material-design-icons/Plus.vue';
 import { useSongStore } from './stores/song';
 import { storeToRefs } from 'pinia';
-import { getFirestore, collection, addDoc, doc, getDoc} from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot} from "firebase/firestore";
 
 const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
@@ -30,40 +30,50 @@ const userAV = ref("");
 const userCredits = ref("");
 
 onMounted(() => {
-  auth = getAuth();
+  const auth = getAuth();
+  const db = getFirestore();
 
-  onAuthStateChanged(auth, async (user) => {
+  // Listen for authentication state changes
+  onAuthStateChanged(auth, (user) => {
     isLoggedIn.value = !!user;
 
     if (user) {
-    // If a user is authenticated
-    userEmail.value = user.email;
-    
-    try {
-        // Reference to the user's document in Firestore
-        const userRef = doc(db, "user", user.uid); // Assuming the user's document is stored with their UID
-        const userDoc = await getDoc(userRef); // Fetch the user's document
-        userID.value = user.uid;
-        if (userDoc.exists()) {
-          // If the document exists, extract the 'name' field from it
-          const userData = userDoc.data();
-          userName.value = userData.name || "No name available"; // If name exists, use it, otherwise display fallback
-          userAV.value = userData.avatar || "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
-          userCredits.value = userData.credits
-          isArtist.value = userData.artist;
+      // If a user is authenticated
+      userEmail.value = user.email;
+
+      // Reference to the user's document in Firestore
+      const userRef = doc(db, "user", user.uid);
+
+      // Listen for real-time updates to the user's document
+      onSnapshot(userRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+
+          userID.value = user.uid;
+          userName.value = userData.name || "No name available";
+          userAV.value =
+            userData.avatar ||
+            "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
+          userCredits.value = userData.credits || 0;
+          isArtist.value = userData.artist || false;
         } else {
           console.log("No such document!");
         }
-      } catch (error) {
-        console.error("Error fetching user data: ", error);
-      }
-
-    
-  } else {
-    console.log("No auth");
-  }
-
+      }, (error) => {
+        console.error("Error listening to document: ", error);
+      });
+    } else {
+      console.log("No authenticated user");
+      isLoggedIn.value = false;
+      userEmail.value = null;
+      userName.value = null;
+      userID.value = null;
+      userAV.value = null;
+      userCredits.value = 0;
+      isArtist.value = false;
+    }
   });
+
   isPlaying.value = false;
 });
 
@@ -178,7 +188,10 @@ let openMenu = ref(false);
         </div>
   
         <!-- NavBar -->
-        <div id="SideNav" class="h-[100%] p-6 w-[240px] fixed z-50 bg-black">
+        <div id="SideNav" class="p-6 w-[240px] fixed z-50 bg-black" :style="{
+          height: currentTrack ? 'calc(100% - 90px)' : '100%'
+        }">
+
           <RouterLink to="/">
             <img width="125" src="https://i.postimg.cc/MKxHSbDN/AVII-trans.png" />
           </RouterLink>
@@ -244,6 +257,9 @@ let openMenu = ref(false);
 
 
 <style>
+body {
+   background-color:  rgb(0 0 0);;
+}
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

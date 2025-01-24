@@ -105,7 +105,7 @@ watch(() => isTrackTimeCurrent.value, (time) => {
     }
 })
 
-watch( () => currentTrack.value.id, async() => {
+watch( () => currentTrack.value.id || currentTrack.value.liked , async() => {
 
     try {
     
