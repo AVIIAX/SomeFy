@@ -7,16 +7,18 @@ import Pause from 'vue-material-design-icons/Pause.vue';
 import MusicNote from 'vue-material-design-icons/MusicNote.vue';
 import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
+import { useModalStore } from '../stores/modalStore.js';
 import { storeToRefs } from 'pinia';
 import { getAuth } from "firebase/auth";
+
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
+const modalStore = useModalStore();
 const currentUser = getAuth().currentUser;
 let isHover = ref(false);
 let isTrackTime = ref(null);
 const isTrackPlays = ref(null);
 const isTrackLikes = ref(null);
-
 const db = getFirestore();
 
 const props = defineProps({
@@ -101,6 +103,10 @@ onMounted(async () => {
   });
 });
 
+const handleSongRowClick = () => {
+  const dataForBoostModal = { title: 'Song Title', artist: 'Song Artist' };  // Example data
+  modalStore.toggleModal('boostModal', dataForBoostModal);  // Pass data to Boost modal
+};
 </script>
 
 <template>
@@ -174,6 +180,11 @@ onMounted(async () => {
 
     <!-- Right-Side Controls -->
     <div class="flex items-center relative z-10">
+
+      <button  @click="handleSongRowClick" v-if="track.artist == currentUser.uid && !track.boost" class="boost boost-moving-gradient boost-moving-gradient--blue mx-5">
+        BOOST
+      </button>
+
       <button type="button" v-if="isHover">
         <noHeart v-if="!trackLiked" fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />
         <Heart v-else fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />

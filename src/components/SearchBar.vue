@@ -21,7 +21,7 @@
   
   <script setup>
   import { ref } from 'vue';
-  import SearchResult from './SearchResult.vue'; // Component to display individual results
+  import SearchResult from './SearchResult.vue';
   import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
   
   const db = getFirestore();

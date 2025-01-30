@@ -69,11 +69,13 @@
 </template>
   
 <script setup>
+import { useModalStore } from '../stores/modalStore.js';
 import { ref, defineEmits } from 'vue';
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion, runTransaction } from "firebase/firestore";
 import { cropImageToSquare  } from "../main";
 
+const modalStore = useModalStore(); 
 // Firebase setup
 const db = getFirestore();
 const auth = getAuth();
@@ -185,7 +187,8 @@ const closeModal = () => {
   genre.value = '';
   artwork.value = '';
   musicFile.value = '';
-  emit('close');
+
+  modalStore.toggleModal('uploadTrackModal'); 
 };
 </script>
 

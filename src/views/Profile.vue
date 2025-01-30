@@ -98,8 +98,7 @@
     
     <div v-if="!myTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
       <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-        <button @click="showModal = true" class="open-modal-btn happyBtn" v-if="!myTracks.length" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
-        <ModalComponent v-if="showModal" @close="showModal = false" />
+        <button @click="handleSongUploadClick" class="open-modal-btn happyBtn" v-if="!myTracks.length" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
     </div>
   </div>
 
@@ -159,6 +158,7 @@ import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/UploadTrackModal.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
 import axios from 'axios';
+import { useModalStore } from '../stores/modalStore.js';
 
 const route = useRoute();
 const db = getFirestore();
@@ -175,7 +175,7 @@ const myTracks = ref([]);
 const likedTracks = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
-const showModal = ref(false);
+const modalStore = useModalStore();
 const showAllTracks = ref(false);
 const showAllLikedTracks = ref(false);
 
@@ -367,6 +367,10 @@ const updateProfileField = async (field, value) => {
 
 const beArtist = async () => {
   await updateProfileField('artist', true);
+};
+
+const handleSongUploadClick = () => {
+  modalStore.toggleModal('uploadTrackModal', null);
 };
 </script>
 
