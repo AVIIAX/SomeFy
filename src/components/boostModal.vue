@@ -1,9 +1,9 @@
 <template>
-  <div class="modal">
-    <div class="modal-content">
+  <div class="modal-overlay">
+    <div class="modal-container">
+      <button class="close-btn" @click="closeModal">&times;</button>
       <h3>{{ modalData?.title }} - {{ modalData?.artist }}</h3>
       <p>Some content inside the Boost modal...</p>
-      <button @click="closeModal">Close</button>
     </div>
   </div>
 </template>
@@ -35,7 +35,7 @@ const closeModal = () => {
 }
 
 .modal-content {
-  background: white;
+  background: rgb(37, 61, 97);
   padding: 20px;
   border-radius: 5px;
 }
