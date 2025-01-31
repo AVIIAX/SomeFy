@@ -241,7 +241,7 @@ const handleLiveUpdates = (id) => {
           myTracks.value = tracksWithDetails
             .filter(track => track !== null)
             .sort((a, b) => {
-              if (a.boost && b.boost) return a.boost - b.boost;
+              if (a.boost && b.boost) return b.boost - a.boost;
               if (a.boost) return -1;
               if (b.boost) return 1;
               return (b.views || 0) - (a.views || 0);
@@ -260,7 +260,7 @@ const handleLiveUpdates = (id) => {
           likedTracks.value = tracksWithDetails
             .filter(track => track !== null)
             .sort((a, b) => {
-              if (a.boost && b.boost) return a.boost - b.boost;
+              if (a.boost && b.boost) return b.boost - a.boost;
               if (a.boost) return -1;
               if (b.boost) return 1;
               return (b.views || 0) - (a.views || 0);

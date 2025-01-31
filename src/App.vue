@@ -10,6 +10,7 @@ import SearchBar from './components/SearchBar.vue';
 import UploadTrackModal from './components/UploadTrackModal.vue';
 import songRow from './components/SongRow.vue';
 import boostModal from './components/boostModal.vue';
+import boostedModal from './components/boostedModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
@@ -213,6 +214,7 @@ let openMenu = ref(false);
         <teleport to="body">
         <UploadTrackModal v-if="modalStore.modals.uploadTrackModal.isVisible"/>
         <boostModal v-if="modalStore.modals.boostModal.isVisible"/>
+        <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
         </teleport>
 
         <MusicPlayer v-if="currentTrack"/>

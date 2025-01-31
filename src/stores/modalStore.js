@@ -8,6 +8,10 @@ export const useModalStore = defineStore('modal', () => {
       isVisible: false,
       data: null,  // Store data for the Boost modal
     },
+    boostedModal: {
+      isVisible: false,
+      data: null,  // Store data for the Boost modal
+    },
     uploadTrackModal: {
       isVisible: false,
       data: null,  // Store data for another modal
