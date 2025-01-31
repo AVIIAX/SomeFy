@@ -104,7 +104,7 @@ onMounted(async () => {
 });
 
 const handleSongRowClick = () => {
-  const dataForBoostModal = { title: 'Song Title', artist: 'Song Artist' };  // Example data
+  const dataForBoostModal = { track: track, artist: trackArtist };  // Example data
   modalStore.toggleModal('boostModal', dataForBoostModal);  // Pass data to Boost modal
 };
 </script>
@@ -181,11 +181,11 @@ const handleSongRowClick = () => {
     <!-- Right-Side Controls -->
     <div class="flex items-center relative z-10">
 
-      <button  @click="handleSongRowClick" v-if="track.artist == currentUser.uid && !track.boost" class="boost boost-moving-gradient boost-moving-gradient--blue mx-5">
+      <button  @click="handleSongRowClick" v-if="track.artist == currentUser.uid" class="boost boost-moving-gradient boost-moving-gradient--blue mx-5">
         BOOST
       </button>
 
-      <button type="button" v-if="isHover">
+      <button type="button">
         <noHeart v-if="!trackLiked" fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />
         <Heart v-else fillColor="#1BD760" :size="22" @click="useSong.likeOrUnlikeSong(track.id)" />
       </button>
