@@ -1,9 +1,10 @@
 <template>
     <div
-        id="MusicPlayer"
-        v-if="audio"
-        class="fixed flex items-center justify-between bottom-0 w-full z-50 h-[90px] bg-[#121212] border-t border-t-[#4b91db]"
-    >
+    id="MusicPlayer"
+    v-if="audio"
+    class="fixed flex items-center justify-between bottom-0 w-full z-50 h-[90px] bg-[#121212] border-t"
+    :style="{ borderTopColor: isOffline ? '#ff7575' : '#75ff83' }"
+  >
         <div class="flex items-center w-1/4">
             <div class="flex items-center ml-4">
                 <RouterLink :to="`/track/${currentTrack.id}`">
@@ -150,6 +151,7 @@ const db = getFirestore();
 const useSong = useSongStore();
 const { isPlaying, audio, currentTrack, trackQueue, currentArtist } = storeToRefs(useSong);
 const currentUser = getAuth().currentUser;
+const isOffline = ref(!navigator.onLine);
 
 let isHover = ref(false);
 let isTrackTimeCurrent = ref(null);
@@ -160,6 +162,10 @@ let range = ref(0);
 const trackLiked = ref(false);
 
 let unsubscribeTrackListener = null; // Will hold the unsubscribe function from onSnapshot
+
+const updateOnlineStatus = () => {
+  isOffline.value = !navigator.onLine;
+};
 
 // Function to listen for real-time updates on the current track's "liked" field.
 const listenForLikeUpdates = (trackId) => {
@@ -177,6 +183,9 @@ const listenForLikeUpdates = (trackId) => {
 };
 
 onMounted(() => {
+    window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+
   if (audio.value) {
     setTimeout(() => {
       timeupdate();
@@ -215,6 +224,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('online', updateOnlineStatus);
+  window.removeEventListener('offline', updateOnlineStatus);
+  
   if (unsubscribeTrackListener) {
     unsubscribeTrackListener();
   }

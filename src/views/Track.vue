@@ -108,6 +108,8 @@
       </p>
     </div>
     
+    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+    
     <!-- Artist Tracks -->
     <div class="p-8 text-center">
       <button type="button" class="text-white text-2xl font-semibold hover:underline cursor-pointer">
