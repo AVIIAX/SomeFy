@@ -8,7 +8,10 @@
         backgroundColor: 'rgb(0 0 0 / 76%)',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        border: track.boost ? 'solid 2px' : 'none',
+        borderImage: track.boost ? 'linear-gradient(to right, #3acfd5 0%, #3a4ed5 100%) 1' : 'none',
+        outline: 'none'
       }">
         <img 
           :src="track.image || 'https://atlast.fm/images/no-artwork.jpg'" 
@@ -160,7 +163,7 @@
 <script setup>
 import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
@@ -379,29 +382,34 @@ const toggleLike = async () => {
   if (!track.value?.id) return;
   const trackDocRef = doc(db, 'track', track.value.id);
 
-  if (track.liked) {
-    try {
+  try {
     const trackSnap = await getDoc(trackDocRef);
     if (trackSnap.exists()) {
       const trackData = trackSnap.data();
-      let newLiked;
-      // Toggle the like: if currentUser is already in the liked array, remove it; otherwise add it.
-      if (trackData.liked.includes(currentUser.uid)) {
-        newLiked = trackData.liked.filter(uid => uid !== currentUser.uid);
+      let newLiked = [];
+
+      // If the liked field exists and is an array, toggle the like.
+      if (trackData.liked && Array.isArray(trackData.liked)) {
+        if (trackData.liked.includes(currentUser.uid)) {
+          newLiked = trackData.liked.filter(uid => uid !== currentUser.uid);
+        } else {
+          newLiked = [...trackData.liked, currentUser.uid];
+        }
       } else {
-        newLiked = [...trackData.liked, currentUser.uid];
+        // If the liked field does not exist (or isn't an array), initialize it.
+        newLiked = [currentUser.uid];
       }
+
       await updateDoc(trackDocRef, {
         liked: newLiked,
       });
-      // No manual state update here—the onSnapshot listener will update trackLiked automatically.
+      // The onSnapshot listener will update the UI automatically.
     }
   } catch (error) {
     console.error("Error updating like status:", error);
   }
-  }
-  
 };
+
 
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);

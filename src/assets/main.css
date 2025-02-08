@@ -85,3 +85,9 @@
     color: aqua;
     font-size: 15px;
   }
+
+
+  @keyframes boosted {
+    from {border-image:  'linear-gradient(to right, #3acfd5 0%, #3a4ed5 100%) 1';}
+    to {border-image:  'linear-gradient(to left, #3acfd5 0%, #3a4ed5 100%) 1';}
+  }
