@@ -105,7 +105,9 @@ onMounted(async () => {
       
       </div>
     </div>
+    <RouterLink :to="`/track/${track.id}`">
     <div class="track-name">{{ track.name }}</div>
+  </RouterLink>
     <RouterLink :to="`/user/${track.artist}`">
       <div class="artist-name">{{ artist.name }}</div>
     </RouterLink>
