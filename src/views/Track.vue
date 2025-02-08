@@ -77,6 +77,15 @@
             <span v-if="track.liked">{{ track.liked.length }}</span>
           </div>
           <span class="block my-8">{{ track.views }} Plays</span>
+
+          <!-- Track Socials -->
+           <div class="socials">
+              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Yt :size="30" /></a>
+              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Spotify :size="30" /></a>
+              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
+              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Apple :size="30" /></a>
+           </div>
+
         </div>
         <img 
           :src="track.image || 'https://atlast.fm/images/no-artwork.jpg'" 
@@ -172,6 +181,10 @@ import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import SongRow from '../components/SongRow.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
+import Yt from 'vue-material-design-icons/Youtube.vue';
+import Spotify from 'vue-material-design-icons/Spotify.vue';
+import Soundcloud from 'vue-material-design-icons/Soundcloud.vue';
+import Apple from 'vue-material-design-icons/Apple.vue';
 import axios from 'axios';
 import HomeCard from '../components/HomeCard.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';

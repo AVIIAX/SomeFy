@@ -91,3 +91,35 @@
     from {border-image:  'linear-gradient(to right, #3acfd5 0%, #3a4ed5 100%) 1';}
     to {border-image:  'linear-gradient(to left, #3acfd5 0%, #3a4ed5 100%) 1';}
   }
+
+  .socials {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+  }
+
+  .socials a {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: ruby;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: all 0.5s;
+  }
+
+  .socials a:hover {
+    transform: scale(1.1);
+  }
+
+  .socials a span svg {
+    fill: rgb(235, 235, 235);
+    transition: all 0.5s;
+  }
+
+  .socials a:hover span svg {
+    fill: rgb(179, 217, 235);
+  }
