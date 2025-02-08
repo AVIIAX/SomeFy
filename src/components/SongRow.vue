@@ -37,6 +37,8 @@ const trackIDs = playList.value.map(track => track.id);
 const track = ref([]);
 const trackArtist = ref([]);
 const trackLiked = ref(false);  // Local state for liked status of this specific track
+const boostExpiration = ref(null);
+const timeLeft = ref("");
 
 onMounted(async () => {
   // Get track details
@@ -47,6 +49,8 @@ onMounted(async () => {
     if (trackDoc.exists()) {
       const trackData = trackDoc.data();
       track.value = trackData;
+
+      boostExpiration.value = trackData.boostExpiration || null;
 
       if (trackData.views) {
         isTrackPlays.value = trackData.views;
@@ -107,6 +111,31 @@ const handleSongRowClick = () => {
   const dataForBoostModal = { track: track, artist: trackArtist };  // Example data
   modalStore.toggleModal('boostModal', dataForBoostModal);  // Pass data to Boost modal
 };
+
+const updateTimeLeft = () => {
+  if (!boostExpiration.value) return;
+
+  const now = Date.now();
+  const remainingTime = boostExpiration.value - now;
+
+  if (remainingTime <= 0) {
+    timeLeft.value = "Boost expired";
+    return;
+  }
+
+  const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+  timeLeft.value = `${days}D ${hours}H ${minutes}M ${seconds}S`;
+};
+
+// Update countdown every second
+onMounted(() => {
+  setInterval(updateTimeLeft, 1000);
+});
+
 </script>
 
 <template>
@@ -120,6 +149,7 @@ const handleSongRowClick = () => {
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
   >
+ 
     <!-- Image with Glass Effect -->
     <div
   class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
@@ -162,11 +192,15 @@ const handleSongRowClick = () => {
 
                 <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()"/>
       </div>
+      
+      
       <div v-else class="text-white font-semibold w-[40px] ml-5">
         <span :class="{'text-green-500': currentTrack && currentTrack.name === track.name}">
           {{ index }}
         </span>
       </div>
+
+      <RouterLink :to="`/track/${track.id}`">
       <div>
         <div
           :class="{'text-green-500': currentTrack && currentTrack.name === track.name}"
@@ -174,12 +208,19 @@ const handleSongRowClick = () => {
         >
           {{ track.name }}
         </div>
+        <RouterLink :to="`/user/${track.artist}`">
         <div class="text-sm font-semibold text-gray-400">{{ trackArtist.name }}</div>
+      </RouterLink>
       </div>
-    </div>
+    </RouterLink>
+    </div>  
 
     <!-- Right-Side Controls -->
     <div class="flex items-center relative z-10">
+
+      <div v-if="track.boost" class="boostTime flex items-center space-x-4 text-xs mx-5 text-gray-400 w-max">
+        {{ timeLeft }}
+      </div>
 
       <button  @click="handleSongRowClick" v-if="track.artist == currentUser.uid" class="boost boost-moving-gradient boost-moving-gradient--blue mx-5">
         BOOST
@@ -204,6 +245,7 @@ const handleSongRowClick = () => {
       </div>
     </div>
   </li>
+
 </template>
 
 <style scoped>

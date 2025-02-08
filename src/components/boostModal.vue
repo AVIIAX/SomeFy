@@ -31,6 +31,7 @@
       </button>
     </RouterLink>
 
+
     </div>
   </div>
 </template>
@@ -51,59 +52,44 @@ const userCredits = modalData?.artist.credits || '0';
 
 const boostComplete = async (requiredCredits) => {
   try {
-    // Use a transaction to update the user's credits and track's boost level atomically
     const userRef = doc(db, "user", modalData?.track.artist);
     const trackRef = doc(db, "track", modalData?.track.id);
+    const boostExpiration = Date.now() + 2 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
 
-    // Start the Firestore transaction
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userRef);
       const trackDoc = await transaction.get(trackRef);
 
-      if (!userDoc.exists()) {
-        throw new Error("User document does not exist!");
-      }
-
-      if (!trackDoc.exists()) {
-        throw new Error("Track document does not exist!");
+      if (!userDoc.exists() || !trackDoc.exists()) {
+        throw new Error("Document does not exist!");
       }
 
       const userData = userDoc.data();
       const trackData = trackDoc.data();
 
-      const currentCredits = userData.credits || 0;
-      const currentLevel = trackData.boost || 0;
-
-      // Check if the user has enough credits
-      if (currentCredits < requiredCredits) {
+      if (userData.credits < requiredCredits) {
         throw new Error("Not enough credits!");
       }
 
-      // Increment the track's boost level
-      const updatedLevel = currentLevel + 1;
-
-      // Update the track's boost level and the user's credits atomically
       transaction.update(trackRef, {
-        boost: updatedLevel, // Increment boost level
+        boost: (trackData.boost || 0) + 1,
+        boostExpiration, // Save expiration time
       });
 
       transaction.update(userRef, {
-        credits: currentCredits - requiredCredits, // Deduct required credits
+        credits: userData.credits - requiredCredits,
       });
     });
 
-    // Close the Boost modal
     closeModal();
-
-    // Pass the data to the Boosted modal
-    const dataForBoostModal = { track: modalData?.track, artist: modalData?.artist };
-    modalStore.toggleModal('boostedModal', dataForBoostModal);
+    modalStore.toggleModal('boostedModal', { track: modalData?.track, artist: modalData?.artist });
 
   } catch (error) {
     console.error('Error boosting track:', error);
-    alert('Failed to boost track. Please try again.');
+    alert('Failed to boost track.');
   }
 };
+
 
 
 

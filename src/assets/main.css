@@ -80,3 +80,8 @@
     font-size: 20px;
     cursor: pointer;
   }
+
+  .boostTime {
+    color: aqua;
+    font-size: 15px;
+  }

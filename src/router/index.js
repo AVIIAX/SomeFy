@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Auth from '../views/Auth.vue'
 import HomeView from '../views/HomeView.vue'
 import Profile from '../views/Profile.vue'
+import Track from '../views/Track.vue'
 import LibraryView from '../views/LibraryView.vue'
 
 const router = createRouter({
@@ -15,6 +16,11 @@ const router = createRouter({
       path: '/user/:userID',  // Dynamic route to match userID
       name: 'UserProfile',
       component: Profile,
+    },
+    {
+      path: '/track/:trackID',  // Dynamic route to match userID
+      name: 'TrackProfile',
+      component: Track,
     },
     {
       path: '/library',

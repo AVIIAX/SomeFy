@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, onMounted } from 'vue';
+import { ref, toRefs, onMounted, watch } from 'vue';
 import { mdilPlay } from '@mdi/light-js';
 import { mdilPause } from '@mdi/light-js';
 import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
@@ -15,21 +15,23 @@ let isTrackTime = ref(null);
 
 const props = defineProps({
   trackId: String,
-  playList: Object,
   index: Number,
 });
 
-const { trackId, playList } = toRefs(props);
+const { trackId } = toRefs(props);
 const track = ref([]);
+const pList = ref([]);
 const artist = ref([]);
-const trackIDs = playList.value.map(track => track.id);
+const trackIDs = pList.value.map(track => track.id);
 
 onMounted(async () => {
 
   try {
 
     const trackRef = doc(db, 'track', trackId.value);
+    const plistRef = doc(db, 'playlists', 'boosted');
     const trackDoc = await getDoc(trackRef);
+    const plistDoc = await getDoc(plistRef);
 
     if (trackDoc.exists()) {
       const trackData = trackDoc.data();
@@ -38,15 +40,20 @@ onMounted(async () => {
       const userRef = doc(db, 'user', trackData.artist);
       const userDoc = await getDoc(userRef);
 
-      if (trackDoc.exists()) {
+      if (userDoc.exists()) {
         const userData = userDoc.data();
         artist.value = userData;
       }
 
     } else {
       console.log("na bn");
-
     }
+    if (plistDoc.exists()) {
+        const plistData = plistDoc.data();
+        pList.value = plistData.tracks;
+        console.log(pList.value);
+        
+      }
 
   } catch (error) {
     console.log(error);
@@ -60,6 +67,8 @@ onMounted(async () => {
     isTrackTime.value = minutes + ':' + seconds.toString().padStart(2, '0');
   });
 });
+
+
 </script>
 
 <template>
@@ -102,7 +111,7 @@ onMounted(async () => {
         :height="60"
         viewBox="0 0 24 24"
         fill="#FFFFFF"
-        @click="useSong.loadSong(track, playList)"
+        @click="useSong.loadSong(track, pList)"
       >
         <path :d="mdilPlay" />
       </svg>
