@@ -47,7 +47,7 @@
             gap: '0.5rem'
           }">
             <svg
-              v-if="!isPlaying || currentTrack.name !== track.name"
+              v-if="(!isPlaying && currentTrack.id !== track.id) || currentTrack.id !== track.id"
               xmlns="http://www.w3.org/2000/svg"
               :width="60"
               :height="60"
@@ -57,14 +57,27 @@
             >
               <path :d="mdilPlay" />
             </svg>
+
             <svg
-              v-else
+              v-if="!isPlaying && currentTrack.id == track.id"
               xmlns="http://www.w3.org/2000/svg"
               :width="60"
               :height="60"
               viewBox="0 0 24 24"
               fill="#FFFFFF"
-              @click="useSong.playOrPauseSong()"
+              @click="useSong.playOrPauseThisSong(currentTrack, trackQueue.map((t) => t.id))"
+            >
+              <path :d="mdilPlay" />
+            </svg>
+
+            <svg
+              v-if="isPlaying && currentTrack.id == track.id"
+              xmlns="http://www.w3.org/2000/svg"
+              :width="60"
+              :height="60"
+              viewBox="0 0 24 24"
+              fill="#FFFFFF"
+              @click="useSong.playOrPauseThisSong(currentTrack, trackQueue.map((t) => t.id))"
             >
               <path :d="mdilPause" />
             </svg>
@@ -198,7 +211,7 @@ const route = useRoute();
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 const useSong = useSongStore();
-const { isPlaying, currentTrack } = storeToRefs(useSong);
+const { isPlaying, currentTrack, trackQueue } = storeToRefs(useSong);
 const externalWaveform = ref(null);
 let externalWaveSurfer = null;
 
