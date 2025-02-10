@@ -18,7 +18,8 @@
     "uniqolor": "^1.1.0",
     "vue": "^3.2.45",
     "vue-material-design-icons": "^5.1.2",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "wavesurfer.js": "^7.9.0"
   },
   "devDependencies": {
     "@pinegrow/tailwindcss-plugin": "^3.0.35",

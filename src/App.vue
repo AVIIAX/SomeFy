@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { watch , ref, onMounted } from 'vue';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
 import Register from './components/Register.vue';
@@ -32,6 +32,13 @@ const userEmail = ref("null");
 const userName = ref("");
 const userAV = ref("");
 const userCredits = ref("");
+
+const useSong = useSongStore();
+const { isPlaying, currentTrack } = storeToRefs(useSong);
+
+const modalStore = useModalStore();
+
+
 
 onMounted(() => {
   const auth = getAuth();
@@ -79,13 +86,8 @@ onMounted(() => {
   });
 
   isPlaying.value = false;
+
 });
-
-const useSong = useSongStore();
-const { isPlaying, currentTrack } = storeToRefs(useSong);
-
-const modalStore = useModalStore();
-
 
 const switchToLogin = () => {
   showRegister.value = false;
@@ -109,7 +111,11 @@ const logout = async () => {
   }
 };
 
-
+// Watch for changes in currentTrack and log updates
+watch(currentTrack, (newTrack) => {
+  currentTrack.value = newTrack;
+  console.log('Current track changed:', newTrack);
+});
 
 let openMenu = ref(false);
 </script>

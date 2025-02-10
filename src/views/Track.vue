@@ -26,7 +26,7 @@
           }" 
         />
 
-        <div>
+        <div class="w-[100%] pr-[1rem]">
           <div :style="{ position: 'relative' }" class="text-white pt-4 font-semibold text-[500%] track-name">
             {{ trackName.length > 50 ? trackName.slice(0, 50) + '...' : trackName }}
             <span v-if="isAuthUser" class="edit-icon" @click="editName">
@@ -76,6 +76,9 @@
             </button>
             <span v-if="track.liked">{{ track.liked.length }}</span>
           </div>
+
+          <div id="waveform" ref="externalWaveform"></div>
+
           <span class="block my-8">{{ track.views }} Plays</span>
 
           <!-- Track Socials -->
@@ -85,7 +88,6 @@
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Apple :size="30" /></a>
            </div>
-
         </div>
         <img 
           :src="track.image || 'https://atlast.fm/images/no-artwork.jpg'" 
@@ -190,12 +192,15 @@ import Apple from 'vue-material-design-icons/Apple.vue';
 import axios from 'axios';
 import HomeCard from '../components/HomeCard.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
+import WaveSurfer from 'wavesurfer.js'
 
 const route = useRoute();
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
+const externalWaveform = ref(null);
+let externalWaveSurfer = null;
 
 const trackID = ref(route.params.trackID);
 const track = ref({});
@@ -214,6 +219,7 @@ const pList = ref([]);
 const userAvatar = ref('');
 const isTrackTime = ref('');
 const likedTracks = ref([]); // For potential liked tracks listing
+let wavesurfer = null;
 
 // Fetch the track data from Firestore and assign an "id" property
 const fetchTrackData = async (id) => {
@@ -329,9 +335,14 @@ const handleLiveUpdates = (id) => {
 };
 
 onMounted(async () => {
+
+  
   await fetchTrackData(trackID.value);
   topHits.value = await getTracks('topHits');
   unsubscribe = handleLiveUpdates(trackID.value);
+
+
+
 
   // Start listening for real-time like updates once track data is fetched
   if (track.value && track.value.id) {
@@ -374,6 +385,24 @@ onMounted(async () => {
     const seconds = Math.floor(duration % 60);
     isTrackTime.value = minutes + ':' + seconds.toString().padStart(2, '0');
   });
+
+  // Initialize WaveSurfer when the component is mounted
+  wavesurfer = WaveSurfer.create({
+    container: externalWaveform.value,
+    waveColor: '#ffffff42',
+        barWidth: 1,
+        barGap: 3,
+        barAlign: 'center',
+        barHeight: 0.3,
+        height: 30,
+        responsive: true,
+        hideScrollbar: true,
+        barRadius: 4,
+        normalize: true,
+        interact: false,
+        cursorWidth: 0,
+  });
+  wavesurfer.load(track.value.url);
 });
 
 onUnmounted(() => {
@@ -386,6 +415,29 @@ watch(() => route.params.trackID, async (newID) => {
   if (unsubscribe) unsubscribe();
   trackID.value = newID;
   await fetchTrackData(newID);
+
+  if (wavesurfer) {
+  console.log("Destroying WaveSurfer instance...");
+  await wavesurfer.destroy(); // Ensure it's fully destroyed
+  wavesurfer = null; // Reset reference
+}
+wavesurfer = WaveSurfer.create({
+    container: externalWaveform.value,
+    waveColor: '#ffffff42',
+        barWidth: 1,
+        barGap: 3,
+        barAlign: 'center',
+        barHeight: 0.3,
+        height: 30,
+        responsive: true,
+        hideScrollbar: true,
+        barRadius: 4,
+        normalize: true,
+        interact: false,
+        cursorWidth: 0,
+  });
+  await wavesurfer.load(track.value.url);
+
   unsubscribe = handleLiveUpdates(newID);
   // Re-subscribe to track updates for the new track ID
   if (unsubscribeTrack) unsubscribeTrack();
@@ -425,6 +477,9 @@ const toggleLike = async () => {
   }
 };
 
+const playWave = () => {
+  wavesurfer.playPause();
+};
 
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);

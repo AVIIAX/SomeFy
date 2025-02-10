@@ -2,12 +2,13 @@ import { defineStore } from 'pinia';
 import { db } from '../main'; // Ensure db is imported from your main.js
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
+import WaveSurfer from 'wavesurfer.js';
 
 export const useSongStore = defineStore('song', {
   state: () => ({
     isPlaying: false,
     isLiked: false,
-    audio: null,
+    wavesurfer: null,
     currentTrack: null,
     currentTrackID: null,
     currentArtist: null,
@@ -16,21 +17,60 @@ export const useSongStore = defineStore('song', {
   }),
 
   actions: {
-    async loadSong(track, trackIDs = null) {
-      // Set the track queue based on trackIDs or use a fallback
-      console.log(trackIDs);
+    createWS(container, url) {
+      // Destroy existing wavesurfer instance before creating a new one
+      if (this.wavesurfer && typeof this.wavesurfer.destroy === "function") {
+        this.wavesurfer.destroy();
+      }
+
+try {
+  this.wavesurfer = WaveSurfer.create({
+        container: '.waveform',
+        waveColor: '#ffffff8f',
+        progressColor: '#3295e2e8',
+        barWidth: 1,
+        barGap: 3,
+        barAlign: 'center',
+        barHeight: 0.3,
+        height: 30,
+        responsive: true,
+        hideScrollbar: true,
+        barRadius: 4,
+        normalize: true,
+      });
+
+      this.wavesurfer.load(url);
+
+      this.wavesurfer.on('ready', () => {
+        console.log('WaveSurfer is ready');
+      });
+
+      this.wavesurfer.on('interaction', () => {
+        console.log('WaveSurfer interaction triggered');
+      });
+
+      this.wavesurfer.on('finish', () => {
+        console.log('WaveSurfer finished playing');
+      });
+} catch (error) {
+  console.log(error);
+  
+}
       
+    },
+
+    async loadSong(track, trackIDs = null, container = ".waveform") {
+      console.log(trackIDs);
+
       if (trackIDs && Array.isArray(trackIDs)) {
         try {
-          // Fetch track details for all trackIDs
           const tracks = await Promise.all(
             trackIDs.map(async (trackId) => {
               const trackRef = doc(db, 'track', trackId);
               const trackDoc = await getDoc(trackRef);
 
               if (trackDoc.exists()) {
-                const trackData = trackDoc.data();
-                return { id: trackId, ...trackData };
+                return { id: trackId, ...trackDoc.data() };
               } else {
                 console.log(`Track not found for ID: ${trackId}`);
                 return null;
@@ -38,7 +78,6 @@ export const useSongStore = defineStore('song', {
             })
           );
 
-          // Filter valid tracks and assign to queue
           this.trackQueue = tracks.filter((track) => track);
           console.log('Track queue set:', this.trackQueue);
         } catch (error) {
@@ -46,43 +85,81 @@ export const useSongStore = defineStore('song', {
         }
       } else {
         console.log('No valid trackIDs provided, using fallback queue.');
-        this.trackQueue = [track]; // Fallback to play only the current track
+        this.trackQueue = [track];
       }
 
-      // Set the current track index
       this.currentIndex = this.trackQueue.findIndex((t) => t.id === track.id);
 
-      // Play the current track
       this.currentTrack = track;
       this.currentTrackID = track.id;
 
-      // Audio setup
-      if (this.audio && this.audio.src) {
-        this.audio.pause();
-        this.isPlaying = false;
-        this.audio.src = '';
+      const userRef = doc(db, 'user', track.artist);
+      const userDoc = await getDoc(userRef);
+      if (!userDoc.exists()) {
+        console.error('User document does not exist');
+        return;
       }
+      this.currentArtist = userDoc.data();
 
-      this.audio = new Audio(track.url);
 
-      // Play the track
+      this.createWS(container, track.url);
+
       setTimeout(() => {
         this.isPlaying = true;
-        this.audio.play();
+        this.wavesurfer.play();
       }, 200);
+      
 
-      // Update views in the database
       await this.updateTrackViews(track.id);
 
-      const userRef = doc(db, 'user', track.artist);
-    const userDoc = await getDoc(userRef);
-    if (!userDoc.exists()) {
-          console.error('User document does not exist');
-          return;
-        }
-    const userData = userDoc.data();
-    this.currentArtist = userData
+      
+    },
 
+    async playOrPauseSong() {
+      if (!this.wavesurfer) {
+        console.error("WaveSurfer instance not initialized");
+        return;
+      }
+
+      if (this.wavesurfer.isPlaying()) {
+        this.isPlaying = false;
+        this.wavesurfer.pause();
+      } else {
+        this.isPlaying = true;
+        this.wavesurfer.play();
+      }
+    },
+
+    async playOrPauseThisSong(track, trackIDs = null) { 
+      if (!(this.wavesurfer.decodedData instanceof AudioBuffer)) {
+        await this.loadSong(track, trackIDs);
+        return;
+      }
+    
+      this.playOrPauseSong();
+    }
+,    
+
+    async nextSong() {
+      if (this.trackQueue.length === 0 || this.currentIndex >= this.trackQueue.length - 1) {
+        console.log('No next track available');
+        return;
+      }
+
+      this.currentIndex += 1;
+      const nextTrack = this.trackQueue[this.currentIndex];
+      await this.loadSong(nextTrack, this.trackQueue.map((t) => t.id));
+    },
+
+    async prevSong() {
+      if (this.trackQueue.length === 0 || this.currentIndex <= 0) {
+        console.log('No previous track available');
+        return;
+      }
+
+      this.currentIndex -= 1;
+      const prevTrack = this.trackQueue[this.currentIndex];
+      await this.loadSong(prevTrack, this.trackQueue.map((t) => t.id));
     },
 
     async updateTrackViews(trackID) {
@@ -94,10 +171,7 @@ export const useSongStore = defineStore('song', {
           const trackData = trackDoc.data();
           const updatedViews = (trackData.views || 0) + 1;
 
-          await updateDoc(trackRef, {
-            views: updatedViews,
-          });
-
+          await updateDoc(trackRef, { views: updatedViews });
           console.log(`Updated views for track ${trackID} to ${updatedViews}`);
         } else {
           console.log('No such track document to update views!');
@@ -107,68 +181,9 @@ export const useSongStore = defineStore('song', {
       }
     },
 
-    async playOrPauseSong() {
-      if (this.audio.paused) {
-        this.isPlaying = true;
-        this.audio.play();
-      } else {
-        this.isPlaying = false;
-        this.audio.pause();
-      }
-    },
-
-    async playOrPauseThisSong(track, trackIDs = null) {
-      if (!this.audio || !this.audio.src || this.currentTrackID !== track.id) {
-        await this.loadSong(track, trackIDs);
-        return;
-      }
-
-      this.playOrPauseSong();
-    },
-
-    async prevSong() {
-      if (this.trackQueue.length === 0 || this.currentIndex <= 0) {
-        console.log('No previous track available');
-        return;
-      }
-
-      // Move to the previous track
-      this.currentIndex -= 1;
-      const prevTrack = this.trackQueue[this.currentIndex];
-
-      // Play the previous track
-      await this.loadSong(prevTrack, this.trackQueue.map((t) => t.id));
-    },
-
-    async nextSong() {
-      if (this.trackQueue.length === 0 || this.currentIndex >= this.trackQueue.length - 1) {
-        console.log('No next track available');
-        return;
-      }
-
-      // Move to the next track
-      this.currentIndex += 1;
-      const nextTrack = this.trackQueue[this.currentIndex];
-
-      // Play the next track
-      await this.loadSong(nextTrack, this.trackQueue.map((t) => t.id));
-    },
-
-    async playFromFirst() {
-      if (this.trackQueue.length === 0) {
-        console.log('No tracks in the queue to play');
-        return;
-      }
-
-      const firstTrack = this.trackQueue[0];
-      this.currentIndex = 0;
-
-      await this.loadSong(firstTrack, this.trackQueue.map((t) => t.id));
-    },
-
     resetState() {
       this.isPlaying = false;
-      this.audio = null;
+      this.wavesurfer = null;
       this.currentTrack = null;
       this.trackQueue = [];
       this.currentIndex = -1;

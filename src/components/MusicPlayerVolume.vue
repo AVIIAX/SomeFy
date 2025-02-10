@@ -7,7 +7,7 @@ import VolumeHigh from 'vue-material-design-icons/VolumeHigh.vue';
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
 const useSong = useSongStore()
-const { audio } = storeToRefs(useSong)
+const { wavesurfer } = storeToRefs(useSong)
 
 let isHover = ref(false)
 
@@ -17,7 +17,7 @@ let volume = ref(null)
 
 onMounted(() => {
     volume.value.addEventListener("input", (e) => {
-        audio.value.volume = e.currentTarget.value / 100;
+        wavesurfer.value.volume = e.currentTarget.value / 100;
     });
 })
 </script>

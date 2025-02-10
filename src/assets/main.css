@@ -123,3 +123,8 @@
   .socials a:hover span svg {
     fill: rgb(179, 217, 235);
   }
+
+  .waveform {
+    width: 100%;
+    hedight: fit-content;
+  }
