@@ -32,7 +32,7 @@ try {
         barGap: 3,
         barAlign: 'center',
         barHeight: 0.3,
-        height: 30,
+        height: 20,
         responsive: true,
         hideScrollbar: true,
         barRadius: 4,
