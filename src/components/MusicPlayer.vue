@@ -114,29 +114,52 @@ import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import PictureInPictureBottomRight from 'vue-material-design-icons/PictureInPictureBottomRight.vue';
 import { mdilPlay, mdilPause, mdilSkipPrevious, mdilSkipNext } from '@mdi/light-js';
+import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
 import WaveSurfer from 'wavesurfer.js';
+import { getAuth } from 'firebase/auth';
 
 const useSong = useSongStore();
 const { isPlaying, currentTrack, trackQueue, currentArtist, wavesurfer } = storeToRefs(useSong);
 const isOffline = ref(!navigator.onLine);
 
+const db = getFirestore();
+const currentUser = getAuth().currentUser;
 let isHover = ref(false);
 let isTrackTimeCurrent = ref(null);
 let isTrackTimeTotal = ref(null);
+const trackLiked = ref(false);
+
+let unsubscribeTrackListener = null;
 
 const updateOnlineStatus = () => {
 isOffline.value = !navigator.onLine;
 };
 
+// Function to listen for real-time updates on the current track's "liked" field.
+const listenForLikeUpdates = (trackId) => {
+  if (unsubscribeTrackListener) {
+    unsubscribeTrackListener();
+  }
+  const trackDocRef = doc(db, 'track', trackId);
+  unsubscribeTrackListener = onSnapshot(trackDocRef, (docSnapshot) => {
+    if (docSnapshot.exists()) {
+      const trackData = docSnapshot.data();
+      trackLiked.value =
+        Array.isArray(trackData.liked) ? trackData.liked.includes(currentUser.uid) : false;
+    }
+  });
+};
+
+
 onMounted(() => {
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
 
-  // Initialize WaveSurfer when the component is mounted
-  if (currentTrack.value) {
-     // useSong.createWS('#waveform', currentTrack.value.url);
+  // Set up the real-time listener for like updates when a current track is available.
+  if (currentTrack.value && currentTrack.value.id) {
+    listenForLikeUpdates(currentTrack.value.id);
   }
 });
 
@@ -149,9 +172,10 @@ onUnmounted(() => {
   }
 });
 
-watch(() => currentTrack.value, (newTrack) => {
-  if (newTrack) {
-      //useSong.createWS('#waveform', newTrack.url);
+// Watch for changes in currentTrack and update the like listener accordingly.
+watch(() => currentTrack.value.id, (newId) => {
+  if (newId) {
+    listenForLikeUpdates(newId);
   }
 });
 
