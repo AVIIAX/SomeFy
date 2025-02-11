@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-    import BoostCard from '../components/BoostCardBack.vue';
+    import BoostCard from '../components/BoostCard.vue';
     import HomeCard from '../components/HomeCard.vue';
     import SongRow from '../components/SongRow.vue'
     import Test from '../components/Test.vue'
@@ -56,7 +56,7 @@ onMounted(async () => {
     top: '60px',
   }">
   
-      <BoostCard trackId="9yidIs3P16Hw5SXk5I98" :playList="boosted" />
+      <BoostCard trackID="mBmee0jelL3Iw35kE0vu" :playList="boosted" />
 
   </div>
 

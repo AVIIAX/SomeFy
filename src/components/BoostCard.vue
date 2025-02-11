@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
+import { onMounted,toRefs, ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getFirestore, doc, getDoc, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
@@ -143,7 +143,12 @@ const externalWaveform = ref(null);
 let externalWaveSurfer = null;
 const isOffline = ref(!navigator.onLine);
 
-const trackID = ref('mBmee0jelL3Iw35kE0vu');
+const props = defineProps({
+  trackID: String,
+  index: Number,
+});
+
+const { trackID } = toRefs(props);
 const track = ref({});
 const trackName = ref('');
 const artist = ref({});
