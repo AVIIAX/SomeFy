@@ -184,6 +184,9 @@ let openMenu = ref(false);
                     <RouterLink to="/Shop">
                         <MenuItem class="ml-[1px]" name="Get More Credits" pageUrl="/Shop"/>
                     </RouterLink>
+                    <RouterLink to="/library">
+                        <MenuItem class="ml-[1px]" name="Library" pageUrl="/library"/>
+                    </RouterLink>
                     <div class="py-3.5"></div>
                 </ul>
                 <div class="border-b border-b-gray-700"></div>

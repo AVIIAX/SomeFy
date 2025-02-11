@@ -25,9 +25,9 @@
             objectFit: 'cover'
           }" 
         />
-
         <div class="w-[100%] pr-[1rem]">
-          <div :style="{ position: 'relative' }" class="text-white pt-4 font-semibold text-[500%] track-name">
+          <span class="my2 pt-4 text-gray-400">{{track.year || 'XXXX'}}</span>
+          <div :style="{ position: 'relative' }" class="text-white  font-semibold text-[500%] track-name">
             {{ trackName.length > 50 ? trackName.slice(0, 50) + '...' : trackName }}
             <span v-if="isAuthUser" class="edit-icon" @click="editName">
               <Pencil fillColor="#FFFFFF" :size="20" />
@@ -88,14 +88,23 @@
               <Heart v-else fillColor="#1BD760" :size="40" />
             </button>
             <span v-if="track.liked">{{ track.liked.length }}</span>
+
+            <button  @click="handleSongRowClick" v-if="track.artist == currentUser.uid" class="boost boost-moving-gradient boost-moving-gradient--blue mx-5">
+        BOOST
+      </button>
+
           </div>
 
-          <div class="waveform" ref="externalWaveform"></div>
+          <div class="waveform my-2" ref="externalWaveform"></div>
 
-          <span class="block my-8">{{ track.views }} Plays</span>
+          <span class="block my-5">{{ track.views }} Plays</span>
 
+          <!-- Track Genre -->
+           <div class="genreList">
+            <div># {{track.genre}}</div>
+           </div>
           <!-- Track Socials -->
-           <div class="socials">
+           <div class="socials mt-5">
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Yt :size="30" /></a>
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Spotify :size="30" /></a>
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
@@ -206,6 +215,7 @@ import axios from 'axios';
 import HomeCard from '../components/HomeCard.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
 import WaveSurfer from 'wavesurfer.js'
+import { useModalStore } from '../stores/modalStore.js';
 
 const route = useRoute();
 const db = getFirestore();
@@ -234,6 +244,7 @@ const isTrackTime = ref('');
 const likedTracks = ref([]); // For potential liked tracks listing
 let wavesurfer = null;
 
+const modalStore = useModalStore();
 // Fetch the track data from Firestore and assign an "id" property
 const fetchTrackData = async (id) => {
   try {
@@ -488,6 +499,11 @@ const toggleLike = async () => {
   } catch (error) {
     console.error("Error updating like status:", error);
   }
+};
+
+const handleSongRowClick = () => {
+  const dataForBoostModal = { track: track, artist: artist };  // Example data
+  modalStore.toggleModal('boostModal', dataForBoostModal);  // Pass data to Boost modal
 };
 
 const playWave = () => {

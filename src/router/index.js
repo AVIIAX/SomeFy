@@ -3,7 +3,7 @@ import Auth from '../views/Auth.vue'
 import HomeView from '../views/HomeView.vue'
 import Profile from '../views/Profile.vue'
 import Track from '../views/Track.vue'
-import LibraryView from '../views/LibraryView.vue'
+import LibraryView from '../views/SearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

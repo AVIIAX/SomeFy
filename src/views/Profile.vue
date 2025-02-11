@@ -1,7 +1,7 @@
 <template>
   <div class="user-profile">
     <!-- Banner Section -->
-    <div class="profile-banner">
+    <div class="profile-banner" :style="`background-color: ${randColor.color};`">
       <div class="banner-content">
         <h1 class="user-name">
           {{ userName.length > 20 ? userName.slice(0, 20) + '...' : userName }}
@@ -159,6 +159,9 @@ import ModalComponent from '../components/UploadTrackModal.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
 import axios from 'axios';
 import { useModalStore } from '../stores/modalStore.js';
+import uniqolor from 'uniqolor';
+let randColor = ref('')
+randColor.value = uniqolor.random()
 
 const route = useRoute();
 const db = getFirestore();
@@ -292,6 +295,7 @@ watch(
     likedTracks.value = [];
     await fetchUserData(newID);
     unsubscribe = handleLiveUpdates(newID);
+    randColor.value = uniqolor.random()
   }
 );
 
@@ -390,7 +394,7 @@ const handleSongUploadClick = () => {
 .profile-banner {
   width: 100%;
   height: 180px;
-  background-color: #838383;
+  backsground-color: #838383;
   display: flex;
   align-items: flex-end;
   padding: 20px;

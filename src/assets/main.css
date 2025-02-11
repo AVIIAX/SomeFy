@@ -132,3 +132,27 @@
     width: 100%;
     hedight: fit-content;
   }
+
+  .genreList {
+    display: grid;
+  }
+
+  .genreList div {
+    background-color: rgba(209, 130, 255, 0.658);
+    width: fit-content;
+    padding: 0.7rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    border-radius: 40px;
+    letter-spacing: 2px;
+    text-align: center;
+    justify-content: center;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.5s;
+  }
+
+  .genreList div:hover {
+    transform: scale(1.02);
+    opacity: 70%;
+  }

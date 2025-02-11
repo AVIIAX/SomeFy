@@ -27,10 +27,13 @@
         />
 
         <div class="w-[100%] pr-[1rem]">
-          <RouterLink :to="`/track/${track.id}`" class="w-fit">
-          <div :style="{ position: 'relative' }" class="text-white pt-4 font-semibold text-[500%] track-name w-fit hover:underline">
+          <span class="my2 pt-4 text-gray-400">{{track.year || 'XXXX'}}</span>
+
+          <RouterLink :to="`/user/${track.artist}`">
+          <div :style="{ position: 'relative' }" class="text-white font-semibold text-[500%] track-name hover:underline w-fit">
             {{ trackName.length > 50 ? trackName.slice(0, 50) + '...' : trackName }}
-          </div></RouterLink>
+          </div>
+        </RouterLink>
 
           <RouterLink :to="`/user/${track.artist}`">
             <div class="text-gray-400 pt-1 pb-3 text-[30px] toArtist">{{ artist.name }}</div>
@@ -87,14 +90,19 @@
               <Heart v-else fillColor="#1BD760" :size="40" />
             </button>
             <span v-if="track.liked">{{ track.liked.length }}</span>
+
           </div>
 
-          <div class="waveform" ref="externalWaveform"></div>
+          <div class="waveform my-2" ref="externalWaveform"></div>
 
-          <span class="block my-8">{{ track.views }} Plays</span>
+          <span class="block my-5">{{ track.views }} Plays</span>
 
+          <!-- Track Genre -->
+           <div class="genreList">
+            <div># {{track.genre}}</div>
+           </div>
           <!-- Track Socials -->
-           <div class="socials">
+           <div class="socials mt-5">
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Yt :size="30" /></a>
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Spotify :size="30" /></a>
               <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
