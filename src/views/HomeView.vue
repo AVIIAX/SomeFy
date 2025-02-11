@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-    import BoostCard from '../components/BoostCard.vue';
+    import BoostCard from '../components/BoostCardBack.vue';
     import HomeCard from '../components/HomeCard.vue';
     import SongRow from '../components/SongRow.vue'
     import Test from '../components/Test.vue'

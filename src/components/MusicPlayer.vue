@@ -1,7 +1,7 @@
 <template>
   <div
   id="MusicPlayer"
-  v-if="wavesurfer"
+
   class="fixed flex items-center justify-between bottom-0 w-full z-50 h-fit bg-[#121212] border-t p-4"
   :style="{ borderTopColor: isOffline ? '#ff7575' : '#75ff83' }"
 >
@@ -13,12 +13,12 @@
               <div class="ml-4">
                   <RouterLink :to="`/track/${currentTrack.id}`">
                       <div class="text-[14px] text-white hover:underline cursor-pointer">
-                          {{ currentTrack.name }}
+                          {{ currentTrack?.name || "Loading" }}
                       </div>
                   </RouterLink>
                   <RouterLink :to="`/user/${currentTrack.artist}`">
                       <div class="text-[11px] text-gray-500 hover:underline hover:text-white cursor-pointer">
-                          {{ currentArtist.name }}
+                          {{ currentArtist?.name || "Loading" }}
                       </div>
                   </RouterLink>
               </div>
@@ -92,7 +92,7 @@
                       {{ isTrackTimeCurrent }}
                   </div>
                   
-                  <div class="waveform"></div>
+                  <div id="waveform"></div>
 
                   <div v-if="isTrackTimeTotal" class="text-white text-[12px] pl-2 ">
                       {{ isTrackTimeTotal }}

@@ -25,7 +25,7 @@ const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
 const isArtist = ref(false);
 const showRegister = ref(false); // Controls whether Register or Login is shown
-let auth;
+let auth = getAuth();
 const showModal = ref(false);
 const userID = ref("null");
 const userEmail = ref("null");
@@ -103,9 +103,11 @@ const handleSongUploadClick = () => {
 
 const logout = async () => {
   try {
+    console.log(auth);
+    
     await signOut(auth);
     isLoggedIn.value = false;
-    currentView.value = 'Register';
+    currentView.value = 'Login';
   } catch (error) {
     console.error('Logout error:', error);
   }

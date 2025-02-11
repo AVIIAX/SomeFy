@@ -25,7 +25,7 @@ export const useSongStore = defineStore('song', {
 
 try {
   this.wavesurfer = WaveSurfer.create({
-        container: '.waveform',
+        container: '#waveform',
         waveColor: '#ffffff8f',
         progressColor: '#3295e2e8',
         barWidth: 1,

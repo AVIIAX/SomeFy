@@ -47,7 +47,7 @@
             gap: '0.5rem'
           }">
             <svg
-              v-if="(!isPlaying && currentTrack.id !== track.id) || currentTrack.id !== track.id"
+              v-if="!currentTrack || (!isPlaying && (currentTrack.id !== track.id)) || (currentTrack.id !== track.id)"
               xmlns="http://www.w3.org/2000/svg"
               :width="60"
               :height="60"
@@ -59,7 +59,7 @@
             </svg>
 
             <svg
-              v-if="!isPlaying && currentTrack.id == track.id"
+              v-if="!isPlaying && (currentTrack && currentTrack.id == track.id)"
               xmlns="http://www.w3.org/2000/svg"
               :width="60"
               :height="60"
@@ -71,7 +71,7 @@
             </svg>
 
             <svg
-              v-if="isPlaying && currentTrack.id == track.id"
+              v-if="isPlaying && (currentTrack && currentTrack.id == track.id)"
               xmlns="http://www.w3.org/2000/svg"
               :width="60"
               :height="60"
@@ -90,7 +90,7 @@
             <span v-if="track.liked">{{ track.liked.length }}</span>
           </div>
 
-          <div id="waveform" ref="externalWaveform"></div>
+          <div class="waveform" ref="externalWaveform"></div>
 
           <span class="block my-8">{{ track.views }} Plays</span>
 

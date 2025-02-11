@@ -63,6 +63,9 @@ onMounted(async () => {
 </script>
 
 <template>
+
+
+
   <div
     class="card"
     @mouseenter="isHover = true"
@@ -75,13 +78,14 @@ onMounted(async () => {
         :src="track.image"
         :style="{ borderRadius: '15px', objectFit: 'cover'}"
       />
+      
       <div
         v-if="isHover"
-        class="play-pause-container"
+        class="play-pause-container z-99"
       >
 
       <svg
-        v-if="!isPlaying || currentTrack.name !== track.name"
+        v-if="!currentTrack || (!isPlaying && (currentTrack.id !== track.id)) || (currentTrack.id !== track.id)"
         xmlns="http://www.w3.org/2000/svg"
         :width="60"
         :height="60"
@@ -91,14 +95,28 @@ onMounted(async () => {
       >
         <path :d="mdilPlay" />
       </svg>
-        <svg
-      v-else  
+
+      <svg
+        v-if="!isPlaying && (currentTrack && currentTrack.id == track.id)"
         xmlns="http://www.w3.org/2000/svg"
         :width="60"
         :height="60"
         viewBox="0 0 24 24"
         fill="#FFFFFF"
-        @click="useSong.playOrPauseSong()"
+        @click="useSong.playOrPauseThisSong(currentTrack, playList)"
+      >
+        <path :d="mdilPlay" />
+      </svg>
+
+
+        <svg
+      v-if="isPlaying && (currentTrack && currentTrack.id == track.id)"
+        xmlns="http://www.w3.org/2000/svg"
+        :width="60"
+        :height="60"
+        viewBox="0 0 24 24"
+        fill="#FFFFFF"
+        @click="useSong.playOrPauseThisSong(currentTrack, playList)"
       >
         <path :d="mdilPause" />
       </svg>
@@ -106,15 +124,16 @@ onMounted(async () => {
       </div>
     </div>
     <RouterLink :to="`/track/${track.id}`">
-    <div class="track-name">{{ track.name }}</div>
+    <div class="track-name hover:underline w-fit">{{ track.name }}</div>
   </RouterLink>
     <RouterLink :to="`/user/${track.artist}`">
-      <div class="artist-name">{{ artist.name }}</div>
+      <div class="artist-name hover:underline w-fit">{{ artist.name }}</div>
     </RouterLink>
     <div v-if="isTrackTime" class="track-time">{{ isTrackTime }}</div>
   </div>
-</template>
 
+  
+</template>
 
 
 <style scoped>
@@ -162,10 +181,6 @@ onMounted(async () => {
   padding-top: 0.25rem;
   padding-bottom: 0.75rem;
   font-size: 14px;
-}
-
-.artist-name:hover {
-  text-decoration: underline;
 }
 
 .track-time {

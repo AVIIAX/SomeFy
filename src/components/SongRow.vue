@@ -12,7 +12,7 @@ import { storeToRefs } from 'pinia';
 import { getAuth } from "firebase/auth";
 
 const useSong = useSongStore();
-const { isPlaying, currentTrack } = storeToRefs(useSong);
+const { isPlaying, currentTrack, currentTrackID } = storeToRefs(useSong);
 const modalStore = useModalStore();
 const currentUser = getAuth().currentUser;
 let isHover = ref(false);
@@ -155,10 +155,21 @@ onMounted(() => {
   class="absolute inset-0 opacity-20 backdrop-blur-md rounded-md"
   :style="{
     zIndex: '-1',
+    display: 'flex',
     backgroundColor: '#0d0d0d',
     outline: 'none'
   }"
-></div>
+>
+<img v-if="track.image" :src="track.image" alt=""
+:style="{
+      width: '100%',
+      objectFit: 'cover',
+      filter: 'blur(4px)',
+    webkitFilter: 'blur(4px)',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+}"></div>
 
 
     <!-- Glass Effect Overlay -->
@@ -178,19 +189,20 @@ onMounted(() => {
     <div class="flex items-center w-full py-1.5 relative z-10 px-4">
       <div v-if="isHover" class="w-[40px] ml-[14px] mr-[6px] cursor-pointer">
         <Play
-                    v-if="!isPlaying"
+                    v-if="!currentTrack || (!isPlaying && (currentTrack.id !== track.id)) || (currentTrack.id !== track.id)"
                     fillColor="#FFFFFF"
                     :size="25"
                     @click="useSong.loadSong(track, trackIDs)"
                 />
                 <Play
-                    v-else-if="isPlaying && currentTrack.id !== track.id"
+                    v-if="!isPlaying && (currentTrack && currentTrack.id == track.id)"
                     fillColor="#FFFFFF"
                     :size="25"
-                    @click="useSong.playOrPauseThisSong(track, trackIDs)"
+                    @click="useSong.playOrPauseThisSong(currentTrack, trackIDs)"
                 />
 
-                <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()"/>
+                <Pause  v-if="isPlaying && (currentTrack && currentTrack.id == track.id)" fillColor="#FFFFFF" :size="25" 
+                @click="useSong.playOrPauseThisSong(currentTrack, trackIDs)"/>
       </div>
       
       
@@ -204,12 +216,12 @@ onMounted(() => {
       <div>
         <div
           :class="{'text-green-500': currentTrack && currentTrack.name === track.name}"
-          class="text-white font-semibold"
+          class="text-white font-semibold text-left hover:underline"
         >
           {{ track.name }}
         </div>
         <RouterLink :to="`/user/${track.artist}`">
-        <div class="text-sm font-semibold text-gray-400">{{ trackArtist.name }}</div>
+        <div class="text-sm font-semibold text-gray-400 text-left hover:underline">{{ trackArtist.name }}</div>
       </RouterLink>
       </div>
     </RouterLink>
