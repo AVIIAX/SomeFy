@@ -29,7 +29,7 @@
         <div class="w-[100%] pr-[1rem]">
           <span class="my2 pt-4 text-gray-400">{{track.year || 'XXXX'}}</span>
 
-          <RouterLink :to="`/user/${track.artist}`">
+          <RouterLink :to="`/track/${track.id}`">
           <div :style="{ position: 'relative' }" class="text-white font-semibold text-[500%] track-name hover:underline w-fit">
             {{ trackName.length > 50 ? trackName.slice(0, 50) + '...' : trackName }}
           </div>
