@@ -257,7 +257,7 @@ const fetchTrackData = async (id) => {
       trackName.value = trackData.name;
       trackAbout.value = trackData.description || 'No description available';
       isAuthUser.value = currentUser && currentUser.uid === trackData.artist;
-      trackLiked.value = trackData.liked.includes(currentUser.uid);
+      trackLiked.value = trackData.liked?.includes(currentUser.uid);
       
       // Fetch artist/user data
       const userRef = doc(db, 'user', trackData.artist);

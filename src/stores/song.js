@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { db } from '../main'; // Ensure db is imported from your main.js
+import { db } from '../firebase'; // Ensure db is imported from your main.js
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import WaveSurfer from 'wavesurfer.js';

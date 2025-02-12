@@ -1,20 +1,23 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-    import BoostCard from '../components/BoostCard.vue';
-    import HomeCard from '../components/HomeCard.vue';
-    import SongRow from '../components/SongRow.vue'
-    import Test from '../components/Test.vue'
+import { getRandomBoostedTrackId } from "../utils/boostedtracks"; 
+import BoostCard from '../components/BoostCard.vue';
+import HomeCard from '../components/HomeCard.vue';
+import SongRow from '../components/SongRow.vue'
+import Test from '../components/Test.vue'
 import Play from 'vue-material-design-icons/Play.vue';
 import Pause from 'vue-material-design-icons/Pause.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
 import artist from '../artist.json'
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
 
+let auth = getAuth();
 const db = getFirestore();
 const topHits = ref([]);
 const boosted = ref([]);
@@ -22,6 +25,7 @@ const topBoost = ref("");
 
 const useSong = useSongStore()
 const { isPlaying, currentTrack } = storeToRefs(useSong);
+const randBoost = ref(null)
 
 const getTracks = async (playList) => {
   try {
@@ -44,8 +48,38 @@ onMounted(async () => {
   topHits.value = await getTracks('topHits'); 
   boosted.value = await getTracks('boosted');
   topBoost.value = '53LnKhGA495Z3m6VdXMM';
-});
 
+  
+});
+// Listen for authentication state changes
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // Check if we have a stored boosted track ID for this user.
+    const storedUserUid = localStorage.getItem("boostedTrackUser");
+    const storedBoostId = localStorage.getItem("boostedTrackId");
+
+    if (storedUserUid === user.uid && storedBoostId) {
+      // Use the stored boosted track id if it exists and the user hasn't changed.
+      randBoost.value = storedBoostId;
+      console.log("Using cached boosted track:", storedBoostId);
+    } else {
+      // Otherwise, fetch a new random boosted track id.
+      const boostedTrackId = await getRandomBoostedTrackId();
+      if (boostedTrackId) {
+        randBoost.value = boostedTrackId;
+        // Cache the current user's UID and the boosted track id.
+        localStorage.setItem("boostedTrackUser", user.uid);
+        localStorage.setItem("boostedTrackId", boostedTrackId);
+        console.log("New boosted track selected:", boostedTrackId);
+      }
+    }
+  } else {
+    // User logged out: clear the stored values.
+    localStorage.removeItem("boostedTrackUser");
+    localStorage.removeItem("boostedTrackId");
+    randBoost.value = null;
+  }
+});
 
 </script>
 
@@ -56,7 +90,7 @@ onMounted(async () => {
     top: '60px',
   }">
   
-      <BoostCard trackID="mBmee0jelL3Iw35kE0vu" :playList="boosted" />
+      <BoostCard v-if="randBoost" :trackID="randBoost" :playList="boosted" />
 
   </div>
 

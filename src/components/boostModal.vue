@@ -54,11 +54,14 @@ const boostComplete = async (requiredCredits) => {
   try {
     const userRef = doc(db, "user", modalData?.track.artist);
     const trackRef = doc(db, "track", modalData?.track.id);
+    const boostDocRef = doc(db, "playlists", "boost");
+
     const boostExpiration = Date.now() + 2 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
 
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userRef);
       const trackDoc = await transaction.get(trackRef);
+      const boostDoc = await transaction.get(boostDocRef);
 
       if (!userDoc.exists() || !trackDoc.exists()) {
         throw new Error("Document does not exist!");
@@ -66,6 +69,7 @@ const boostComplete = async (requiredCredits) => {
 
       const userData = userDoc.data();
       const trackData = trackDoc.data();
+      const boostData = boostDoc.data();
 
       if (userData.credits < requiredCredits) {
         throw new Error("Not enough credits!");
@@ -78,6 +82,10 @@ const boostComplete = async (requiredCredits) => {
 
       transaction.update(userRef, {
         credits: userData.credits - requiredCredits,
+      });
+
+      transaction.update(boostDocRef, {
+        [trackData.id]: { 'level': (trackData.boost || 0) + 1},
       });
     });
 
