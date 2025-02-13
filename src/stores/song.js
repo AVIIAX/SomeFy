@@ -11,6 +11,22 @@ let eqFilters = [];
 let eqContext = null;
 let eqUpdateInterval = null;
 
+// NEW: Global variables to hold the last node of the EQ chain and a convolver for reverb
+let eqChainOutput = null;
+let reverbNode = null;
+
+// NEW: Helper to load an impulse response for the reverb effect
+async function loadImpulseResponse(url, context) {
+  try {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    return await context.decodeAudioData(arrayBuffer);
+  } catch (error) {
+    console.error("Error loading impulse response:", error);
+    return null;
+  }
+}
+
 function attachEqFilters(ws) {
   if (!ws) return;
   if (!eqContext) {
@@ -42,6 +58,11 @@ function attachEqFilters(ws) {
     prev.connect(curr);
     return curr;
   }, mediaNode);
+  
+  // Save chain's last node for further effects processing
+  eqChainOutput = chain;
+  
+  // Initially connect chain to destination
   chain.connect(eqContext.destination);
   
   // Poll localStorage for any changes in EQ settings and update filters in realtime
@@ -68,6 +89,11 @@ export const useSongStore = defineStore('song', {
     currentArtist: null,
     trackQueue: [], // Queue of track details
     currentIndex: -1, // Tracks the index of the current track in the queue
+    // NEW: Effect state parameters
+    isSlowed: false,
+    isReverbed: false,
+    slowedRate: 0.8, // Customize slowed playback rate (e.g., 0.8 means 80% speed)
+    reverbImpulseUrl: '../reverb.wav', // Customize with your impulse response URL
   }),
 
   actions: {
@@ -77,41 +103,46 @@ export const useSongStore = defineStore('song', {
         this.wavesurfer.destroy();
       }
 
-try {
-  this.wavesurfer = WaveSurfer.create({
-        container: '#waveform',
-        waveColor: '#ffffff8f',
-        progressColor: '#3295e2e8',
-        barWidth: 1,
-        barGap: 3,
-        barAlign: 'center',
-        barHeight: 0.3,
-        height: 10,
-        responsive: true,
-        hideScrollbar: true,
-        barRadius: 4,
-        normalize: true,
-      });
+      try {
+        this.wavesurfer = WaveSurfer.create({
+          container: '#waveform',
+          waveColor: '#ffffff8f',
+          progressColor: '#3295e2e8',
+          barWidth: 1,
+          barGap: 3,
+          barAlign: 'center',
+          barHeight: 0.3,
+          height: 10,
+          responsive: true,
+          hideScrollbar: true,
+          barRadius: 4,
+          normalize: true,
+        });
 
-      this.wavesurfer.load(url);
+        this.wavesurfer.load(url);
 
-      this.wavesurfer.on('ready', () => {
-        console.log('WaveSurfer is ready');
-        attachEqFilters(this.wavesurfer); // Route audio through EQ filters from localStorage
-      });
+        this.wavesurfer.on('ready', async () => {
+          console.log('WaveSurfer is ready');
+          attachEqFilters(this.wavesurfer); // Route audio through EQ filters from localStorage
+          
+          // Apply reverb effect if toggled on
+          if (this.isReverbed) {
+            await this.addReverbEffect();
+          }
+          // Apply slowed effect if toggled on
+          this.updatePlaybackRate();
+        });
 
-      this.wavesurfer.on('interaction', () => {
-        console.log('WaveSurfer interaction triggered');
-      });
+        this.wavesurfer.on('interaction', () => {
+          console.log('WaveSurfer interaction triggered');
+        });
 
-      this.wavesurfer.on('finish', () => {
-        console.log('WaveSurfer finished playing');
-      });
-} catch (error) {
-  console.log(error);
-  
-}
-      
+        this.wavesurfer.on('finish', () => {
+          console.log('WaveSurfer finished playing');
+        });
+      } catch (error) {
+        console.log(error);
+      }
     },
 
     async loadSong(track, trackIDs = null, container = ".waveform") {
@@ -157,18 +188,15 @@ try {
       }
       this.currentArtist = userDoc.data();
 
-
       this.createWS(container, track.url);
 
       setTimeout(() => {
         this.isPlaying = true;
+        
         this.wavesurfer.play();
       }, 200);
       
-
       await this.updateTrackViews(track.id);
-
-      
     },
 
     async playOrPauseSong() {
@@ -193,9 +221,8 @@ try {
       }
     
       this.playOrPauseSong();
-    }
-,    
-
+    },
+    
     async nextSong() {
       if (this.trackQueue.length === 0 || this.currentIndex >= this.trackQueue.length - 1) {
         console.log('No next track available');
@@ -301,6 +328,103 @@ try {
         }
       } catch (error) {
         console.error('Error liking/unliking the song:', error);
+      }
+    },
+
+    // ================================
+    // New Effect Methods
+    // ================================
+
+    // Toggle the slowed effect. When enabled, set the playback rate to the customized slowed rate.
+    toggleSlowEffect() {
+      this.isSlowed = !this.isSlowed;
+      this.updatePlaybackRate();
+    },
+
+    // Helper: update playback rate based on the isSlowed flag.
+    updatePlaybackRate() {
+      if (this.wavesurfer) {
+        const rate = this.isSlowed ? this.slowedRate : 1;
+        this.wavesurfer.setPlaybackRate(rate);
+        console.log(`Playback rate set to ${rate}`);
+      }
+    },
+
+    // Toggle the reverb effect.
+    async toggleReverbEffect() {
+      this.isReverbed = !this.isReverbed;
+      if (this.isReverbed) {
+        await this.addReverbEffect();
+      } else {
+        this.removeReverbEffect();
+      }
+    },
+
+    async toggleSlowedReverbEffect() {
+      this.isReverbed = !this.isReverbed;
+      this.isSlowed = !this.isSlowed;
+      if (this.isReverbed) {
+        await this.addReverbEffect();
+      } else {
+        this.removeReverbEffect();
+      }
+      this.updatePlaybackRate();
+    },
+    // Add reverb effect by inserting a Convolver node between the EQ chain and the destination.
+    async addReverbEffect() {
+      if (!eqContext || !eqChainOutput) {
+        console.error("Audio context or EQ chain not initialized");
+        return;
+      }
+      try {
+        // Disconnect the current connection from eqChainOutput to destination.
+        try {
+          eqChainOutput.disconnect(eqContext.destination);
+        } catch (e) {
+          // It might not be connected—ignore error.
+        }
+        // Create the convolver node if it doesn't exist.
+        if (!reverbNode) {
+          reverbNode = eqContext.createConvolver();
+          const impulseBuffer = await loadImpulseResponse(this.reverbImpulseUrl, eqContext);
+          if (impulseBuffer) {
+            reverbNode.buffer = impulseBuffer;
+          } else {
+            console.error("Failed to load impulse response; reverb effect not applied");
+            // Reconnect directly if impulse loading fails.
+            eqChainOutput.connect(eqContext.destination);
+            return;
+          }
+        }
+        // Connect the chain through the reverb node to the destination.
+        eqChainOutput.connect(reverbNode);
+        reverbNode.connect(eqContext.destination);
+        console.log("Reverb effect added");
+      } catch (error) {
+        console.error("Error adding reverb effect:", error);
+      }
+    },
+
+    // Remove the reverb effect by bypassing the convolver node.
+    removeReverbEffect() {
+      if (!eqContext || !eqChainOutput) {
+        console.error("Audio context or EQ chain not initialized");
+        return;
+      }
+      try {
+        if (reverbNode) {
+          try {
+            eqChainOutput.disconnect(reverbNode);
+          } catch (e) {}
+          try {
+            reverbNode.disconnect(eqContext.destination);
+          } catch (e) {}
+        }
+        // Reconnect the EQ chain directly to the destination.
+        eqChainOutput.connect(eqContext.destination);
+        console.log("Reverb effect removed");
+      } catch (error) {
+        console.error("Error removing reverb effect:", error);
       }
     },
   },

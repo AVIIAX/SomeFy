@@ -87,6 +87,11 @@
                           <path :d="mdilSkipNext" />
                       </svg>
                   </button>
+
+                  <button class="mx-2 text-white" @click="useSong.toggleSlowedReverbEffect()">
+                      SLOWEDREVERBED!!
+                  </button>
+
               </div>
               
               <div class="flex items-center h-fit w-[100%]">
