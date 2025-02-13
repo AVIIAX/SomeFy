@@ -4,6 +4,59 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import WaveSurfer from 'wavesurfer.js';
 
+// Global EQ configuration (adjust bands as needed)
+const eqBands = [32, 64, 128, 256, 512, 1000, 2000];
+let eqFilters = [];
+let eqContext = null;
+let eqUpdateInterval = null;
+
+function attachEqFilters(ws) {
+  if (!ws) return;
+  if (!eqContext) {
+    eqContext = new AudioContext();
+  }
+  if (eqContext.state === 'suspended') {
+    eqContext.resume();
+  }
+  const audio = ws.getMediaElement();
+  if (!audio) {
+    console.error("No media element found in wavesurfer");
+    return;
+  }
+  const mediaNode = eqContext.createMediaElementSource(audio);
+  const savedSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
+  
+  // Create an array of filters using stored settings
+  eqFilters = eqBands.map((band) => {
+    const filter = eqContext.createBiquadFilter();
+    filter.type = band <= 32 ? 'lowshelf' : band >= 16000 ? 'highshelf' : 'peaking';
+    filter.frequency.value = band;
+    filter.Q.value = 1;
+    filter.gain.value = savedSettings[band] || 0;
+    return filter;
+  });
+  
+  // Chain filters: mediaNode -> filter1 -> filter2 -> ... -> destination
+  const chain = eqFilters.reduce((prev, curr) => {
+    prev.connect(curr);
+    return curr;
+  }, mediaNode);
+  chain.connect(eqContext.destination);
+  
+  // Poll localStorage for any changes in EQ settings and update filters in realtime
+  if (eqUpdateInterval) clearInterval(eqUpdateInterval);
+  eqUpdateInterval = setInterval(() => {
+    const currentSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
+    eqFilters.forEach((filter) => {
+      const band = filter.frequency.value;
+      const newGain = currentSettings[band] || 0;
+      if (filter.gain.value !== newGain) {
+        filter.gain.value = newGain;
+      }
+    });
+  }, 100); // adjust interval (in ms) as needed
+}
+
 export const useSongStore = defineStore('song', {
   state: () => ({
     isPlaying: false,
@@ -32,7 +85,7 @@ try {
         barGap: 3,
         barAlign: 'center',
         barHeight: 0.3,
-        height: 20,
+        height: 10,
         responsive: true,
         hideScrollbar: true,
         barRadius: 4,
@@ -43,6 +96,7 @@ try {
 
       this.wavesurfer.on('ready', () => {
         console.log('WaveSurfer is ready');
+        attachEqFilters(this.wavesurfer); // Route audio through EQ filters from localStorage
       });
 
       this.wavesurfer.on('interaction', () => {

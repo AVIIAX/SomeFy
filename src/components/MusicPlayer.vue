@@ -2,7 +2,7 @@
   <div
   id="MusicPlayer"
 
-  class="fixed flex items-center justify-between bottom-0 w-full z-50 h-fit bg-[#121212] border-t p-4"
+  class="fixed flex items-center justify-between bottom-0 w-full z-50 h-[90px] bg-[#121212] border-t p-4"
   :style="{ borderTopColor: isOffline ? '#ff7575' : '#75ff83' }"
 >
       <div class="flex items-center w-1/4">
@@ -38,21 +38,21 @@
                       @click="useSong.likeOrUnlikeSong(currentTrack.id)"
                   />
               </button>
-              <PictureInPictureBottomRight @click="isOpenEq = !isOpenEq" :class="isOpenEq ? 'text-[#282828]' : 'bg-black'" class="ml-4" fillColor="#FFFFFF" :size="18" />
+              <Equalizer @click="isOpenEq = !isOpenEq" :class="isOpenEq ? 'text-[#282828]' : 'bg-black'" class="ml-4 cursor-pointer" :fillColor="isOpenEq ? '#ffffff96': '#FFFFFF'" :size="18" />
 
               
           </div>
       </div>
 
-      <div class="max-w-[35%] mx-auto w-2/4 mb-3">
+      <div class="max-w-[35%] mx-auto w-2/4 ">
           <div class="items-center justify-center" :style="{
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem',
+            gap: '0.5rem',
           }">
               <div class="buttons flex items-center justify-center h-[30px]">
                   <button class="mx-2" @click="useSong.prevSong()">
-                      <svg xmlns="http://www.w3.org/2000/svg" :width="25" :height="25" viewBox="0 0 24 24" fill="#FFFFFF">
+                      <svg xmlns="http://www.w3.org/2000/svg" :width="20" :height="20" viewBox="0 0 24 24" fill="#FFFFFF">
                           <path :d="mdilSkipPrevious" />
                       </svg>
                   </button>
@@ -64,8 +64,8 @@
                       <svg
                           v-if="!isPlaying"
                           xmlns="http://www.w3.org/2000/svg"
-                          :width="25"
-                          :height="25"
+                          :width="20"
+                          :height="20"
                           viewBox="0 0 24 24"
                           fill="#FFFFFF"
                       >
@@ -74,8 +74,8 @@
                       <svg
                           v-else
                           xmlns="http://www.w3.org/2000/svg"
-                          :width="25"
-                          :height="25"
+                          :width="20"
+                          :height="20"
                           viewBox="0 0 24 24"
                           fill="#FFFFFF"
                       >
@@ -83,7 +83,7 @@
                       </svg>
                   </button>
                   <button class="mx-2" @click="useSong.nextSong()">
-                      <svg xmlns="http://www.w3.org/2000/svg" :width="25" :height="25" viewBox="0 0 24 24" fill="#FFFFFF">
+                      <svg xmlns="http://www.w3.org/2000/svg" :width="20" :height="20" viewBox="0 0 24 24" fill="#FFFFFF">
                           <path :d="mdilSkipNext" />
                       </svg>
                   </button>
@@ -108,17 +108,17 @@
       </div>
   </div>
   
-<Equalizer v-if="isOpenEq" />
+<EqualizerCom v-if="isOpenEq" />
 
 </template>
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import MusicPlayerVolume from '../components/MusicPlayerVolume.vue';
-import Equalizer from '../components/Equalizer.vue';
+import EqualizerCom from '../components/Equalizer.vue';
 import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
-import PictureInPictureBottomRight from 'vue-material-design-icons/PictureInPictureBottomRight.vue';
+import Equalizer from 'vue-material-design-icons/Equalizer.vue';
 import { mdilPlay, mdilPause, mdilSkipPrevious, mdilSkipNext } from '@mdi/light-js';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
@@ -208,9 +208,6 @@ const formatTime = (seconds) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-const openEq = () => {
-  isOpenEq.value = !isOpenEq.value; // Properly toggle the ref
-};
 
 
 
