@@ -247,7 +247,7 @@ body {
 }
 /* width */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 7px;
   border-radius: 20px;
 }
 
@@ -258,12 +258,12 @@ body {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #ffffff;border-radius: 20px;
+  background: #ffffff86;border-radius: 20px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffffff;border-radius: 20px;
+  background: #ffffffd7;border-radius: 20px;
 }
 
 .happyBtn {

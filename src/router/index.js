@@ -3,6 +3,7 @@ import Auth from '../views/Auth.vue'
 import HomeView from '../views/HomeView.vue'
 import Profile from '../views/Profile.vue'
 import Track from '../views/Track.vue'
+import ShopView from '../views/ShopView.vue'
 import LibraryView from '../views/SearchView.vue'
 
 const router = createRouter({
@@ -11,6 +12,10 @@ const router = createRouter({
     {
       path: '/',
       component: HomeView
+    },
+    {
+      path: '/Shop',
+      component: ShopView
     },
     {
       path: '/user/:userID',  // Dynamic route to match userID

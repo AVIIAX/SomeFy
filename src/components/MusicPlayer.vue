@@ -8,7 +8,7 @@
       <div class="flex items-center w-1/4">
           <div class="flex items-center ml-4">
               <RouterLink :to="`/track/${currentTrack.id}`">
-                  <img class="rounded-sm shadow-2xl" width="55" :src="currentTrack.image" />
+                  <img class="rounded-sm shadow-2xl max-w-none" width="55" :src="currentTrack.image" />
               </RouterLink>
               <div class="ml-4">
                   <RouterLink :to="`/track/${currentTrack.id}`">
@@ -118,7 +118,7 @@ import MusicPlayerVolume from '../components/MusicPlayerVolume.vue';
 import EqualizerCom from '../components/Equalizer.vue';
 import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
-import Equalizer from 'vue-material-design-icons/Equalizer.vue';
+import Equalizer from 'vue-material-design-icons/EqualizerOutline.vue';
 import { mdilPlay, mdilPause, mdilSkipPrevious, mdilSkipNext } from '@mdi/light-js';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';

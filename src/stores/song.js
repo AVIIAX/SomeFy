@@ -3,6 +3,7 @@ import { db } from '../firebase'; // Ensure db is imported from your main.js
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import WaveSurfer from 'wavesurfer.js';
+import { getRandomBoostedTrackId } from "../utils/boostedtracks.js";
 
 // Global EQ configuration (adjust bands as needed)
 const eqBands = [32, 64, 128, 256, 512, 1000, 2000];
@@ -133,6 +134,7 @@ try {
           );
 
           this.trackQueue = tracks.filter((track) => track);
+          this.trackQueue.unshift(getRandomBoostedTrackId());
           console.log('Track queue set:', this.trackQueue);
         } catch (error) {
           console.error('Error fetching track data:', error);
