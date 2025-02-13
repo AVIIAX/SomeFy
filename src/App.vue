@@ -236,7 +236,7 @@ export default {
         <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
         </teleport>
 
-        <MusicPlayer  v-if="currentTrack"/>
+        <MusicPlayer v-if="currentTrack"/>
     </div>
 
     

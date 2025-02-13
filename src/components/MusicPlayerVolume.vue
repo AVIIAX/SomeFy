@@ -194,12 +194,12 @@ function getPointerAngle(e) {
 <style>
 /* Additional styling if needed */
 #vol-knob {
-    transform: scale(0.6);
+    transform: scale(0.5);
     transition: all 0.5s;
 }
 
 #vol-knob:hover {
-    transform: scale(0.65);
+    transform: scale(0.55);
 }
 
 </style>

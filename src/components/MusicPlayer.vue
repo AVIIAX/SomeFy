@@ -2,7 +2,7 @@
   <div
   id="MusicPlayer"
 
-  class="fixed flex items-center justify-between bottom-0 w-full z-50 h-[90px] bg-[#121212] border-t p-4"
+  class="fixed flex items-center justify-between bottom-0 w-full z-49 h-[90px] bg-[#121212] border-t p-4"
   :style="{ borderTopColor: isOffline ? '#ff7575' : '#75ff83' }"
 >
       <div class="flex items-center w-1/4">
