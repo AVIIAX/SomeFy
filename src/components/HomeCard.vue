@@ -5,7 +5,6 @@ import { mdilPause } from '@mdi/light-js';
 import { getFirestore, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
-
 const db = getFirestore();
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
@@ -132,9 +131,7 @@ onMounted(async () => {
     <div v-if="isTrackTime" class="track-time">{{ isTrackTime }}</div>
   </div>
 
-  
 </template>
-
 
 <style scoped>
 .card {

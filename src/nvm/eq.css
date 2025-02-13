@@ -1,0 +1,115 @@
+
+.eq:before, .eq:after {
+  content: "";
+  background-color: transparent;
+  position: absolute;
+  z-index: -1;
+  box-shadow: 0 20px 20px rgba(0, 0, 0, 0.3);
+  top: 100%;
+  bottom: -5px;
+  left: 8%;
+  right: 8%;
+  border-radius: 50%;
+}
+.eq:after {
+  box-shadow: 0 25px 20px rgba(0, 0, 0, 0.6);
+  left: 12%;
+  right: 12%;
+}
+
+.eq main {
+  position: relative;
+  display: block;
+  padding: 2rem;
+}
+
+
+.eq main .sliders {
+  position: relative;
+  display: inline-block;
+}
+.eq main .sliders .range-slider {
+  display: inline-block;
+  width: 40px;
+  position: relative;
+  height: 300px;
+  float: left;
+}
+
+.eq main .sliders .range-slider::after {
+  position: absolute;
+  bottom: -24px;
+  left: calc(50% - 2em);
+  font-size: 80%;
+  color: #8e8e9b;
+  content: '32';
+  width: 4em;
+  text-align: center;
+}
+.eq main .sliders .range-slider:nth-child(2)::after {
+  content: '32';
+}
+.eq main .sliders .range-slider:nth-child(3)::after {
+  content: '64';
+}
+.eq main .sliders .range-slider:nth-child(4)::after {
+  content: '128';
+}
+.eq main .sliders .range-slider:nth-child(5)::after {
+  content: '256';
+}
+.eq main .sliders .range-slider:nth-child(6)::after {
+  content: '512';
+}
+.eq main .sliders .range-slider:nth-child(7)::after {
+  content: '1K';
+}
+.eq main .sliders .range-slider:nth-child(8)::after {
+  content: '2K';
+}
+.eq main .sliders .range-slider__thumb {
+  opacity: 1;
+  position: absolute;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  background-color: white;
+  color: #8376ff;
+  text-align: center;
+  font-size: 40%;
+  box-shadow: 0 0 2px #373641;
+  border-radius: 50%;
+  pointer-events: none;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.eq main .sliders .range-slider__bar {
+  left: 18px;
+  bottom: 0;
+  position: absolute;
+  background: linear-gradient(#9791b8, #8376ff);
+  pointer-events: none;
+  width: 4px;
+  border-radius: 10px;
+  opacity: 1;
+}
+
+.eq-reset-button {
+  color: beige;
+  font-family: monospace;
+  letter-spacing: 1px;
+  margin-left: 15px;
+  font-size: 15px;
+}
+
+.range-slider::before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 4px;
+  left: 50%;
+  transform: translate(-50%);
+  background-color: rgba(160, 160, 160, 0.76);
+}

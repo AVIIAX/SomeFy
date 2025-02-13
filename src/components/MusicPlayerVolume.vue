@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 import VolumeMute from 'vue-material-design-icons/VolumeMute.vue';
 import VolumeHigh from 'vue-material-design-icons/VolumeHigh.vue';
@@ -37,6 +37,7 @@ const toggleMute = () => {
         wavesurfer.value.setVolume(isMuted.value ? 0 : vol.value / 100);
     }
 }
+
 </script>
 
 <template>
@@ -75,6 +76,7 @@ const toggleMute = () => {
         <!-- Full Volume Track -->
         <div class="absolute h-[4px] z-[-0] mt-[6px] inset-y-0 left-0 w-full bg-gray-500 rounded-full" />
     </div>
+
 </template>
 
 <style>
@@ -86,3 +88,4 @@ const toggleMute = () => {
   height: 0;
 }
 </style>
+

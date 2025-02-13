@@ -20,6 +20,7 @@ import { useSongStore } from './stores/song';
 import { useModalStore } from './stores/modalStore.js';
 import { storeToRefs } from 'pinia';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot} from "firebase/firestore";
+import draggable from './utils/DraggableDirective.js';
 
 const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
@@ -121,6 +122,13 @@ watch(currentTrack, (newTrack) => {
 
 let openMenu = ref(false);
 </script>
+<script>
+export default {
+  directives: {
+    draggable, // Register the custom directive
+  },
+};
+</script>
 <template> 
     <!-- NOT LOGGED IN -->
     <div v-if="!isLoggedIn" class="fixed left-0 top-0 w-full h-full bg-gradient-to-b from-[#1C1C1C] to-black flex items-center justify-center">
@@ -211,7 +219,7 @@ let openMenu = ref(false);
             <RouterView/>
             <div class="mb-[100px]"></div>
         </div>
-        <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black" v-if="isArtist" :style="{ 
+        <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black draggable-box" v-if="isArtist" :style="{ 
         backgroundColor: '#3481c9', 
         color: 'Black', 
         padding: '1rem', 
@@ -228,8 +236,10 @@ let openMenu = ref(false);
         <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
         </teleport>
 
-        <MusicPlayer v-if="currentTrack"/>
+        <MusicPlayer  v-if="currentTrack"/>
     </div>
+
+    
 </template>
 <style>
 body {

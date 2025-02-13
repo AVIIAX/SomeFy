@@ -38,7 +38,9 @@
                       @click="useSong.likeOrUnlikeSong(currentTrack.id)"
                   />
               </button>
-              <PictureInPictureBottomRight class="ml-4" fillColor="#FFFFFF" :size="18" />
+              <PictureInPictureBottomRight @click="isOpenEq = !isOpenEq" :class="isOpenEq ? 'text-[#282828]' : 'bg-black'" class="ml-4" fillColor="#FFFFFF" :size="18" />
+
+              
           </div>
       </div>
 
@@ -105,11 +107,15 @@
           <MusicPlayerVolume />
       </div>
   </div>
+  
+<Equalizer v-if="isOpenEq" />
+
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import MusicPlayerVolume from '../components/MusicPlayerVolume.vue';
+import Equalizer from '../components/Equalizer.vue';
 import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import PictureInPictureBottomRight from 'vue-material-design-icons/PictureInPictureBottomRight.vue';
@@ -132,6 +138,7 @@ let isTrackTimeTotal = ref(null);
 const trackLiked = ref(false);
 
 let unsubscribeTrackListener = null;
+let isOpenEq = ref(false);
 
 const updateOnlineStatus = () => {
 isOffline.value = !navigator.onLine;
@@ -152,11 +159,11 @@ const listenForLikeUpdates = (trackId) => {
   });
 };
 
-
 onMounted(() => {
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
 
+  
   // Set up the real-time listener for like updates when a current track is available.
   if (currentTrack.value && currentTrack.value.id) {
     listenForLikeUpdates(currentTrack.value.id);
@@ -187,6 +194,7 @@ watch(() => wavesurfer.value, (ws) => {
           isTrackTimeCurrent.value = formatTime(currentTime);
           isTrackTimeTotal.value = formatTime(duration);
       });
+      
 
       ws.on('finish', () => {
           useSong.nextSong();
@@ -199,6 +207,14 @@ const formatTime = (seconds) => {
   const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
+
+const openEq = () => {
+  isOpenEq.value = !isOpenEq.value; // Properly toggle the ref
+};
+
+
+
+
 
 </script>
 

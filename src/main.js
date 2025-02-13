@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 
 import './assets/main.css'
+import './nvm/eq.css'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
@@ -62,6 +63,7 @@ export async function cropImageToSquare(file) {
     reader.readAsDataURL(file); // Read the file as a Data URL
   });
 }
+
 
 
 app.use(pinia)
