@@ -399,8 +399,9 @@ const handleSongUploadClick = () => {
 
 const toggleFollow = async () => {
   if (!userID.value) return;
-  const userDocRef = doc(db, 'user', userID.value);
-  const thisUserDocRef = doc(db, 'user', currentUser.uid);
+
+  const userDocRef = doc(db, "user", userID.value);
+  const thisUserDocRef = doc(db, "user", currentUser.uid);
 
   try {
     const userSnap = await getDoc(userDocRef);
@@ -410,39 +411,31 @@ const toggleFollow = async () => {
       const userData = userSnap.data();
       const thisUserData = thisUserSnap.data();
 
-      let newFollowers = [];
-      let newFollowing = [];
+      // Ensure followers and following are arrays
+      const userFollowers = Array.isArray(userData.followers) ? userData.followers : [];
+      const thisUserFollowing = Array.isArray(thisUserData.following) ? thisUserData.following : [];
 
-      // If the followed field exists and is an array, toggle the follow.
-      if (userData.followers && Array.isArray(userData.followers) && thisUserData.following && Array.isArray(thisUserData.following)) {
+      let newFollowers = [...userFollowers];
+      let newFollowing = [...thisUserFollowing];
 
-        if (userData.followers.includes(currentUser.uid)) {
-          newFollowers = userData.followers.filter(uid => uid !== currentUser.uid);
-          newFollowing = thisUserData.following.filter(uid => uid !== userID.value);
-        } else {
-          newFollowers = [...userData.followers, currentUser.uid];
-          newFollowing = [...thisUserData.following, userID.value];
-        }
+      if (userFollowers.includes(currentUser.uid)) {
+        newFollowers = newFollowers.filter(uid => uid !== currentUser.uid);
+        newFollowing = newFollowing.filter(uid => uid !== userID.value);
       } else {
-        // If the followed field does not exist (or isn't an array), initialize it.
-        newFollowers = [currentUser.uid];
-        newFollowing = [userID.value];
+        newFollowers.push(currentUser.uid);
+        newFollowing.push(userID.value);
       }
 
-      await updateDoc(userDocRef, {
-        followers: newFollowers,
-      });
-      await updateDoc(thisUserDocRef, {
-        following: newFollowing,
-      });
+      await updateDoc(userDocRef, { followers: newFollowers });
+      await updateDoc(thisUserDocRef, { following: newFollowing });
 
-      isFollowed.value = !isFollowed.value
-      // The onSnapshot listener will update the UI automatically.
+      isFollowed.value = !isFollowed.value;
     }
   } catch (error) {
     console.error("Error updating follow status:", error);
   }
 };
+
 </script>
 
 
