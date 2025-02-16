@@ -33,7 +33,12 @@
       
       
       
-    </div><div class="profile-info">
+    </div>
+    <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
+      <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
+      <div v-else class="followed-btn">UNFOLLOW</div>
+    </div>
+    <div class="profile-info">
         <p class="about">
           {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
 
@@ -166,7 +171,7 @@ randColor.value = uniqolor.random()
 const route = useRoute();
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
-
+const isFollowed = ref(false);
 const userID = ref(route.params.userID);
 const userName = ref('');
 const userAvatar = ref('');
@@ -199,6 +204,21 @@ const fetchUserData = async (id) => {
         myTracks.value = await fetchTrackDetails(userData.tracks || []);
       }
       likedTracks.value = await fetchTrackDetails(userData.liked || []);
+
+
+      //Followers
+      if (userData.followers && Array.isArray(userData.followers)) {
+
+if (userData.followers.includes(currentUser.uid)) {
+  isFollowed.value = true;
+} else {
+  isFollowed.value = false;
+}
+} else {
+  isFollowed.value = false;
+}
+
+
     } else {
       console.error('No such user document!');
     }
@@ -375,6 +395,53 @@ const beArtist = async () => {
 
 const handleSongUploadClick = () => {
   modalStore.toggleModal('uploadTrackModal', null);
+};
+
+const toggleFollow = async () => {
+  if (!userID.value) return;
+  const userDocRef = doc(db, 'user', userID.value);
+  const thisUserDocRef = doc(db, 'user', currentUser.uid);
+
+  try {
+    const userSnap = await getDoc(userDocRef);
+    const thisUserSnap = await getDoc(thisUserDocRef);
+
+    if (userSnap.exists() && thisUserSnap.exists()) {
+      const userData = userSnap.data();
+      const thisUserData = thisUserSnap.data();
+
+      let newFollowers = [];
+      let newFollowing = [];
+
+      // If the followed field exists and is an array, toggle the follow.
+      if (userData.followers && Array.isArray(userData.followers) && thisUserData.following && Array.isArray(thisUserData.following)) {
+
+        if (userData.followers.includes(currentUser.uid)) {
+          newFollowers = userData.followers.filter(uid => uid !== currentUser.uid);
+          newFollowing = thisUserData.following.filter(uid => uid !== userID.value);
+        } else {
+          newFollowers = [...userData.followers, currentUser.uid];
+          newFollowing = [...thisUserData.following, userID.value];
+        }
+      } else {
+        // If the followed field does not exist (or isn't an array), initialize it.
+        newFollowers = [currentUser.uid];
+        newFollowing = [userID.value];
+      }
+
+      await updateDoc(userDocRef, {
+        followers: newFollowers,
+      });
+      await updateDoc(thisUserDocRef, {
+        following: newFollowing,
+      });
+
+      isFollowed.value = !isFollowed.value
+      // The onSnapshot listener will update the UI automatically.
+    }
+  } catch (error) {
+    console.error("Error updating follow status:", error);
+  }
 };
 </script>
 

@@ -2,6 +2,7 @@
   <div v-draggable v-if="isOpenEq" id="eq" class="eq cursor-move draggable-box">
     <main id="eqMain" ref="eqMain"></main>
   </div>
+  <weq8-ui />
 </template>
 
 <script setup>
@@ -9,6 +10,7 @@ import { ref, onMounted, nextTick, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useSongStore } from '../stores/song';
 import draggable from '../utils/DraggableDirective.js';
+import 'https://cdn.skypack.dev/weq8/ui';
 
 const useSong = useSongStore();
 const { wavesurfer } = storeToRefs(useSong);

@@ -20,7 +20,8 @@
     "vue": "^3.2.45",
     "vue-material-design-icons": "^5.1.2",
     "vue-router": "^4.1.6",
-    "wavesurfer.js": "^7.9.0"
+    "wavesurfer.js": "^7.9.0",
+    "weq8": "^0.2.2"
   },
   "devDependencies": {
     "@pinegrow/tailwindcss-plugin": "^3.0.35",
