@@ -20,7 +20,8 @@
       </div>
       <div class="nameDiv">
         <div>{{ follower ? follower.name : 'Loading...' }}</div>
-        <span>Started Following You!</span>
+        <h4>Started Following You!</h4>
+        <span>{{ formattedTime }}</span>
       </div>
     </div>
   </RouterLink>
@@ -138,6 +139,10 @@ div {
   color: rgb(105, 105, 105);
 }
 
+.nameDiv h4 {
+  color: rgb(194, 194, 194);
+}
+
 .mainTab {
   padding: 1rem;
   cursor: pointer;
@@ -153,9 +158,7 @@ div {
 .mainTab:hover {
   background-color: #1f2937;
 }
-</style>
 
-<style>
 .toArtist {
   display: inline-block;
   white-space: nowrap;
