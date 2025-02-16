@@ -38,7 +38,7 @@
 
 <script setup>
 import { watch, onMounted, ref } from 'vue';
-import { useModalStore } from '../stores/modalStore.js';
+import { useModalStore } from '../../stores/modalStore.js';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot, runTransaction } from 'firebase/firestore';

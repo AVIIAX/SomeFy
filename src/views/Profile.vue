@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <div class="profile-header">
+    <div class="profile-header flex-col gap-2">
       <div class="profile-img-container cursor-pointer">
         <!-- Avatar -->
         <img :src="userAvatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg'" alt="User Avatar" class="profile-img" @click="triggerFileInput" />
@@ -31,13 +31,18 @@
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>
       
-      
-      
-    </div>
+      <div class="text-[#dadadaf3] flex gap-2">
+        <span @click="handleFollowClick(followers, 'Followers')" class="cursor-pointer">{{ followers.length || '0'}}</span>
+        |
+        <span @click="handleFollowClick(following, 'Following')" class="cursor-pointer">{{ following.length || '0'}}</span>
+      </div>
     <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
       <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
       <div v-else class="followed-btn">UNFOLLOW</div>
     </div>
+      
+    </div>
+    
     <div class="profile-info">
         <p class="about">
           {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
@@ -160,7 +165,7 @@ import { useRoute } from 'vue-router';
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
-import ModalComponent from '../components/UploadTrackModal.vue';
+import ModalComponent from '../components/modals/UploadTrackModal.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
 import axios from 'axios';
 import { useModalStore } from '../stores/modalStore.js';
@@ -181,6 +186,8 @@ const isAuthUser = ref(false);
 const isArtist = ref(false);
 const myTracks = ref([]);
 const likedTracks = ref([]);
+const followers = ref([]);
+const following = ref([]);
 const fileInput = ref(null);
 const errorMessage = ref('');
 const modalStore = useModalStore();
@@ -204,6 +211,8 @@ const fetchUserData = async (id) => {
         myTracks.value = await fetchTrackDetails(userData.tracks || []);
       }
       likedTracks.value = await fetchTrackDetails(userData.liked || []);
+      followers.value = userData.followers || [];
+      following.value = userData.following || [];
 
 
       //Followers
@@ -436,6 +445,10 @@ const toggleFollow = async () => {
   }
 };
 
+const handleFollowClick = (dataType, name) => {
+  const dataForBoostModal = { users: dataType, name: name};  // Example data
+  modalStore.toggleModal('followModal', dataForBoostModal);  // Pass data to Boost modal
+};
 </script>
 
 

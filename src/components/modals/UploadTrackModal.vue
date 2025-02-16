@@ -69,11 +69,11 @@
 </template>
   
 <script setup>
-import { useModalStore } from '../stores/modalStore.js';
+import { useModalStore } from '../../stores/modalStore.js';
 import { ref, defineEmits } from 'vue';
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, addDoc, updateDoc, collection, arrayUnion, runTransaction } from "firebase/firestore";
-import { cropImageToSquare  } from "../main";
+import { cropImageToSquare  } from "../../main.js";
 
 const modalStore = useModalStore(); 
 // Firebase setup

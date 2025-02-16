@@ -7,10 +7,11 @@ import Login from './components/Login.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
 import SearchBar from './components/SearchBar.vue';
-import UploadTrackModal from './components/UploadTrackModal.vue';
+import UploadTrackModal from './components/modals/UploadTrackModal.vue';
 import songRow from './components/SongRow.vue';
-import boostModal from './components/boostModal.vue';
-import boostedModal from './components/boostedModal.vue';
+import boostModal from './components/modals/boostModal.vue';
+import boostedModal from './components/modals/boostedModal.vue';
+import followModal from './components/modals/followModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
@@ -234,6 +235,7 @@ export default {
         <UploadTrackModal v-if="modalStore.modals.uploadTrackModal.isVisible"/>
         <boostModal v-if="modalStore.modals.boostModal.isVisible"/>
         <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
+        <followModal v-if="modalStore.modals.followModal.isVisible"/>
         </teleport>
 
         <MusicPlayer v-if="currentTrack"/>

@@ -1,61 +1,114 @@
 import { defineStore } from 'pinia';
 import { db } from '../firebase'; // Ensure db is imported from your main.js
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from "firebase/auth";
 import WaveSurfer from 'wavesurfer.js';
-import { getRandomBoostedTrackId } from '../utils/boostedtracks.js';
-import { WEQ8Runtime } from "weq8";
+import { getRandomBoostedTrackId } from "../utils/boostedtracks.js";
 
-// Helper to load an impulse response for the reverb effect
+// Global EQ configuration (adjust bands as needed)
+const eqBands = [32, 64, 128, 256, 512, 1000, 2000];
+let eqFilters = [];
+let eqContext = null;
+let eqUpdateInterval = null;
+
+// NEW: Global variables to hold the last node of the EQ chain and a convolver for reverb
+let eqChainOutput = null;
+let reverbNode = null;
+
+// NEW: Helper to load an impulse response for the reverb effect
 async function loadImpulseResponse(url, context) {
   try {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     return await context.decodeAudioData(arrayBuffer);
   } catch (error) {
-    console.error('Error loading impulse response:', error);
+    console.error("Error loading impulse response:", error);
     return null;
   }
+}
+
+function attachEqFilters(ws) {
+  if (!ws) return;
+  if (!eqContext) {
+    eqContext = new AudioContext();
+  }
+  if (eqContext.state === 'suspended') {
+    eqContext.resume();
+  }
+  const audio = ws.getMediaElement();
+  if (!audio) {
+    console.error("No media element found in wavesurfer");
+    return;
+  }
+  const mediaNode = eqContext.createMediaElementSource(audio);
+  const savedSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
+  
+  // Create an array of filters using stored settings
+  eqFilters = eqBands.map((band) => {
+    const filter = eqContext.createBiquadFilter();
+    filter.type = band <= 32 ? 'lowshelf' : band >= 16000 ? 'highshelf' : 'peaking';
+    filter.frequency.value = band;
+    filter.Q.value = 1;
+    filter.gain.value = savedSettings[band] || 0;
+    return filter;
+  });
+  
+  // Chain filters: mediaNode -> filter1 -> filter2 -> ... -> destination
+  const chain = eqFilters.reduce((prev, curr) => {
+    prev.connect(curr);
+    return curr;
+  }, mediaNode);
+  
+  // Save chain's last node for further effects processing
+  eqChainOutput = chain;
+  
+  // Initially connect chain to destination
+  chain.connect(eqContext.destination);
+  
+  // Poll localStorage for any changes in EQ settings and update filters in realtime
+  if (eqUpdateInterval) clearInterval(eqUpdateInterval);
+  eqUpdateInterval = setInterval(() => {
+    const currentSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
+    eqFilters.forEach((filter) => {
+      const band = filter.frequency.value;
+      const newGain = currentSettings[band] || 0;
+      if (filter.gain.value !== newGain) {
+        filter.gain.value = newGain;
+      }
+    });
+  }, 100); // adjust interval (in ms) as needed
 }
 
 export const useSongStore = defineStore('song', {
   state: () => ({
     isPlaying: false,
     isLiked: false,
-    // Do NOT persist these non-serializable objects:
     wavesurfer: null,
     currentTrack: null,
     currentTrackID: null,
     currentArtist: null,
-    trackQueue: [],
-    currentIndex: -1,
-    // Effect state parameters:
+    trackQueue: [], // Queue of track details
+    currentIndex: -1, // Tracks the index of the current track in the queue
+    // NEW: Effect state parameters
     isSlowed: false,
     isReverbed: false,
-    slowedRate: 0.8, // 80% speed when slowed
-    reverbImpulseUrl: '../reverb.wav', // update as needed
-    // Do NOT persist the reverb node
-    reverbNode: null,
+    slowedRate: 0.8, // Customize slowed playback rate (e.g., 0.8 means 80% speed)
+    reverbImpulseUrl: '../reverb.wav', // Customize with your impulse response URL
   }),
 
   actions: {
     createWS(container, url) {
-      // Destroy any existing WaveSurfer instance.
-      if (this.wavesurfer) {
-        if (typeof this.wavesurfer.stop === 'function') {
-          this.wavesurfer.stop();
-        }
-        if (typeof this.wavesurfer.destroy === 'function') {
-          this.wavesurfer.destroy();
-        }
+      // Destroy existing wavesurfer instance before creating a new one
+      if (this.wavesurfer && typeof this.wavesurfer.destroy === "function") {
+        this.wavesurfer.destroy();
       }
+
       try {
-        // Create a new WaveSurfer instance.
         this.wavesurfer = WaveSurfer.create({
-          container: container || '#waveform',
+          container: '#waveform',
           waveColor: '#ffffff8f',
           progressColor: '#3295e2e8',
-          backend: 'WebAudio',
+          backend: 'MediaElement',
           barWidth: 1,
           barGap: 3,
           barAlign: 'center',
@@ -71,58 +124,38 @@ export const useSongStore = defineStore('song', {
 
         this.wavesurfer.on('ready', async () => {
           console.log('WaveSurfer is ready');
-          // Apply slowed playback rate if toggled.
-          this.updatePlaybackRate();
-          // Apply EQ and reverb via manual node chaining.
-          await this.updateEffectsChain();
-
-          //WEQ8Runtime
-          console.log(this.wavesurfer);
+          attachEqFilters(this.wavesurfer); // Route audio through EQ filters from localStorage
           
-          const audioContext = this.wavesurfer.backend.ac; // Get Wavesurfer's AudioContext
-          const sourceNode = this.wavesurfer.backend.getAudioNode(); // Get source audio node
-        
-          // Initialize weq8 with the same AudioContext
-          const weq8 = new WEQ8Runtime(audioContext);
-        
-          // Connect Wavesurfer's output to weq8 EQ
-          sourceNode.connect(weq8.input);
-        
-          // Connect EQ output to the audio context destination
-          weq8.connect(audioContext.destination);
-        
-          // Attach weq8 UI to control the EQ
-          document.querySelector("weq8-ui").runtime = weq8;
+          // Apply reverb effect if toggled on
+          if (this.isReverbed) {
+            await this.addReverbEffect();
+          }
+          // Apply slowed effect if toggled on
+          this.updatePlaybackRate();
+        });
 
+        this.wavesurfer.on('interaction', () => {
+          console.log('WaveSurfer interaction triggered');
+        });
 
-
-
-
-
-
-          // Optional additional event listeners.
-          this.wavesurfer.on('play', () => {
-            // Reapply effects on play if necessary.
-          });
-          this.wavesurfer.on('interaction', () => {
-            console.log('WaveSurfer interaction triggered');
-          });
-          this.wavesurfer.on('finish', () => {
-            console.log('WaveSurfer finished playing');
-          });
+        this.wavesurfer.on('finish', () => {
+          console.log('WaveSurfer finished playing');
         });
       } catch (error) {
-        console.error(error);
+        console.log(error);
       }
     },
 
-    async loadSong(track, trackIDs = null, container = '#waveform') {
+    async loadSong(track, trackIDs = null, container = ".waveform") {
+      console.log(trackIDs);
+
       if (trackIDs && Array.isArray(trackIDs)) {
         try {
           const tracks = await Promise.all(
             trackIDs.map(async (trackId) => {
               const trackRef = doc(db, 'track', trackId);
               const trackDoc = await getDoc(trackRef);
+
               if (trackDoc.exists()) {
                 return { id: trackId, ...trackDoc.data() };
               } else {
@@ -131,8 +164,8 @@ export const useSongStore = defineStore('song', {
               }
             })
           );
+
           this.trackQueue = tracks.filter((track) => track);
-          // Optionally prepend a boosted track.
           this.trackQueue.unshift(getRandomBoostedTrackId());
           console.log('Track queue set:', this.trackQueue);
         } catch (error) {
@@ -144,6 +177,7 @@ export const useSongStore = defineStore('song', {
       }
 
       this.currentIndex = this.trackQueue.findIndex((t) => t.id === track.id);
+
       this.currentTrack = track;
       this.currentTrackID = track.id;
 
@@ -155,7 +189,6 @@ export const useSongStore = defineStore('song', {
       }
       this.currentArtist = userDoc.data();
 
-      // (Re)create WaveSurfer for the new track.
       this.createWS(container, track.url);
 
       const checkDecodedData = setInterval(() => {
@@ -168,15 +201,16 @@ export const useSongStore = defineStore('song', {
           }, 500);
         }
       }, 100);
-
+      
       await this.updateTrackViews(track.id);
     },
 
     async playOrPauseSong() {
-      if (!this.wavesurfer || typeof this.wavesurfer.isPlaying !== 'function') {
-        console.error('WaveSurfer instance not initialized');
+      if (!this.wavesurfer) {
+        console.error("WaveSurfer instance not initialized");
         return;
       }
+
       if (this.wavesurfer.isPlaying()) {
         this.isPlaying = false;
         this.wavesurfer.pause();
@@ -186,19 +220,21 @@ export const useSongStore = defineStore('song', {
       }
     },
 
-    async playOrPauseThisSong(track, trackIDs = null) {
-      if (!this.wavesurfer) {
+    async playOrPauseThisSong(track, trackIDs = null) { 
+      if (!(this.wavesurfer.decodedData instanceof AudioBuffer)) {
         await this.loadSong(track, trackIDs);
         return;
       }
+    
       this.playOrPauseSong();
     },
-
+    
     async nextSong() {
       if (this.trackQueue.length === 0 || this.currentIndex >= this.trackQueue.length - 1) {
         console.log('No next track available');
         return;
       }
+
       this.currentIndex += 1;
       const nextTrack = this.trackQueue[this.currentIndex];
       await this.loadSong(nextTrack, this.trackQueue.map((t) => t.id));
@@ -209,6 +245,7 @@ export const useSongStore = defineStore('song', {
         console.log('No previous track available');
         return;
       }
+
       this.currentIndex -= 1;
       const prevTrack = this.trackQueue[this.currentIndex];
       await this.loadSong(prevTrack, this.trackQueue.map((t) => t.id));
@@ -218,9 +255,11 @@ export const useSongStore = defineStore('song', {
       try {
         const trackRef = doc(db, 'track', trackID);
         const trackDoc = await getDoc(trackRef);
+
         if (trackDoc.exists()) {
           const trackData = trackDoc.data();
           const updatedViews = (trackData.views || 0) + 1;
+
           await updateDoc(trackRef, { views: updatedViews });
           console.log(`Updated views for track ${trackID} to ${updatedViews}`);
         } else {
@@ -233,9 +272,6 @@ export const useSongStore = defineStore('song', {
 
     resetState() {
       this.isPlaying = false;
-      if (this.wavesurfer) {
-        this.wavesurfer.destroy();
-      }
       this.wavesurfer = null;
       this.currentTrack = null;
       this.trackQueue = [];
@@ -243,28 +279,37 @@ export const useSongStore = defineStore('song', {
     },
 
     async likeOrUnlikeSong(id) {
-      const currentUser = getAuth().currentUser;
+      const currentUser = getAuth().currentUser; // Get the current authenticated user
       if (!currentUser) {
         console.error('User not authenticated');
         return;
       }
-      const userRef = doc(db, 'user', currentUser.uid);
-      const trackRef = doc(db, 'track', id);
+
+      const userRef = doc(db, 'user', currentUser.uid); // Reference to the current user's document
+      const trackRef = doc(db, 'track', id); // Reference to the specific track document
 
       try {
+        // Fetch the current user's data
         const userDoc = await getDoc(userRef);
         if (!userDoc.exists()) {
           console.error('User document does not exist');
           return;
         }
+
         const userData = userDoc.data();
-        const likedTracks = userData.liked || [];
-        this.isLiked = likedTracks.includes(id);
+        const likedTracks = userData.liked || []; // Get the liked tracks array, default to empty
+
+        this.isLiked = likedTracks.includes(id); // Check if the track is already liked
 
         if (this.isLiked) {
+          // Unlike the track
           this.isLiked = false;
+
+          // Remove the track ID from the user's liked array
           const updatedLikedTracks = likedTracks.filter((trackId) => trackId !== id);
           await updateDoc(userRef, { liked: updatedLikedTracks });
+
+          // Remove the user ID from the track's liked array
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
             const trackData = trackDoc.data();
@@ -272,15 +317,18 @@ export const useSongStore = defineStore('song', {
             await updateDoc(trackRef, { liked: updatedTrackLikes });
           }
         } else {
+          // Like the track
           this.isLiked = true;
+
+          // Add the track ID to the user's liked array
           const updatedLikedTracks = [...likedTracks, id];
           await updateDoc(userRef, { liked: updatedLikedTracks });
+
+          // Add the user ID to the track's liked array (ensure no duplicates)
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
             const trackData = trackDoc.data();
-            const updatedTrackLikes = trackData.liked
-              ? [...new Set([...trackData.liked, currentUser.uid])]
-              : [currentUser.uid];
+            const updatedTrackLikes = trackData.liked ? [...new Set([...trackData.liked, currentUser.uid])] : [currentUser.uid];
             await updateDoc(trackRef, { liked: updatedTrackLikes });
           }
         }
@@ -290,139 +338,150 @@ export const useSongStore = defineStore('song', {
     },
 
     // ================================
-    // Effect Methods
+    // New Effect Methods
     // ================================
 
-    // Toggle the slowed playback effect.
+    // Toggle the slowed effect. When enabled, set the playback rate to the customized slowed rate.
     toggleSlowEffect() {
       this.isSlowed = !this.isSlowed;
       this.updatePlaybackRate();
     },
 
-    // Update playback rate (and detune) based on whether slowed is active.
-    updatePlaybackRate() {
+    // Helper: update playback rate based on the isSlowed flag.
+    /*updatePlaybackRate() {
       if (this.wavesurfer) {
-        const backend = this.wavesurfer.backend;
-        if (backend && backend.ac) {
-          const rate = this.isSlowed ? this.slowedRate : 1;
-          const detuneCents = this.isSlowed ? 1200 * Math.log2(1 / rate) : 0;
-          backend.setPlaybackRate(rate);
-          if (backend.source) {
-            backend.source.detune.value = detuneCents;
-          }
-        } else {
-          const rate = this.isSlowed ? this.slowedRate : 1;
-          this.wavesurfer.setPlaybackRate(rate);
-        }
+        const rate = this.isSlowed ? this.slowedRate : 1;
+        this.wavesurfer.setPlaybackRate(rate);
+        console.log(`Playback rate set to ${rate}`);
       }
-    },
+    },*/
 
     // Toggle the reverb effect.
     async toggleReverbEffect() {
       this.isReverbed = !this.isReverbed;
-      await this.updateEffectsChain();
-      console.log('Reverb effect toggled:', this.isReverbed);
+      if (this.isReverbed) {
+        await this.addReverbEffect();
+      } else {
+        this.removeReverbEffect();
+      }
     },
 
     async toggleSlowedReverbEffect() {
-      // (Optional: combine toggles as needed)
-      this.isSlowed = !this.isSlowed;
       this.isReverbed = !this.isReverbed;
+      this.isSlowed = !this.isSlowed;
+      if (this.isReverbed) {
+        await this.addReverbEffect();
+      } else {
+        this.removeReverbEffect();
+      }
       this.updatePlaybackRate();
-      await this.updateEffectsChain();
     },
+    // Add reverb effect by inserting a Convolver node between the EQ chain and the destination.
 
-    // Manually rebuild the effects chain (EQ and reverb) and rewire the audio graph.
-    async updateEffectsChain() {
-      if (
-        !this.wavesurfer ||
-        !this.wavesurfer.backend ||
-        !this.wavesurfer.backend.ac
-      )
-        return;
-      const audioContext = this.wavesurfer.backend.ac;
-
-      // Attempt to get the WaveSurfer output gain node.
-      const wsGainNode = this.wavesurfer.backend.gainNode;
-      if (!wsGainNode) {
-        console.warn('No gain node available from WaveSurfer backend.');
+    async updatePlaybackRate() {
+      if (this.wavesurfer) {
+      const audio = this.wavesurfer.getMediaElement();
+      if (audio) {
+      const rate = this.isSlowed ? this.slowedRate : 1;
+     
+     
+      // Ensure preservesPitch is set to false (if supported)
+      if ('preservesPitch' in audio) {
+      audio.preservesPitch = false; // Disable pitch correction
+      }
+     
+     
+      audio.playbackRate = rate;
+     
+     
+      // Adjust pitch using `detune` (in cents)
+      const detune = this.isSlowed ? -440 : 0;
+      audio.detune = detune;
+     
+     
+      console.log(`Playback rate: ${rate}, Detune: ${detune}`); // Debugging
+      } else {
+      console.error("No media element found in wavesurfer");
+      }
+      }
+      },
+     
+    async addReverbEffect() {
+      if (!eqContext || !eqChainOutput) {
+        console.error("Audio context or EQ chain not initialized");
         return;
       }
-
-      // Disconnect the gain node from the destination.
-      wsGainNode.disconnect();
-
-      // --- Create EQ filters based on saved settings ---
-      const eqBands = [32, 64, 128, 256, 512, 1000, 2000];
-      const savedSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
-      const eqFilters = eqBands.map((band) => {
-        const filter = audioContext.createBiquadFilter();
-        // Choose filter type based on frequency.
-        if (band <= 32) {
-          filter.type = 'lowshelf';
-        } else if (band >= 16000) {
-          filter.type = 'highshelf';
-        } else {
-          filter.type = 'peaking';
+      try {
+        // Disconnect the current connection from eqChainOutput to destination.
+        try {
+          eqChainOutput.disconnect(eqContext.destination);
+        } catch (e) {
+          // It might not be connected—ignore error.
         }
-        filter.frequency.value = band;
-        filter.Q.value = 1;
-        filter.gain.value = savedSettings[band] ?? 0;
-        return filter;
-      });
-
-      // --- Create (or reuse) the reverb node if enabled ---
-      if (this.isReverbed) {
-        if (!this.reverbNode) {
-          this.reverbNode = audioContext.createConvolver();
-          const impulseResponse = await loadImpulseResponse(
-            this.reverbImpulseUrl,
-            audioContext
-          );
-          if (!impulseResponse) {
-            console.error('Failed to load impulse response for reverb');
+    
+        // Create the convolver node if it doesn't exist.
+        if (!reverbNode) {
+          reverbNode = eqContext.createConvolver();
+          const impulseBuffer = await loadImpulseResponse(this.reverbImpulseUrl, eqContext);
+          if (impulseBuffer) {
+            reverbNode.buffer = impulseBuffer;
           } else {
-            this.reverbNode.buffer = impulseResponse;
+            console.error("Failed to load impulse response; reverb effect not applied");
+            // Reconnect directly if impulse loading fails.
+            eqChainOutput.connect(eqContext.destination);
+            return;
           }
         }
-      } else {
-        if (this.reverbNode) {
-          this.reverbNode.disconnect();
-          this.reverbNode = null;
-        }
+    
+        // Create a GainNode to control the wet/dry mix (25% reverb, 75% dry)
+        const wetGain = eqContext.createGain();
+        wetGain.gain.value = 0.85; // 25% reverb
+    
+        const dryGain = eqContext.createGain();
+        dryGain.gain.value = 0.35; // 75% dry
+    
+        // Create a StereoPannerNode to ensure the reverb is stereo
+        const stereoPanner = eqContext.createStereoPanner();
+        stereoPanner.pan.value = 0; // Center pan (stereo)
+    
+        // Split the signal into dry and wet paths
+        eqChainOutput.connect(dryGain);
+        dryGain.connect(eqContext.destination); // Dry signal goes directly to the destination
+    
+        eqChainOutput.connect(reverbNode);
+        reverbNode.connect(stereoPanner); // Apply stereo panning to the reverb
+        stereoPanner.connect(wetGain); // Connect the panned reverb to the wet gain
+        wetGain.connect(eqContext.destination); // Wet signal goes to the destination
+    
+        console.log("Reverb effect added with 25% mix and stereo");
+      } catch (error) {
+        console.error("Error adding reverb effect:", error);
       }
+    },
 
-      // Build the chain: start with the output gain node,
-      // then connect each EQ filter in sequence,
-      // then (if enabled) connect the reverb node,
-      // and finally connect the last node to the destination.
-      let currentNode = wsGainNode;
-      eqFilters.forEach((filter) => {
-        currentNode.connect(filter);
-        currentNode = filter;
-      });
-      if (this.isReverbed && this.reverbNode) {
-        currentNode.connect(this.reverbNode);
-        currentNode = this.reverbNode;
+    // Remove the reverb effect by bypassing the convolver node.
+    removeReverbEffect() {
+      if (!eqContext || !eqChainOutput) {
+        console.error("Audio context or EQ chain not initialized");
+        return;
       }
-      currentNode.connect(audioContext.destination);
+      try {
+        if (reverbNode) {
+          try {
+            eqChainOutput.disconnect(reverbNode);
+          } catch (e) {}
+          try {
+            reverbNode.disconnect(eqContext.destination);
+          } catch (e) {}
+        }
+        // Reconnect the EQ chain directly to the destination.
+        eqChainOutput.connect(eqContext.destination);
+        console.log("Reverb effect removed");
+      } catch (error) {
+        console.error("Error removing reverb effect:", error);
+      }
     },
   },
 
-  // Persist only serializable state – exclude wavesurfer and reverbNode.
-  persist: {
-    paths: [
-      'isPlaying',
-      'isLiked',
-      'currentTrack',
-      'currentTrackID',
-      'currentArtist',
-      'trackQueue',
-      'currentIndex',
-      'isSlowed',
-      'isReverbed',
-      'slowedRate',
-      'reverbImpulseUrl',
-    ],
-  },
+  persist: true,
 });
