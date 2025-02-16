@@ -428,15 +428,38 @@ const toggleFollow = async () => {
       let newFollowing = [...thisUserFollowing];
 
       if (userFollowers.includes(currentUser.uid)) {
+        // Unfollow: remove user from arrays
         newFollowers = newFollowers.filter(uid => uid !== currentUser.uid);
         newFollowing = newFollowing.filter(uid => uid !== userID.value);
+
+        await updateDoc(userDocRef, { followers: newFollowers });
+        await updateDoc(thisUserDocRef, { following: newFollowing });
       } else {
+        // Follow: add user to arrays
         newFollowers.push(currentUser.uid);
         newFollowing.push(userID.value);
-      }
 
-      await updateDoc(userDocRef, { followers: newFollowers });
-      await updateDoc(thisUserDocRef, { following: newFollowing });
+        // Generate a unique mail key.
+        const mailKey =
+          Date.now().toString() + Math.random().toString(36).substring(2, 15);
+
+        // Build a new mail object.
+        const newMail = {
+          type: "follower",
+          follower: currentUser.uid,
+          time: new Date(), // or use serverTimestamp() if desired
+          seen: false,
+        };
+
+        // Update followed user's doc: update followers array and add the new mail.
+        await updateDoc(userDocRef, {
+          followers: newFollowers,
+          [`inboxMails.${mailKey}`]: newMail,
+        });
+
+        // Update current user's following array.
+        await updateDoc(thisUserDocRef, { following: newFollowing });
+      }
 
       isFollowed.value = !isFollowed.value;
     }
@@ -444,6 +467,7 @@ const toggleFollow = async () => {
     console.error("Error updating follow status:", error);
   }
 };
+
 
 const handleFollowClick = (dataType, name) => {
   const dataForBoostModal = { users: dataType, name: name};  // Example data
