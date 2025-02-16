@@ -1,5 +1,5 @@
 <script setup>
-import { watch , ref, onMounted } from 'vue';
+import { watch , ref, onMounted, computed  } from 'vue';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
 import Register from './components/Register.vue';
@@ -12,10 +12,12 @@ import songRow from './components/SongRow.vue';
 import boostModal from './components/modals/boostModal.vue';
 import boostedModal from './components/modals/boostedModal.vue';
 import followModal from './components/modals/followModal.vue';
+import Mail from './components/Mails.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
-import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
+import MailBox from 'vue-material-design-icons/EmailOutline.vue';
+import MailBoxOpen from 'vue-material-design-icons/EmailOpenOutline.vue';
 import PlusIcon from 'vue-material-design-icons/Plus.vue';
 import { useSongStore } from './stores/song';
 import { useModalStore } from './stores/modalStore.js';
@@ -34,7 +36,10 @@ const userEmail = ref("null");
 const userName = ref("");
 const userAV = ref("");
 const userCredits = ref("");
-
+const userMails = ref([]);
+const unseenMailCount = computed(() => {
+  return userMails.value.filter(mail => !mail.seen).length;
+});
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
 
@@ -69,6 +74,16 @@ onMounted(() => {
             "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
           userCredits.value = userData.credits || 0;
           isArtist.value = userData.artist || false;
+          
+          // Convert inboxMails (which is a map) to an array
+      // if (userData.inboxMails) {
+      //   userMails.value = Object.keys(userData.inboxMails).map((key) => {
+      //     return { id: key, ...userData.inboxMails[key] };
+      //   });
+      // } else {
+      //   userMails.value = [];
+      // }
+      fetchUserMails(user.uid)
         } else {
           console.log("No such document!");
         }
@@ -103,6 +118,42 @@ const handleSongUploadClick = () => {
   modalStore.toggleModal('uploadTrackModal', null);
 };
 
+const fetchUserMails = async (id) => {
+  try {
+    const userDocRef = doc(db, 'user', id);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+      const userData = userDocSnap.data();
+      if (userData.inboxMails) {
+        // Convert the inboxMails map to an array
+        userMails.value = Object.keys(userData.inboxMails).map((key) => {
+          
+          return { id: key, ...userData.inboxMails[key] };
+        });
+        // Sort the mails so that the newest (most recent timestamp) is at the top
+        userMails.value.sort((a, b) => {
+          // If using Firebase Timestamp, use toDate().getTime(), otherwise fallback to Date constructor
+          const timeA =
+            a.time && typeof a.time.toDate === 'function'
+              ? a.time.toDate().getTime()
+              : new Date(a.time).getTime();
+          const timeB =
+            b.time && typeof b.time.toDate === 'function'
+              ? b.time.toDate().getTime()
+              : new Date(b.time).getTime();
+          return timeB - timeA; // descending order (newest first)
+        });
+      } else {
+        userMails.value = [];
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching user mails:', error);
+    userMails.value = [];
+  }
+};
+
+
 const logout = async () => {
   try {
     console.log(auth);
@@ -122,6 +173,7 @@ watch(currentTrack, (newTrack) => {
 });
 
 let openMenu = ref(false);
+let openMail = ref(false);
 </script>
 <script>
 export default {
@@ -164,6 +216,47 @@ export default {
 </button>
                     </div>
                 </RouterLink>
+                <div class="flex items-center ml-6 gap-5">
+
+                  <div class="cursor-pointer relative">
+    <MailBox
+      v-if="!openMail"
+      @click="openMail = true"
+      fillColor="#FFFFFF"
+      :size="30"
+    />
+    <MailBoxOpen
+      v-else
+      @click="openMail = false"
+      fillColor="#FFFFFF"
+      :size="30"
+    />
+    <!-- Red dot indicator if there are unseen mails -->
+    <span
+      v-if="unseenMailCount > 0"
+      class="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500"
+    ></span>
+  </div>
+
+  <span
+    v-if="openMail"
+    class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[105px] w-[250px] h-[300px] p-1 cursor-pointer"
+  >
+    <ul class="text-gray-200 font-semibold text-[14px]">
+      <div
+        v-if="userMails && userMails.length > 0"
+        class="overflow-auto mt-2 w-full bg-[#181822] rounded-lg shadow-lg h-fit z-50"
+      >
+      <Mail
+      v-for="(mail, index) in userMails"
+      :key="mail.id"        
+      :data="mail"          
+    ></Mail>
+      </div>
+      <div v-else class="text-center text-gray-400 mt-4">No mails found.</div>
+    </ul>
+  </span>
+                    
                 <button @click="openMenu = !openMenu" :class="openMenu ? 'bg-[#282828]' : 'bg-black'" class="bg-black hover:bg-[#282828] rounded-full p-0.5 mr-8 mt-0.5 cursor-pointer">
                     <div class="flex items-center">
                         <img class="rounded-full navProfileImg" width="27" height="27" :src='userAV'/>
@@ -171,12 +264,17 @@ export default {
                         <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25"/>
                         <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25"/>
                     </div>
-                </button><span v-if="openMenu" class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"> <ul class="text-gray-200 font-semibold text-[14px]">
+                </button>
+              </div>
+              
+              
+              <span v-if="openMenu" class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"> <ul class="text-gray-200 font-semibold text-[14px]">
                         <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">
                             <RouterLink :to="`/user/${userID}`">Profile</RouterLink>
                         </li>
                         <li class="px-3 py-2.5 hover:bg-[#3E3D3D]" @click="logout">Log out</li>
                     </ul> </span>
+
             </div>
             <!-- NavBar -->
             <div id="SideNav" class="p-6 w-[240px] fixed z-50 bg-black" :style="{
