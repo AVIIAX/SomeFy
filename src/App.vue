@@ -13,6 +13,7 @@ import boostModal from './components/modals/boostModal.vue';
 import boostedModal from './components/modals/boostedModal.vue';
 import followModal from './components/modals/followModal.vue';
 import Mail from './components/Mails.vue';
+import CollabModal from './components/modals/collabModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
@@ -334,6 +335,7 @@ export default {
         <boostModal v-if="modalStore.modals.boostModal.isVisible"/>
         <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
         <followModal v-if="modalStore.modals.followModal.isVisible"/>
+        <collabModal v-if="modalStore.modals.collabModal.isVisible"/>
         </teleport>
 
         <MusicPlayer v-if="currentTrack"/>

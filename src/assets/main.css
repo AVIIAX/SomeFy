@@ -188,5 +188,9 @@
   }
 
   .followed-btn {
-    background-color: rgba(174, 169, 216, 0.952);
+    background-color: #aea9d8f3;
+  }
+
+  .collab-btn {
+    background-color: #707891;
   }

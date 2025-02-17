@@ -75,33 +75,6 @@ div {
   color: white;
 }
 
-.searchImg {
-  width: 50px; /* Set the desired size */
-  height: 50px; /* Match the width to make it a circle */
-  border-radius: 50%; /* Makes the div a full circle */
-  overflow: hidden; /* Ensures the image doesn't overflow the circle */
-  display: flex; /* Optional: For alignment purposes */
-  align-items: center; /* Optional: Center image vertically */
-  justify-content: center; /* Optional: Center image horizontally */
-}
-
-.searchImgTrack {
-  width: 50px; /* Set the desired size */
-  height: 50px; /* Match the width to make it a circle */
-  border-radius: 10%; /* Makes the div a full circle */
-  overflow: hidden; /* Ensures the image doesn't overflow the circle */
-  display: flex; /* Optional: For alignment purposes */
-  align-items: center; /* Optional: Center image vertically */
-  justify-content: center; /* Optional: Center image horizontally */
-  border: 2px solid #e94e4e;
-}
-
-.searchImg img, .searchImgTrack img {
-  width: 100%; /* Ensures the image covers the div */
-  height: 100%; /* Ensures the image covers the div */
-  object-fit: cover;  /* Ensures the image maintains its aspect ratio while covering the container */
-}
-
 .nameDiv {
   align-items: center;
   justify-content: center;
@@ -156,5 +129,32 @@ div {
 
 .toArtist:hover {
   text-decoration: underline;
+}
+
+.searchImg {
+  width: 50px; /* Set the desired size */
+  height: 50px; /* Match the width to make it a circle */
+  border-radius: 50%; /* Makes the div a full circle */
+  overflow: hidden; /* Ensures the image doesn't overflow the circle */
+  display: flex; /* Optional: For alignment purposes */
+  align-items: center; /* Optional: Center image vertically */
+  justify-content: center; /* Optional: Center image horizontally */
+}
+
+.searchImgTrack {
+  width: 50px; /* Set the desired size */
+  height: 50px; /* Match the width to make it a circle */
+  border-radius: 10%; /* Makes the div a full circle */
+  overflow: hidden; /* Ensures the image doesn't overflow the circle */
+  display: flex; /* Optional: For alignment purposes */
+  align-items: center; /* Optional: Center image vertically */
+  justify-content: center; /* Optional: Center image horizontally */
+  border: 2px solid #e94e4e;
+}
+
+.searchImg img, .searchImgTrack img {
+  width: 100%; /* Ensures the image covers the div */
+  height: 100%; /* Ensures the image covers the div */
+  object-fit: cover;  /* Ensures the image maintains its aspect ratio while covering the container */
 }
 </style>

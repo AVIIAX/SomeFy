@@ -31,15 +31,20 @@
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>
       
-      <div class="text-[#dadadaf3] flex gap-2">
+      <div class="text-[#dadadaf3] flex gap-5">
         <span @click="handleFollowClick(followers, 'Followers')" class="cursor-pointer">{{ followers.length || '0'}}</span>
         |
         <span @click="handleFollowClick(following, 'Following')" class="cursor-pointer">{{ following.length || '0'}}</span>
       </div>
+      <div class="follow flex">
     <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
       <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
       <div v-else class="followed-btn">UNFOLLOW</div>
     </div>
+    <div v-if="isFollowed" class="collab-btn flex items-center gap-1" @click="handleCollabClick">
+      <Collab fillColor="#aea9d89" :size="20" />
+      COLLAB?</div>
+  </div>
       
     </div>
     
@@ -167,6 +172,7 @@ import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/modals/UploadTrackModal.vue';
 import Pencil from 'vue-material-design-icons/Pencil.vue';
+import Collab from 'vue-material-design-icons/AccountMultipleOutline.vue';
 import axios from 'axios';
 import { useModalStore } from '../stores/modalStore.js';
 import uniqolor from 'uniqolor';
@@ -468,10 +474,14 @@ const toggleFollow = async () => {
   }
 };
 
-
 const handleFollowClick = (dataType, name) => {
   const dataForBoostModal = { users: dataType, name: name};  // Example data
   modalStore.toggleModal('followModal', dataForBoostModal);  // Pass data to Boost modal
+};
+
+const handleCollabClick = () => {
+  const dataForCollabModal = { type: 'request', target: userID.value, this: currentUser.uid };
+  modalStore.toggleModal('collabModal', dataForCollabModal);
 };
 </script>
 

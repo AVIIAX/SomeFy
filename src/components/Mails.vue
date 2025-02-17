@@ -25,6 +25,26 @@
       </div>
     </div>
   </RouterLink>
+
+  <!-- Collab message -->
+    <div v-else-if="data.type === 'collab'">
+    <div class="mainTab">
+      <div class="nameDiv flex">
+        <div>{{ data.message.length > 20 ? data.message.slice(0, 20) + '...' : data.message }}</div>
+        <RouterLink
+    
+    :to="`/user/${data.from}`"
+  >
+        <h4 class="hover:underline">~ {{ collabFrom ? collabFrom.name : 'Loading...' }}</h4>
+        </RouterLink>
+        <span>{{ formattedTime }}</span>
+        <div class="flex collabBtns my-2">
+          <button @click="acceptCollab(data, data.id)" class="accept bg-[#d1d1d1] text-[#171717]">ACCEPT</button>
+          <button @click="rejectCollab(data)" class="reject bg-[#de6363]">REJECT</button>
+        </div>
+      </div>
+    </div>
+    </div>
 </template>
 
 <script setup>
@@ -32,17 +52,19 @@ import { ref, onMounted, computed } from 'vue';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { RouterLink } from 'vue-router';
 import { getAuth } from 'firebase/auth';
+import { useModalStore } from '../stores/modalStore.js';
 
 const currentUser = getAuth().currentUser;
 
 const db = getFirestore();
-
+const modalStore = useModalStore();
 // The component receives the mail object via the `data` prop.
 const props = defineProps(['data']);
 
 
 
 const follower = ref(null);
+const collabFrom = ref(null);
 
 // Format the timestamp (assumed to be a Firebase Timestamp or a date string/number)
 const formattedTime = computed(() => {
@@ -58,7 +80,7 @@ const formattedTime = computed(() => {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate()
   ) {
-    return 'today';
+    return 'Today';
   } else {
     const diffTime = Math.abs(now - date);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -90,7 +112,21 @@ onMounted(async () => {
       follower.value = userDoc.data();
     }
   }
+
+  // For collab notifications, fetch the collab's user data.
+  if (props.data.type === 'collab') {
+    const userRef = doc(db, 'user', props.data.from);
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      collabFrom.value = userDoc.data();
+    }
+  }
 });
+
+const acceptCollab = async (data, id) => {
+  const dataForCollabModal = { type: 'accept', target: data.from, this: currentUser.uid,  mail: data, mailId: id };  // Example data
+  modalStore.toggleModal('collabModal', dataForCollabModal);  // Pass data to Boost modal
+};
 </script>
 
 <style scoped>
@@ -169,5 +205,24 @@ div {
 
 .toArtist:hover {
   text-decoration: underline;
+}
+
+.collabBtns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.collabBtns button {
+  padding: 0.25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collabBtns button:hover {
+  opacity: 90%;
 }
 </style>
