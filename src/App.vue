@@ -37,7 +37,7 @@ const userEmail = ref("null");
 const userName = ref("");
 const userAV = ref("");
 const userCredits = ref("");
-const userMails = ref([]);
+const userMails = ref([null]);
 const unseenMailCount = computed(() => {
   return userMails.value.filter(mail => !mail.seen).length;
 });
@@ -59,7 +59,7 @@ onMounted(() => {
     if (user) {
       // If a user is authenticated
       userEmail.value = user.email;
-
+      
       // Reference to the user's document in Firestore
       const userRef = doc(db, "user", user.uid);
 
@@ -102,6 +102,7 @@ onMounted(() => {
       isArtist.value = false;
     }
   });
+
 
   isPlaying.value = false;
 
@@ -243,10 +244,10 @@ export default {
     v-if="openMail"
     class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[105px] w-[250px] h-[300px] p-1 cursor-pointer"
   >
-    <ul class="text-gray-200 font-semibold text-[14px]">
+    <div class="text-gray-200 font-semibold text-[14px]">
       <div
         v-if="userMails && userMails.length > 0"
-        class="overflow-auto mt-2 w-full bg-[#181822] rounded-lg shadow-lg h-fit z-50"
+        class="overflow-auto mt-2 w-full h-[400px]  bg-[#181822] rounded-lg shadow-lg z-50"
       >
       <Mail
       v-for="(mail, index) in userMails"
@@ -255,7 +256,7 @@ export default {
     ></Mail>
       </div>
       <div v-else class="text-center text-gray-400 mt-4">No mails found.</div>
-    </ul>
+    </div>
   </span>
                     
                 <button @click="openMenu = !openMenu" :class="openMenu ? 'bg-[#282828]' : 'bg-black'" class="bg-black hover:bg-[#282828] rounded-full p-0.5 mr-8 mt-0.5 cursor-pointer">
@@ -269,7 +270,7 @@ export default {
               </div>
               
               
-              <span v-if="openMenu" class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"> <ul class="text-gray-200 font-semibold text-[14px]">
+              <span v-if="openMenu && userMails" class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"> <ul class="text-gray-200 font-semibold text-[14px]">
                         <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">
                             <RouterLink :to="`/user/${userID}`">Profile</RouterLink>
                         </li>

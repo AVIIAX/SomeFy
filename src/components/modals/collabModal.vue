@@ -41,22 +41,51 @@
           </button>
         </div>
       </div>
-      <div class="flex flex-col gap-4" v-if="modalData?.type === 'reject'">
+      <div class="flex flex-col gap-4 p-4 w-full" v-if="modalData?.type === 'reject'">
         <h1>Reject Request</h1>
-        <div class="flex flex-col gap-4">
-          <span class="opacity-60">Reject Collab Request From {{  target?.name }}</span>
+        <div class="flex flex-col gap-4 justify-center items-center w-full">
+          <span class="opacity-60">Reject Collab Request From</span>
+
+        <RouterLink
+          :to="`/user/${modalData?.target}`">
+          <div class="flex gap-[0.2rem] justify-center items-center bg-[#4b4f9b8f] pr-[1rem] rounded-full w-fit cursor-pointer">
+            <div class="searchImg" style="border: solid 2px #d4d4d4; transform: scale(0.7)">
+              <img :src="target?.avatar" alt="" />
+            </div>
+            <div class="nameDiv">
+              <div>{{ target?.name }}</div>
+            </div>
+          </div>
+        </RouterLink>
+
           <p :style="{
             maxHeight: '100px',
             overflow: 'auto',
             color: '#a8a4a4',
             padding: '0.5rem',
             fontFamily: 'monospace'
-          }">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-          <textarea name="" class="msg" placeholder="Why Are You Rejecting The Request (Optional)"></textarea>
-          <button @click="reject(modalData.target, modalData.this)" class="send">
+          }">{{ modalData?.mail?.message }}</p>
+          <textarea name="" class="msg w-full" placeholder="Why Are You Rejecting? (Optional)" v-model="message"></textarea>
+          <button @click="reject(modalData.target, modalData.this, modalData.mailId, message)" class="send w-full">
             Reject Request
 
           </button>
+        </div>
+      </div>
+      <div class="flex flex-col gap-4 p- w-full max-h-[400px]" v-if="modalData?.type === 'msg'">
+        <h1>Message</h1>
+        <div class="justify-center items-center w-full">
+          <p 
+    :style="{
+      maxHeight: '200px',
+      maxWidth: '100%',
+      overflow: 'auto',
+      overflowX: 'hidden',
+      color: '#a8a4a4',
+      fontFamily: 'monospace',
+      fontSize: '100%'
+    }"
+  >{{ modalData?.message }}</p>
         </div>
       </div>
     </div>
@@ -99,7 +128,10 @@ const fetchUserData = async (id) => {
 };
 
 onMounted(async () => {
+
+  if(modalData.target) {
   await fetchUserData(modalData?.target);
+  }
   
 });
 
@@ -151,6 +183,7 @@ const mailKey =
       from: thisUser,
       message: message,
       collabID: mailId,
+      status: 'accepted',
       time: new Date(), 
       seen: false,
     };
@@ -172,9 +205,46 @@ console.error('Error accept collab request:', error);
 }
 };
 
-const reject = async (target, thisUser) => {
-  console.log('Rejecting collab with', target, 'from', thisUser);
+const reject = async (target, thisUser, mailId, message) => {
+  try {
+
+const targetDocRef = doc(db, "user", target);
+const userDocRef = doc(db, "user", thisUser);
+// TARGET UPDATE
+// Generate a unique mail key.
+const mailKey =
+      Date.now().toString() + Math.random().toString(36).substring(2, 15);
+
+    // Build a new mail object.
+    const newMail = {
+      type: "system",
+      from: thisUser,
+      message: message,
+      collabID: mailId,
+      status: 'rejected',
+      time: new Date(), 
+      seen: false,
+    };
+
+    await updateDoc(targetDocRef, {
+      [`inboxMails.${mailKey}`]: newMail,
+    });
+
+//MAILUPDATE
+await updateDoc(userDocRef, { 
+  [`inboxMails.${mailId}.status`]: "rejected", 
+  [`inboxMails.${mailId}.collabID`]: mailKey
+});
+
+closeModal()
+
+} catch (error) {
+console.error('Error reject collab request:', error);
+}
 };
+
+
+
 
 </script>
 

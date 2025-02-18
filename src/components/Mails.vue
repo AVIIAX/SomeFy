@@ -1,9 +1,25 @@
 <template>
   <!-- System message -->
-  <div v-if="data.type === 'system'">
+  <div v-if="data.type === 'system'" @click="openModal(data)">
     <div class="mainTab">
-      <div class="nameDiv flex">
-        <div>{{ data.message }}</div>
+      <div class="nameDiv flex" style="width: fit-content;">
+
+        <div v-if="data.collabID && collabFrom">
+          <RouterLink class="w-fit"
+          :to="`/user/${data?.from}`">
+          <div class="flex gap-[0.2rem] p-[0.2rem] pr-[0.5rem] bg-[#44546a] rounded-full w-fit cursor-pointer">
+            <div class="w-[20px] h-[20px] rounded-full flex justify-center" style="border: solid 2px #d4d4d4;">
+              <img class="rounded-full" :src="collabFrom?.avatar" alt="" />
+            </div>
+            <div class="">
+              <div>{{ collabFrom?.name }}</div>
+            </div>
+          </div>
+        </RouterLink>
+        <div>{{ data.status === 'accepted' ? 'Accepted' : 'Rejected'}} Your Request!</div>
+        </div>
+
+        <h4>{{ data.message.length > 20 ? data.message.slice(0, 20) + '...' : data.message }}</h4>
         <span>{{ formattedTime }}</span>
       </div>
     </div>
@@ -37,10 +53,11 @@
   >
         <h4 class="hover:underline">~ {{ collabFrom ? collabFrom.name : 'Loading...' }}</h4>
         </RouterLink>
+        <h4 v-if="data.status !== 'waiting'">{{ data.status === 'accepted' ? 'Accepted' : 'Rejected' }}</h4>
         <span>{{ formattedTime }}</span>
-        <div class="flex collabBtns my-2">
+        <div v-if="data.status === 'waiting'" class="flex collabBtns my-2">
           <button @click="acceptCollab(data, data.id)" class="accept bg-[#d1d1d1] text-[#171717]">ACCEPT</button>
-          <button @click="rejectCollab(data)" class="reject bg-[#de6363]">REJECT</button>
+          <button @click="rejectCollab(data, data.id)" class="reject bg-[#de6363]">REJECT</button>
         </div>
       </div>
     </div>
@@ -84,7 +101,7 @@ const formattedTime = computed(() => {
   } else {
     const diffTime = Math.abs(now - date);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays === 1 ? '1D ago' : `${diffDays} Days ago`;
+    return diffDays === 0 ? '1D ago' : `${diffDays} Days ago`;
   }
 });
 
@@ -114,7 +131,23 @@ onMounted(async () => {
   }
 
   // For collab notifications, fetch the collab's user data.
+  if (props.data.type === 'system') {
+
+    if(props.data.collabID) {
+      const userRef = doc(db, 'user', props.data.from);
+      const userDoc = await getDoc(userRef);
+      
+        if (userDoc.exists()) {
+          collabFrom.value = userDoc.data();
+        }
+    }
+    
+    
+  }
+
+  // For collab accept/reject notifications, fetch the collab's user data.
   if (props.data.type === 'collab') {
+
     const userRef = doc(db, 'user', props.data.from);
     const userDoc = await getDoc(userRef);
     if (userDoc.exists()) {
@@ -127,6 +160,18 @@ const acceptCollab = async (data, id) => {
   const dataForCollabModal = { type: 'accept', target: data.from, this: currentUser.uid,  mail: data, mailId: id };  // Example data
   modalStore.toggleModal('collabModal', dataForCollabModal);  // Pass data to Boost modal
 };
+
+const rejectCollab = async (data, id) => {
+  const dataForCollabModal = { type: 'reject', target: data.from, this: currentUser.uid,  mail: data, mailId: id };  // Example data
+  modalStore.toggleModal('collabModal', dataForCollabModal);  // Pass data to Boost modal
+};
+
+const openModal = async (data) => {
+  if(data.collabID) {
+    const dataForCollabModal = { type: 'msg', message: data.message };  // Example data
+  modalStore.toggleModal('collabModal', dataForCollabModal);  // Pass data to Boost modal
+  }
+}
 </script>
 
 <style scoped>
