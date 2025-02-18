@@ -22,7 +22,8 @@
             top: '0',
             left: '0',
             zIndex: '-1',
-            objectFit: 'cover'
+            objectFit: 'cover',
+            filter: 'blur(10px)'
           }" 
         />
         <div class="w-[100%] pr-[1rem]">
