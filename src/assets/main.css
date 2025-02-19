@@ -194,3 +194,56 @@
   .collab-btn {
     background-color: #707891;
   }
+
+  /* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: fit-content;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+  background-color: rgb(169, 171, 204);
+  color: #2c2c2c;
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem 0.5rem;
+  border-radius: 6px;
+  transition: all 1s;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.slowedReverbed {
+  background-color:transparent;
+  width:35px;
+  height:35px;
+  border-radius:50px;
+  text-align: center;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  border: solid 2px;
+  box-shadow: 0 0 5px #ff81b1, inset 0 0 5px #fc8cb7;
+  cursor: pointer;
+  display: flex;
+  transition: all 1s;
+}
+
+.slowedReverbed svg {
+  width: 50px;
+  height: 50px;
+}

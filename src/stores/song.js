@@ -11,11 +11,11 @@ let eqFilters = [];
 let eqContext = null;
 let eqUpdateInterval = null;
 
-// NEW: Global variables to hold the last node of the EQ chain and a convolver for reverb
+// Global variables to hold the last node of the EQ chain and a convolver for reverb
 let eqChainOutput = null;
 let reverbNode = null;
 
-// NEW: Helper to load an impulse response for the reverb effect
+// Helper to load an impulse response for the reverb effect
 async function loadImpulseResponse(url, context) {
   try {
     const response = await fetch(url);
@@ -89,15 +89,48 @@ export const useSongStore = defineStore('song', {
     currentArtist: null,
     trackQueue: [], // Queue of track details
     currentIndex: -1, // Tracks the index of the current track in the queue
-    // NEW: Effect state parameters
+    // Effect state parameters
     isSlowed: false,
     isReverbed: false,
-    slowedRate: 0.8, // Customize slowed playback rate (e.g., 0.8 means 80% speed)
+    slowedRate: 0.8, // Normal playback is 1; range is 0.4 (left) to 2 (right)
     reverbImpulseUrl: '../reverb.wav', // Customize with your impulse response URL
+    // Flag to avoid adding multiple storage listeners
+    localStorageListenerAdded: false,
   }),
 
   actions: {
+    // Initialize a storage event listener to update slowed parameters live
+    initLocalStorageListener() {
+      if (this.localStorageListenerAdded) return;
+      if (typeof window !== 'undefined') {
+        window.addEventListener('storage', (event) => {
+          // Assumes Pinia persist plugin uses key "pinia"
+          if (event.key === 'pinia' && event.newValue) {
+            try {
+              const newState = JSON.parse(event.newValue);
+              if (newState && newState.song) {
+                const newSongState = newState.song;
+                if (newSongState.slowedRate !== undefined) {
+                  this.slowedRate = newSongState.slowedRate;
+                }
+                if (newSongState.isSlowed !== undefined) {
+                  this.isSlowed = newSongState.isSlowed;
+                }
+                this.updatePlaybackRate();
+              }
+            } catch (e) {
+              console.error("Error parsing persisted state", e);
+            }
+          }
+        });
+        this.localStorageListenerAdded = true;
+      }
+    },
+
     createWS(container, url) {
+      // Initialize storage listener (only once)
+      this.initLocalStorageListener();
+
       // Destroy existing wavesurfer instance before creating a new one
       if (this.wavesurfer && typeof this.wavesurfer.destroy === "function") {
         this.wavesurfer.destroy();
@@ -225,7 +258,6 @@ export const useSongStore = defineStore('song', {
         await this.loadSong(track, trackIDs);
         return;
       }
-    
       this.playOrPauseSong();
     },
     
@@ -234,7 +266,6 @@ export const useSongStore = defineStore('song', {
         console.log('No next track available');
         return;
       }
-
       this.currentIndex += 1;
       const nextTrack = this.trackQueue[this.currentIndex];
       await this.loadSong(nextTrack, this.trackQueue.map((t) => t.id));
@@ -245,7 +276,6 @@ export const useSongStore = defineStore('song', {
         console.log('No previous track available');
         return;
       }
-
       this.currentIndex -= 1;
       const prevTrack = this.trackQueue[this.currentIndex];
       await this.loadSong(prevTrack, this.trackQueue.map((t) => t.id));
@@ -255,11 +285,9 @@ export const useSongStore = defineStore('song', {
       try {
         const trackRef = doc(db, 'track', trackID);
         const trackDoc = await getDoc(trackRef);
-
         if (trackDoc.exists()) {
           const trackData = trackDoc.data();
           const updatedViews = (trackData.views || 0) + 1;
-
           await updateDoc(trackRef, { views: updatedViews });
           console.log(`Updated views for track ${trackID} to ${updatedViews}`);
         } else {
@@ -284,32 +312,21 @@ export const useSongStore = defineStore('song', {
         console.error('User not authenticated');
         return;
       }
-
       const userRef = doc(db, 'user', currentUser.uid); // Reference to the current user's document
       const trackRef = doc(db, 'track', id); // Reference to the specific track document
-
       try {
-        // Fetch the current user's data
         const userDoc = await getDoc(userRef);
         if (!userDoc.exists()) {
           console.error('User document does not exist');
           return;
         }
-
         const userData = userDoc.data();
-        const likedTracks = userData.liked || []; // Get the liked tracks array, default to empty
-
-        this.isLiked = likedTracks.includes(id); // Check if the track is already liked
-
+        const likedTracks = userData.liked || [];
+        this.isLiked = likedTracks.includes(id);
         if (this.isLiked) {
-          // Unlike the track
           this.isLiked = false;
-
-          // Remove the track ID from the user's liked array
           const updatedLikedTracks = likedTracks.filter((trackId) => trackId !== id);
           await updateDoc(userRef, { liked: updatedLikedTracks });
-
-          // Remove the user ID from the track's liked array
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
             const trackData = trackDoc.data();
@@ -317,14 +334,9 @@ export const useSongStore = defineStore('song', {
             await updateDoc(trackRef, { liked: updatedTrackLikes });
           }
         } else {
-          // Like the track
           this.isLiked = true;
-
-          // Add the track ID to the user's liked array
           const updatedLikedTracks = [...likedTracks, id];
           await updateDoc(userRef, { liked: updatedLikedTracks });
-
-          // Add the user ID to the track's liked array (ensure no duplicates)
           const trackDoc = await getDoc(trackRef);
           if (trackDoc.exists()) {
             const trackData = trackDoc.data();
@@ -340,22 +352,50 @@ export const useSongStore = defineStore('song', {
     // ================================
     // New Effect Methods
     // ================================
-
     // Toggle the slowed effect. When enabled, set the playback rate to the customized slowed rate.
     toggleSlowEffect() {
-      this.isSlowed = !this.isSlowed;
-      this.updatePlaybackRate();
+      this.setIsSlowed(!this.isSlowed);
     },
 
-    // Helper: update playback rate based on the isSlowed flag.
-    /*updatePlaybackRate() {
-      if (this.wavesurfer) {
-        const rate = this.isSlowed ? this.slowedRate : 1;
-        this.wavesurfer.setPlaybackRate(rate);
-        console.log(`Playback rate set to ${rate}`);
+    // Update slowedRate in steps (0.1) and update playback rate in realtime.
+    setSlowedRate(newRate) {
+      const step = 0.1;
+      newRate = Math.round(newRate * 10) / 10;
+      if (newRate < 0.4) newRate = 0.4;
+      if (newRate > 2) newRate = 2;
+      if (Math.abs(newRate - this.slowedRate) >= step) {
+        this.slowedRate = newRate;
+        this.updatePlaybackRate();
       }
-    },*/
+    },
 
+    // Update the isSlowed flag and then update playback rate in realtime.
+    setIsSlowed(newVal) {
+      if (this.isSlowed !== newVal) {
+        this.isSlowed = newVal;
+        this.updatePlaybackRate();
+      }
+    },
+
+    // Update playback rate based on isSlowed and slowedRate.
+    async updatePlaybackRate() {
+      if (this.wavesurfer) {
+        const audio = this.wavesurfer.getMediaElement();
+        if (audio) {
+          const rate = this.isSlowed ? this.slowedRate : 1;
+          if ('preservesPitch' in audio) {
+            audio.preservesPitch = false;
+          }
+          audio.playbackRate = rate;
+          const detune = this.isSlowed ? -440 : 0;
+          audio.detune = detune;
+          console.log(`Playback rate set to ${rate}, Detune: ${detune}`);
+        } else {
+          console.error("No media element found in wavesurfer");
+        }
+      }
+    },
+     
     // Toggle the reverb effect.
     async toggleReverbEffect() {
       this.isReverbed = !this.isReverbed;
@@ -376,50 +416,17 @@ export const useSongStore = defineStore('song', {
       }
       this.updatePlaybackRate();
     },
-    // Add reverb effect by inserting a Convolver node between the EQ chain and the destination.
 
-    async updatePlaybackRate() {
-      if (this.wavesurfer) {
-      const audio = this.wavesurfer.getMediaElement();
-      if (audio) {
-      const rate = this.isSlowed ? this.slowedRate : 1;
-     
-     
-      // Ensure preservesPitch is set to false (if supported)
-      if ('preservesPitch' in audio) {
-      audio.preservesPitch = false; // Disable pitch correction
-      }
-     
-     
-      audio.playbackRate = rate;
-     
-     
-      // Adjust pitch using `detune` (in cents)
-      const detune = this.isSlowed ? -440 : 0;
-      audio.detune = detune;
-     
-     
-      console.log(`Playback rate: ${rate}, Detune: ${detune}`); // Debugging
-      } else {
-      console.error("No media element found in wavesurfer");
-      }
-      }
-      },
-     
     async addReverbEffect() {
       if (!eqContext || !eqChainOutput) {
         console.error("Audio context or EQ chain not initialized");
         return;
       }
       try {
-        // Disconnect the current connection from eqChainOutput to destination.
         try {
           eqChainOutput.disconnect(eqContext.destination);
-        } catch (e) {
-          // It might not be connected—ignore error.
-        }
+        } catch (e) {}
     
-        // Create the convolver node if it doesn't exist.
         if (!reverbNode) {
           reverbNode = eqContext.createConvolver();
           const impulseBuffer = await loadImpulseResponse(this.reverbImpulseUrl, eqContext);
@@ -427,31 +434,27 @@ export const useSongStore = defineStore('song', {
             reverbNode.buffer = impulseBuffer;
           } else {
             console.error("Failed to load impulse response; reverb effect not applied");
-            // Reconnect directly if impulse loading fails.
             eqChainOutput.connect(eqContext.destination);
             return;
           }
         }
     
-        // Create a GainNode to control the wet/dry mix (25% reverb, 75% dry)
         const wetGain = eqContext.createGain();
-        wetGain.gain.value = 0.85; // 25% reverb
+        wetGain.gain.value = 0.85;
     
         const dryGain = eqContext.createGain();
-        dryGain.gain.value = 0.35; // 75% dry
+        dryGain.gain.value = 0.35;
     
-        // Create a StereoPannerNode to ensure the reverb is stereo
         const stereoPanner = eqContext.createStereoPanner();
-        stereoPanner.pan.value = 0; // Center pan (stereo)
+        stereoPanner.pan.value = 0;
     
-        // Split the signal into dry and wet paths
         eqChainOutput.connect(dryGain);
-        dryGain.connect(eqContext.destination); // Dry signal goes directly to the destination
+        dryGain.connect(eqContext.destination);
     
         eqChainOutput.connect(reverbNode);
-        reverbNode.connect(stereoPanner); // Apply stereo panning to the reverb
-        stereoPanner.connect(wetGain); // Connect the panned reverb to the wet gain
-        wetGain.connect(eqContext.destination); // Wet signal goes to the destination
+        reverbNode.connect(stereoPanner);
+        stereoPanner.connect(wetGain);
+        wetGain.connect(eqContext.destination);
     
         console.log("Reverb effect added with 25% mix and stereo");
       } catch (error) {
@@ -459,7 +462,6 @@ export const useSongStore = defineStore('song', {
       }
     },
 
-    // Remove the reverb effect by bypassing the convolver node.
     removeReverbEffect() {
       if (!eqContext || !eqChainOutput) {
         console.error("Audio context or EQ chain not initialized");
@@ -474,7 +476,6 @@ export const useSongStore = defineStore('song', {
             reverbNode.disconnect(eqContext.destination);
           } catch (e) {}
         }
-        // Reconnect the EQ chain directly to the destination.
         eqChainOutput.connect(eqContext.destination);
         console.log("Reverb effect removed");
       } catch (error) {

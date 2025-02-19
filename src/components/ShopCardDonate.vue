@@ -46,12 +46,13 @@ function onBuy() {
 
 <template>
   <div class="shop-card">
-    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Credits</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
+    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Me A Coffee</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
     <DotLottieVue
+      style="height: 200px; width: 200px" 
       class="lottie"
       autoplay
       loop
-      src="https://assets-v2.lottiefiles.com/a/566f50c0-1187-11ee-a02c-539a714365fe/BD0yP96rRX.lottie"
+      src="https://assets-v2.lottiefiles.com/a/910d258a-1188-11ee-b88a-9bd716c2ab21/7Frf5sO43U.lottie"
     />
     <div class="quantity-control">
       <button class="quantity-btn" @click="decreaseQuantity">-</button>

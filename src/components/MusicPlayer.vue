@@ -88,10 +88,19 @@
                       </svg>
                   </button>
 
-                  <button class="mx-2 text-white" @click="useSong.toggleSlowedReverbEffect()">
-                      SLOWEDREVERBED!!
-                  </button>
-
+                  <!-- <button class="mx-2 tooltip slowedReverbed text-white" :style="{ color: useSong.isSlowed ? 'red': 'white' }" @click="useSong.toggleSlowedReverbEffect()">
+                  </button> -->
+                  <BlurRadial 
+  
+  class="mx-5 tooltip slowedReverbed text-white" 
+  @click="useSong.toggleSlowedReverbEffect()" 
+  :style="{
+    borderColor: useSong.isSlowed ? '#7de1ff' : '#ff6e6e',
+    transform: useSong.isSlowed ? 'scale(1.1)' : 'scale(1)',
+    color: useSong.isSlowed ? '#7de1ff' : '#ff6e6e'
+  }" 
+/>
+<span class="tooltiptext">Oneclick SlowedReverbed</span>
               </div>
               
               <div class="flex items-center h-fit w-[100%]">
@@ -108,7 +117,10 @@
           </div>
       </div>
 
-      <div class="flex items-center w-1/4 justify-end pr-10">
+  
+      <div class="flex items-center justify-end">
+          <MusicPlayerSlow />
+          <MusicPlayerSlow />
           <MusicPlayerVolume />
       </div>
   </div>
@@ -120,10 +132,12 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import MusicPlayerVolume from '../components/MusicPlayerVolume.vue';
+import MusicPlayerSlow from '../components/MusicPlayerSlow.vue';
 import EqualizerCom from '../components/Equalizer.vue';
 import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import Equalizer from 'vue-material-design-icons/EqualizerOutline.vue';
+import BlurRadial from 'vue-material-design-icons/Blur.vue';
 import { mdilPlay, mdilPause, mdilSkipPrevious, mdilSkipNext } from '@mdi/light-js';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { useSongStore } from '../stores/song';

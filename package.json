@@ -8,11 +8,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "@lottiefiles/dotlottie-vue": "^0.5.6",
     "@mdi/light-js": "^0.2.63",
     "axios": "^1.7.9",
     "firebase": "^11.2.0",
-    "firebase-admin": "^13.0.2",
+    "firebase-admin": "^13.1.0",
+    "firebase-functions": "^6.3.2",
     "pinia": "^2.0.28",
     "pinia-plugin-persistedstate": "^3.0.2",
     "soundtouchjs": "^0.1.30",
