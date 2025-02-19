@@ -137,6 +137,7 @@ function getPointerAngle(e) {
   return angle
 }
 
+const timeoutId = ref(null);
 
 // --- WHEEL LOGIC ---
 // Allow adjusting the knob using the mouse wheel.
@@ -150,6 +151,11 @@ const onWheel = (e) => {
   newRate = Math.max(0.4, Math.min(2, newRate))
   slowedRate.value = newRate
   // The watcher on slowedRate will update knobRotation.
+
+  // Set new timeout to reset wheeling after 100ms of inactivity
+  timeoutId.value = setTimeout(() => {
+    wheeling.value = false;
+  }, 1500);
 }
 
 

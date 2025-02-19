@@ -5,45 +5,64 @@ import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia'
 
 const useSong = useSongStore()
+// (Retaining wavesurfer here only in case it’s needed elsewhere)
 const { wavesurfer } = storeToRefs(useSong)
 
-// Volume in [0..100] and mute state
-const vol = ref(80)
-const isMuted = ref(false)
+// --- SLOWED RATE SETUP ---
+// custDetune ranges from 0.4 to 2, with the normal value 1.
+// We assume useSong.custDetune exists and is reactive.
+const custDetune = ref(useSong.custDetune || 440)
 
-// Set WaveSurfer volume when available
-watch(wavesurfer, (newWS) => {
-  if (newWS && typeof newWS.setVolume === 'function') {
-    newWS.setVolume(isMuted.value ? 0 : vol.value / 100)
+// Sync external changes from the store.
+watch(
+  () => useSong.custDetune,
+  (newVal) => {
+    custDetune.value = newVal
   }
-}, { immediate: true })
+)
 
-watch(vol, (newVol) => {
-  if (wavesurfer.value && typeof wavesurfer.value.setVolume === 'function') {
-    wavesurfer.value.setVolume(isMuted.value ? 0 : newVol / 100)
-  }
+// Update the store when custDetune changes locally and update playback rate.
+watch(custDetune, (newVal) => {
+  useSong.custDetune = newVal
+  useSong.updatePlaybackRate()
 })
 
-const toggleMute = () => {
-  isMuted.value = !isMuted.value
-  if (wavesurfer.value && typeof wavesurfer.value.setVolume === 'function') {
-    wavesurfer.value.setVolume(isMuted.value ? 0 : vol.value / 100)
+// --- KNOB LOGIC ---
+// The knob rotates between 0° and 270°.
+// We want 0.4 → 0°, 1 → 135°, and 2 → 270°.
+// We use piecewise linear mappings.
+
+// Map a slowed rate to a rotation angle.
+function mapRateToAngle(rate) {
+  if (rate <= 1) {
+    // Map [0.4, 1] to [0, 135]
+    return ((rate - 0.4) / (1 - 0.4)) * 135
+  } else {
+    // Map [1, 2] to [135, 270]
+    return 135 + ((rate - 1) / (2 - 1)) * 135
   }
 }
 
-// --- KNOB LOGIC ---
-// Internally, we track a "physical" knob rotation from 0 to 270° (which maps to volume 0–100).
-const knobRotation = ref((vol.value / 100) * 270)
-// When volume changes externally, sync knobRotation:
-watch(vol, (newVol) => {
-  knobRotation.value = (newVol / 100) * 270
+// Map a rotation angle back to a slowed rate.
+function mapAngleToRate(angle) {
+  if (angle <= 135) {
+    // Map [0, 135] to [0.4, 1]
+    return 0.4 + (angle / 135) * (1 - 0.4)  // 1 - 0.4 = 0.6
+  } else {
+    // Map [135, 270] to [1, 2]
+    return 1 + ((angle - 135) / 135) * (2 - 1)  // 2 - 1 = 1
+  }
+}
+
+// The "physical" knob rotation in degrees.
+const knobRotation = ref(mapRateToAngle(custDetune.value)) // initial rotation (should be 135° when custDetune is 1)
+
+// Sync knobRotation when custDetune changes externally.
+watch(custDetune, (newRate) => {
+  knobRotation.value = mapRateToAngle(newRate)
 })
 
-// The visual angle maps the physical range [0,270] to a 180° arc.
-// At volume 0: knobRotation = 0 → visualAngle = 0° (pointer at left)
-// At volume 100: knobRotation = 270 → visualAngle = 180° (pointer rotated to right)
-const visualAngle = () => (knobRotation.value / 270) * 180
-
+// --- DRAGGING LOGIC ---
 const knobRef = ref(null)
 const dragging = ref(false)
 const wheeling = ref(false)
@@ -62,23 +81,32 @@ const startDrag = (e) => {
   lastAngle.value = getPointerAngle(e)
 }
 
-// On drag, add the pointer’s angle difference so that upward motion increases volume.
+// On drag, update knobRotation based on the pointer’s angle difference.
 const onDrag = (e) => {
   if (!dragging.value) return
 
   const angle = getPointerAngle(e)
   let angleDiff = angle - lastAngle.value
 
-  // Correct for wrapping around 0°/360°
+  // Correct for wrapping around 0°/360°.
   if (angleDiff > 180) angleDiff -= 360
   if (angleDiff < -180) angleDiff += 360
 
-  // Use addition: an increase in pointer angle increases knobRotation.
-  const newRotation = knobRotation.value + angleDiff
-  knobRotation.value = Math.max(0, Math.min(270, newRotation))
+  // Compute a new rotation based on pointer movement, clamped between 0 and 270°.
+  let newRotation = knobRotation.value + angleDiff
+  newRotation = Math.max(0, Math.min(270, newRotation))
 
-  // Update volume based on the physical rotation.
-  vol.value = (knobRotation.value / 270) * 100
+  // Compute the continuous new slowed rate from newRotation.
+  const continuousRate = mapAngleToRate(newRotation)
+  // Snap it to the nearest 0.05.
+  let snappedRate = Math.round(continuousRate / 0.1) * 0.1
+  // Clamp to the valid range.
+  snappedRate = Math.max(0.4, Math.min(2, snappedRate))
+  // Update the knob rotation to the discrete step corresponding to snappedRate.
+  const snappedAngle = mapRateToAngle(snappedRate)
+
+  knobRotation.value = snappedAngle
+  custDetune.value = snappedRate
 
   lastAngle.value = angle
 }
@@ -91,29 +119,7 @@ const stopDrag = () => {
   document.removeEventListener('touchend', stopDrag)
 }
 
-const timeoutId = ref(null);
-// --- WHEEL LOGIC ---
-// Allow adjusting volume using the mouse wheel.
-const onWheel = (e) => {
-  wheeling.value = true;
-  e.preventDefault()
-  const step = 1 // adjust volume in 1% steps
-  if (e.deltaY < 0) {
-    // scroll up: increase volume
-    vol.value = Math.min(100, vol.value + step)
-  } else {
-    // scroll down: decrease volume
-    vol.value = Math.max(0, vol.value - step)
-  }
-
-   // Set new timeout to reset wheeling after 100ms of inactivity
-   timeoutId.value = setTimeout(() => {
-    wheeling.value = false;
-  }, 1500);
-}
-
-
-// Helper: compute pointer angle (in degrees, [0,360)) relative to knob center.
+// Helper: compute pointer angle (in degrees, [0,360)) relative to the knob center.
 function getPointerAngle(e) {
   let clientX, clientY
   if (e.touches && e.touches[0]) {
@@ -129,6 +135,37 @@ function getPointerAngle(e) {
   let angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI)
   if (angle < 0) angle += 360
   return angle
+}
+
+
+const timeoutId = ref(null);
+
+// --- WHEEL LOGIC ---
+// Allow adjusting the knob using the mouse wheel.
+const onWheel = (e) => {
+  wheeling.value = true;
+  e.preventDefault()
+  const step = 0.05
+  // Scroll up (deltaY < 0) increases value; scroll down decreases.
+  let newRate = custDetune.value - (e.deltaY > 0 ? step : -step)
+  newRate = Math.round(newRate / step) * step
+  newRate = Math.max(0.4, Math.min(2, newRate))
+  custDetune.value = newRate
+  // The watcher on custDetune will update knobRotation.
+
+  // Set new timeout to reset wheeling after 100ms of inactivity
+  timeoutId.value = setTimeout(() => {
+    wheeling.value = false;
+  }, 1500);
+}
+
+
+
+// --- TOGGLE LOGIC ---
+// Clicking the center toggles the slowed state and updates playback rate.
+const toggleSlowed = () => {
+  useSong.isSlowed = !useSong.isSlowed
+  useSong.updatePlaybackRate()
 }
 </script>
 
@@ -170,14 +207,14 @@ function getPointerAngle(e) {
         cy="25"
         r="21"
         fill="none"
-        stroke="#7bc2e5"
+        stroke="#e58e7b"
         stroke-width="2"
         filter="url(#glow)"
       />
 
       <!-- Rotating group: knob face and pointer.
-           We rotate by the computed visualAngle. -->
-      <g :transform="'rotate(' + visualAngle() + ' 25 25)'">
+           We rotate by the computed knobRotation value. -->
+      <g :transform="'rotate(' + knobRotation + ' 25 25)'">
         <!-- Knob face -->
         <circle
           cx="25"
@@ -200,31 +237,31 @@ function getPointerAngle(e) {
         <circle cx="12" cy="20" r="1.5" fill="#fff" />
       </g>
 
-      <!-- Mute/Unmute icon in the center (non-rotating) -->
+      <!-- Center toggle icon (non-rotating) -->
       <foreignObject x="15" y="15" width="20" height="20">
         <div
           xmlns="http://www.w3.org/1999/xhtml"
-          @click.stop="toggleMute"
+          @click.stop="toggleSlowed"
           style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;"
         >
-          <Power v-if="isMuted" fillColor="#e57b7b" :size="17" />
-          <Power v-else fillColor="#7bc2e5" :size="19" />
+          <!-- When slowed is active, show one color/size; otherwise another -->
+          <Power v-if="useSong.isSlowed" fillColor="#7bc2e5" :size="19" />
+          <Power v-else fillColor="#e57b7b" :size="17" />
         </div>
       </foreignObject>
     </svg>
-    <span v-if="dragging || wheeling" class="tooltiptext">{{ Math.round(vol * 10) / 10 }}</span>
+    <span v-if="dragging || wheeling" class="tooltiptext">{{ Math.round(useSong.custDetune * 10) / 10 }}</span>
   </div>
 </template>
 
 <style>
 /* Additional styling if needed */
 #vol-knob {
-    transform: scale(0.5);
-    transition: all 0.5s;
+  transform: scale(0.5);
+  transition: all 0.5s;
 }
 
 #vol-knob:hover {
-    transform: scale(0.55);
+  transform: scale(0.55);
 }
-
 </style>

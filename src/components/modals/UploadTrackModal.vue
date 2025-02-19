@@ -5,19 +5,21 @@
       <form @submit.prevent="handleSubmit">
         <!-- Artwork Input -->
         <div class="artwork-container">
-          <label for="artwork" class="artwork-label">
+          <label for="artwork" class="artwork-label cursor-pointer">
             <img
               v-if="artwork"
               :src="artwork"
               class="artwork-preview"
               alt="Uploaded artwork"
             />
-            <img
+            <!-- <img
               v-else
               src="https://archive.org/download/placeholder-image/placeholder-image.jpg"
               class="artwork-placeholder"
               alt="Placeholder"
-            />
+            /> -->
+
+            <div v-else class="imagePlaceHold artwork-placeholder"></div>
           </label>
           <input
             id="artwork"
@@ -28,11 +30,13 @@
           />
         </div>
 
+        <div class="max-h-[500px] overflow-auto my-8 p-3">
+        <span>Required</span>
         <!-- Name Input -->
         <input
           v-model="name"
           type="text"
-          placeholder="Enter song name"
+          placeholder="Track Name"
           class="input"
         />
 
@@ -40,29 +44,74 @@
         <input
           v-model="genre"
           type="text"
-          placeholder="Enter genre"
+          placeholder="Genre"
           class="input"
         />
 
         <!-- Year Input -->
         <input
           v-model="year"
-          type="text"
-          placeholder="Release year"
+          type="number"
+          min="1900" 
+          max="2025" 
+          placeholder="Release Year"
           class="input"
         />
 
         <!-- Music File Input -->
+         <span>Upload Track File</span>
         <input
           id="music"
           type="file"
           accept="audio/*"
           @change="handleMusicUpload"
+          class="input track-upload"
+        />
+
+        <span>Optional</span>
+        <!-- Description Input -->
+        <textarea
+          v-model="description"
+          type="text"
+          placeholder="Description"
           class="input"
         />
 
+        <!-- Socials -->
+         <!-- Year Input -->
+        <input
+          v-model="yt"
+          type="text"
+          placeholder="Youtube Link"
+          class="input"
+        />
+
+        <input
+          v-model="spotify"
+          type="text"
+          placeholder="Spotify Link"
+          class="input"
+        />
+
+        <input
+          v-model="soundc"
+          type="text"
+          placeholder="Sound Cloud Link"
+          class="input"
+        />
+
+        <input
+          v-model="apple"
+          type="text"
+          placeholder="Apple Music Link"
+          class="input"
+        />
+        
+      </div>
         <!-- Submit Button -->
-        <button type="submit" class="submit-btn happyBtn">Submit</button>
+        <button  type="submit" class="submit-btn">Submit 5
+          <CircleMultiple fill="#FFFFFF" size="20" />
+        </button>
       </form>
     </div>
   </div>
@@ -87,6 +136,7 @@ import {
   getDownloadURL
 } from "firebase/storage";
 import { cropImageToSquare } from "../../main.js";
+import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 
 const modalStore = useModalStore();
 const db = getFirestore();
@@ -100,6 +150,12 @@ const currentUser = auth.currentUser;
 const name = ref('');
 const genre = ref('');
 const year = ref('');
+const description = ref('');
+const yt = ref('');
+const spotify = ref('');
+const soundc = ref('');
+const apple = ref('');
+
 const artwork = ref(''); // Data URL for preview
 const artworkBlob = ref(null); // Blob to be uploaded
 const musicFile = ref(null); // Audio file object
@@ -168,6 +224,11 @@ const handleSubmit = async () => {
         image: "", // To be updated after Storage upload
         url: "",   // To be updated after Storage upload
         id: trackId,
+        description: description,
+        youtube: yt || null,
+        spotify: spotify || null,
+        soundcloud: soundc || null,
+        applemusic: apple || null,
         views: 0,
         createdAt: new Date(),
       };
@@ -218,6 +279,10 @@ const closeModal = () => {
 </script>
 
 <style scoped>
+.modal-container {
+  width: 700px;
+  padding: 30px;
+}
 /* Artwork Input */
 .artwork-container {
   margin: 20px 0;
@@ -255,25 +320,75 @@ const closeModal = () => {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
-  border: 1px solid #555;
   border-radius: 5px;
   font-size: 14px;
-  background-color: #3c3c3c;
+  background-color: #2c2c2cbb;
   color: #f0f0f0;
 }
 
 /* Submit Button */
 .submit-btn {
-  background-color: #4caf50;
+  position: relative;
   color: white;
   border: none;
   padding: 10px 20px;
+  border: 2px solid #e0e0e0ea;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  word-spacing: 0.5rem;
+  transition: all 0.3s;
 }
 
 .submit-btn:hover {
-  background-color: #45a049;
+  background-color: #e0e0e041;
+  transform: translateX(-50%) scale(1.05);
+}
+
+.track-upload {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.track-upload::after {
+  content: '';
+  position: absolute;
+  width: 98%;
+  height: 80%;
+  border: 2px dotted rgb(138, 138, 138);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.track-upload::-webkit-file-upload-button {
+  visibility: hidden;
+}
+
+.artwork-label::-webkit-file-upload-button {
+  visibility: hidden;
+}
+
+.imagePlaceHold{
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  letter-spacing: 3px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.imagePlaceHold::after {
+  content: 'Track Artwork';
 }
 </style>

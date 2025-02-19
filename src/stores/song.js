@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import WaveSurfer from 'wavesurfer.js';
 import { getRandomBoostedTrackId } from "../utils/boostedtracks.js";
+import * as Tone from 'tone';
 
 // Global EQ configuration (adjust bands as needed)
 const eqBands = [32, 64, 128, 256, 512, 1000, 2000];
@@ -42,7 +43,7 @@ function attachEqFilters(ws) {
   }
   const mediaNode = eqContext.createMediaElementSource(audio);
   const savedSettings = JSON.parse(localStorage.getItem('eqSettings')) || {};
-  
+
   // Create an array of filters using stored settings
   eqFilters = eqBands.map((band) => {
     const filter = eqContext.createBiquadFilter();
@@ -52,19 +53,19 @@ function attachEqFilters(ws) {
     filter.gain.value = savedSettings[band] || 0;
     return filter;
   });
-  
+
   // Chain filters: mediaNode -> filter1 -> filter2 -> ... -> destination
   const chain = eqFilters.reduce((prev, curr) => {
     prev.connect(curr);
     return curr;
   }, mediaNode);
-  
+
   // Save chain's last node for further effects processing
   eqChainOutput = chain;
-  
+
   // Initially connect chain to destination
   chain.connect(eqContext.destination);
-  
+
   // Poll localStorage for any changes in EQ settings and update filters in realtime
   if (eqUpdateInterval) clearInterval(eqUpdateInterval);
   eqUpdateInterval = setInterval(() => {
@@ -91,11 +92,14 @@ export const useSongStore = defineStore('song', {
     currentIndex: -1, // Tracks the index of the current track in the queue
     // Effect state parameters
     isSlowed: false,
+    isPreservesPitch: false,
     isReverbed: false,
     slowedRate: 0.8, // Normal playback is 1; range is 0.4 (left) to 2 (right)
+    custDetune: 1200,  // Detune in cents (e.g. 1200 = 12 semitones)
     reverbImpulseUrl: '../reverb.wav', // Customize with your impulse response URL
-    // Flag to avoid adding multiple storage listeners
     localStorageListenerAdded: false,
+    // New: Tone pitch shifter instance
+    pitchShifter: null,
   }),
 
   actions: {
@@ -124,6 +128,15 @@ export const useSongStore = defineStore('song', {
           }
         });
         this.localStorageListenerAdded = true;
+      }
+    },
+
+    // Change pitch manually (in semitones)
+    changePitch(semitones) {
+      if (this.pitchShifter) {
+        this.pitchShifter.pitch = semitones;
+        // Also update custDetune (convert semitones back to cents)
+        this.custDetune = semitones * 100;
       }
     },
 
@@ -158,11 +171,27 @@ export const useSongStore = defineStore('song', {
         this.wavesurfer.on('ready', async () => {
           console.log('WaveSurfer is ready');
           attachEqFilters(this.wavesurfer); // Route audio through EQ filters from localStorage
-          
+
           // Apply reverb effect if toggled on
           if (this.isReverbed) {
             await this.addReverbEffect();
           }
+
+          // Set up Tone.js pitch shifter:
+          // Get the underlying media element from WaveSurfer
+          const mediaElement = this.wavesurfer.backend.media;
+          // Mute the media element so that only Tone's processed audio is heard.
+          mediaElement.muted = true;
+          // Create a media element source for Tone.js
+          const mediaSource = Tone.context.createMediaElementSource(mediaElement);
+          // Create a PitchShift effect and store it in the state.
+          // Convert custDetune (in cents) to semitones.
+          this.pitchShifter = new Tone.PitchShift({
+            pitch: this.custDetune / 100
+          }).toDestination();
+          // Connect the media source to the pitch shifter.
+          mediaSource.connect(this.pitchShifter);
+
           // Apply slowed effect if toggled on
           this.updatePlaybackRate();
         });
@@ -174,6 +203,12 @@ export const useSongStore = defineStore('song', {
         this.wavesurfer.on('finish', () => {
           console.log('WaveSurfer finished playing');
         });
+
+        Tone.start().then(() => {
+          console.log("Tone.js AudioContext started");
+        });
+
+        
       } catch (error) {
         console.log(error);
       }
@@ -234,7 +269,7 @@ export const useSongStore = defineStore('song', {
           }, 500);
         }
       }, 100);
-      
+
       await this.updateTrackViews(track.id);
     },
 
@@ -377,19 +412,26 @@ export const useSongStore = defineStore('song', {
       }
     },
 
-    // Update playback rate based on isSlowed and slowedRate.
+    // Update playback rate based on isSlowed and slowedRate, and update Tone pitch shifter based on custDetune.
     async updatePlaybackRate() {
       if (this.wavesurfer) {
         const audio = this.wavesurfer.getMediaElement();
         if (audio) {
+          // Set playback rate for slowed effect.
           const rate = this.isSlowed ? this.slowedRate : 1;
           if ('preservesPitch' in audio) {
-            audio.preservesPitch = false;
+            audio.preservesPitch = this.isPreservesPitch;
           }
           audio.playbackRate = rate;
-          const detune = this.isSlowed ? -440 : 0;
-          audio.detune = detune;
-          console.log(`Playback rate set to ${rate}, Detune: ${detune}`);
+          
+          // Update pitch shifting using Tone's PitchShift.
+          if (this.pitchShifter) {
+            // Convert custDetune (in cents) to semitones.
+            const semitones = this.custDetune / 100;
+            this.pitchShifter.pitch = semitones;
+          }
+          
+          console.log(`Playback rate set to ${rate}, Pitch shift set to ${this.custDetune} cents`);
         } else {
           console.error("No media element found in wavesurfer");
         }

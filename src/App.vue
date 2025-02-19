@@ -321,7 +321,7 @@ export default {
             <div class="mb-[100px]"></div>
         </div>
         <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black draggable-box" v-if="isArtist" :style="{ 
-        backgroundColor: '#3481c9', 
+        border: 'solid 2px  #3481c9',
         color: 'Black', 
         padding: '1rem', 
         borderRadius: '100%',
@@ -346,7 +346,11 @@ export default {
 </template>
 <style>
 body {
-   background-color:  rgb(0 0 0);;
+   background-color:  rgb(0 0 0);
+   font-family: "Liter", serif;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 1px;
 }
 /* width */
 ::-webkit-scrollbar {

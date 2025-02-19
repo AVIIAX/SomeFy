@@ -199,24 +199,22 @@
 .tooltip {
   position: relative;
   display: inline-block;
-  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
 }
 
 /* Tooltip text */
-.tooltip .tooltiptext {
+.tooltiptext {
   visibility: hidden;
   width: fit-content;
   bottom: 100%;
   left: 50%;
   margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
-  background-color: rgb(169, 171, 204);
+  background-color: rgba(190, 192, 223, 0.863);
   color: #2c2c2c;
   font-size: 30px;
   font-weight: bold;
   text-align: center;
   padding: 0.5rem 0.5rem;
   border-radius: 6px;
-  transition: all 1s;
   /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
