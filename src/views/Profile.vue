@@ -5,9 +5,6 @@
       <div class="banner-content">
         <h1 class="user-name">
           {{ userName.length > 20 ? userName.slice(0, 20) + '...' : userName }}
-          <span v-if="isAuthUser" class="edit-icon" @click="editName">
-            <Pencil fillColor="#FFFFFF" :size="20" />
-          </span>
         </h1>
         <span v-if="isArtist">~ Artist</span>
         <p v-if="isAuthUser" class="credits">
@@ -31,11 +28,16 @@
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>
       
-      <div class="text-[#dadadaf3] flex gap-5">
+      <div class="text-[#dadadaf3] flex gap-5 relative">
         <span @click="handleFollowClick(followers, 'Followers')" class="cursor-pointer">{{ followers.length || '0'}}</span>
         |
         <span @click="handleFollowClick(following, 'Following')" class="cursor-pointer">{{ following.length || '0'}}</span>
+        <span v-if="isAuthUser" class="edit-icon absolute left-full" @click="editTrack">
+              <Cog fillColor="#FFFFFF" :size="20" />
+            </span>
+        
       </div>
+      
       <div class="follow flex">
     <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
       <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
@@ -51,10 +53,6 @@
     <div class="profile-info">
         <p class="about">
           {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
-
-          <span v-if="isAuthUser" class="edit-icon" @click="editAbout">
-            <Pencil fillColor="#FFFFFF" :size="20" />
-          </span>
         </p>
       </div>
     
@@ -171,13 +169,13 @@ import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/fires
 import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/modals/UploadTrackModal.vue';
-import Pencil from 'vue-material-design-icons/Pencil.vue';
+import Cog from 'vue-material-design-icons/Cog.vue';
 import Collab from 'vue-material-design-icons/AccountMultipleOutline.vue';
 import axios from 'axios';
 import { useModalStore } from '../stores/modalStore.js';
 import uniqolor from 'uniqolor';
 let randColor = ref('')
-randColor.value = uniqolor.random()
+randColor.value = uniqolor.random({lightness: 10})
 
 const route = useRoute();
 const db = getFirestore();
@@ -330,7 +328,7 @@ watch(
     likedTracks.value = [];
     await fetchUserData(newID);
     unsubscribe = handleLiveUpdates(newID);
-    randColor.value = uniqolor.random()
+    randColor.value = uniqolor.random({lightness: 10})
   }
 );
 
@@ -341,6 +339,12 @@ const visibleTracks = computed(() => {
 const visibleLikedTracks = computed(() => {
   return showAllLikedTracks.value ? likedTracks.value : likedTracks.value.slice(0, 3);
 });
+
+const editTrack = async () => {
+  
+  const dataForEditModal = { trackID: null, user: userID };  
+  modalStore.toggleModal('editProfileModal', dataForEditModal); 
+}
 
 const editName = async () => {
   const newName = prompt('Edit your name:', userName.value);
@@ -568,7 +572,7 @@ const handleCollabClick = () => {
 .edit-icon {
   cursor: pointer;
   font-size: 1.2rem;
-  margin-left: 5px;
+  margin-left: 1rem;
 }
 
 .file-input {

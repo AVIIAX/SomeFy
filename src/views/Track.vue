@@ -30,9 +30,6 @@
           <span class="my2 pt-4 text-gray-400">{{track.year || 'XXXX'}}</span>
           <div :style="{ position: 'relative' }" class="text-white  font-semibold text-[500%] track-name">
             {{ trackName.length > 50 ? trackName.slice(0, 50) + '...' : trackName }}
-            <span v-if="isAuthUser" class="edit-icon" @click="editName">
-              <Pencil fillColor="#FFFFFF" :size="20" />
-            </span>
           </div>
           <RouterLink :to="`/user/${track.artist}`">
             <div class="text-gray-400 pt-1 pb-3 text-[30px] toArtist">{{ artist.name }}</div>
@@ -94,6 +91,10 @@
         BOOST
       </button>
 
+      <span v-if="isAuthUser" class="edit-icon" @click="editTrack">
+              <Cog fillColor="#FFFFFF" :size="20" />
+            </span>
+
           </div>
 
           <div class="waveform my-2" ref="externalWaveform"></div>
@@ -105,23 +106,20 @@
             <div># {{track.genre}}</div>
            </div>
           <!-- Track Socials -->
-           <div class="socials mt-5">
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Yt :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Spotify :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Apple :size="30" /></a>
+           <div v-if="track.socials" class="socials mt-5">
+              <a v-if="track.socials.youtube" :href="track.socials.youtube" target="_blank"><Yt :size="30" /></a>
+              <a v-if="track.socials.spotify" :href="track.socials.spotify" target="_blank"><Spotify :size="30" /></a>
+              <a v-if="track.socials.soundcloud" :href="track.socials.soundcloud" target="_blank"><Soundcloud :size="30" /></a>
+              <a v-if="track.socials.applemusic" :href="track.socials.applemusic" target="_blank"><Apple :size="30" /></a>
            </div>
         </div>
         <img 
           :src="track.image || 'https://atlast.fm/images/no-artwork.jpg'" 
           alt="User Avatar" 
           class="profile-img" 
-          @click="triggerFileInput" 
         />
       </div>
 
-      <!-- File Input -->
-      <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
     </div>
 
     <div class="profile-info">
@@ -207,7 +205,7 @@ import { mdilPlay, mdilPause } from '@mdi/light-js';
 import Heart from 'vue-material-design-icons/HeartMultiple.vue';
 import noHeart from 'vue-material-design-icons/HeartMultipleOutline.vue';
 import SongRow from '../components/SongRow.vue';
-import Pencil from 'vue-material-design-icons/Pencil.vue';
+import Cog from 'vue-material-design-icons/Cog.vue';
 import Yt from 'vue-material-design-icons/Youtube.vue';
 import Spotify from 'vue-material-design-icons/Spotify.vue';
 import Soundcloud from 'vue-material-design-icons/Soundcloud.vue';
@@ -507,17 +505,15 @@ const handleSongRowClick = () => {
   modalStore.toggleModal('boostModal', dataForBoostModal);  // Pass data to Boost modal
 };
 
-const playWave = () => {
-  wavesurfer.playPause();
-};
-
 const visibleTracks = computed(() => {
   return showAllTracks.value ? myTracks.value : myTracks.value.slice(0, 3);
 });
 
-const visibleLikedTracks = computed(() => {
-  return showAllLikedTracks.value ? likedTracks.value : likedTracks.value.slice(0, 3);
-});
+const editTrack = async () => {
+  
+  const dataForEditModal = { trackID: trackID.value, user: null };  
+  modalStore.toggleModal('editProfileModal', dataForEditModal); 
+}
 
 const editName = async () => {
   const newName = prompt('Edit Track Name:', trackName.value);
@@ -638,7 +634,6 @@ const updateProfileField = async (field, value) => {
 .about {
   display: flex;
   font-size: 1.2rem;
-  font-style: italic;
   margin-top: 10px;
   word-wrap: break-word;
   line-height: 1.4;

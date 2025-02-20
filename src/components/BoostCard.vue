@@ -102,11 +102,11 @@
             <div># {{track.genre}}</div>
            </div>
           <!-- Track Socials -->
-           <div class="socials mt-5">
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Yt :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Spotify :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Soundcloud :size="30" /></a>
-              <a href="https://www.w3schools.com/tags/att_a_href.asp" target="_blank"><Apple :size="30" /></a>
+           <div v-if="track.socials" class="socials mt-5">
+            <a v-if="track.socials.youtube" :href="track.socials.youtube" target="_blank"><Yt :size="30" /></a>
+              <a v-if="track.socials.spotify" :href="track.socials.spotify" target="_blank"><Spotify :size="30" /></a>
+              <a v-if="track.socials.soundcloud" :href="track.socials.soundcloud" target="_blank"><Soundcloud :size="30" /></a>
+              <a v-if="track.socials.applemusic" :href="track.socials.applemusic" target="_blank"><Apple :size="30" /></a>
            </div>
         </div>
         <img 

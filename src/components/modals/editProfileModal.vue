@@ -2,7 +2,9 @@
   <div class="modal-overlay">
     <div class="modal-container">
       <button class="close-btn" @click="closeModal">&times;</button>
-      <form @submit.prevent="handleSubmit">
+
+      <!-- Edit Track -->
+      <form v-if="modalData?.trackID" @submit.prevent="handleSubmit">
         <!-- Artwork Input -->
         <div class="artwork-container">
           <label for="artwork" class="artwork-label cursor-pointer">
@@ -58,16 +60,6 @@
           class="input"
         />
 
-        <!-- Music File Input -->
-         <span>Upload Track File</span>
-        <input
-          id="music"
-          type="file"
-          accept="audio/*"
-          @change="handleMusicUpload"
-          class="input track-upload"
-        />
-
         <span>Optional</span>
         <!-- Description Input -->
         <textarea
@@ -109,8 +101,50 @@
         
       </div>
         <!-- Submit Button -->
-        <button  type="submit" class="submit-btn">Submit 5
-          <CircleMultiple fill="#FFFFFF" size="20" />
+        <button  type="submit" class="submit-btn">Update
+         
+        </button>
+      </form>
+
+      <!-- Edit User -->
+      <form v-else-if="modalData?.user" @submit.prevent="handleSubmit">
+
+        <div class="max-h-[500px] overflow-auto my-8 p-3">
+        <!-- Name Input -->
+        <input
+          v-model="userName"
+          type="text"
+          placeholder="User Name"
+          class="input"
+        />
+
+        <!-- Location Input -->
+        <input
+          v-model="userLocation"
+          type="text"
+          placeholder="Location"
+          class="input"
+        />
+
+        <!-- Genre Input -->
+        <input
+          v-model="userGenre"
+          type="text"
+          placeholder="Genre"
+          class="input"
+        />
+
+        <!-- About Input -->
+        <textarea
+          v-model="userAbout"
+          type="text"
+          placeholder="About"
+          class="input"
+        />
+
+      </div>
+        <!-- Submit Button -->
+        <button  type="submit" class="submit-btn">Update
         </button>
       </form>
     </div>
@@ -118,12 +152,13 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref, defineEmits, onMounted } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
 import { getAuth } from "firebase/auth";
 import {
   getFirestore,
   doc,
+  getDoc,
   updateDoc,
   collection,
   arrayUnion,
@@ -142,11 +177,21 @@ const modalStore = useModalStore();
 const db = getFirestore();
 const auth = getAuth();
 const storage = getStorage();
+const modalData = modalStore.modals.editProfileModal.data;
 
 const emit = defineEmits(['close']);
 const currentUser = auth.currentUser;
 
+// Profile details
+const user = ref([]);
+const userName = ref('');
+const userAvatar = ref('');
+const userAbout = ref('');
+const userGenre = ref('');
+const userLocation = ref('');
+
 // Track details
+const track = ref([]);
 const name = ref('');
 const genre = ref('');
 const year = ref('');
@@ -158,8 +203,69 @@ const apple = ref('');
 
 const artwork = ref(''); // Data URL for preview
 const artworkBlob = ref(null); // Blob to be uploaded
-const musicFile = ref(null); // Audio file object
 const isSubmitting = ref(false);
+
+const fetchUserData = async (id) => {
+  try {
+    const userRef = doc(db, 'user', id);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      user.value = userData;
+      userName.value = userData.name;
+      userAvatar.value = userData.avatar;
+      userAbout.value = userData.about;
+      userGenre.value = userData.genre;
+      userLocation.value = userData.location;
+
+    } else {
+      console.error('No such user document!');
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    errorMessage.value = 'Failed to fetch user data.';
+  }
+};
+
+const fetchTrackData = async (id) => {
+  try {
+    const trackRef = doc(db, 'track', id);
+    const trackDoc = await getDoc(trackRef);
+    if (trackDoc.exists()) {
+      const trackData = trackDoc.data();
+      // Include the document ID in the track data
+      //track.value = { id, ...trackData };
+      track.value = trackData;
+      name.value = trackData.name;
+      genre.value = trackData.genre;
+      year.value = trackData.year;
+      description.value = trackData.description;
+      artwork.value = trackData.image;
+      yt.value = trackData.socials.youtube;
+      spotify.value = trackData.socials.spotify;
+      soundc.value = trackData.socials.soundcloud;
+      apple.value = trackData.socials.applemusic;
+
+    } else {
+      console.log("Track not found.");
+    }
+  } catch (error) {
+    console.error('Error fetching track data:', error);
+  }
+};
+
+ onMounted(async() => {
+  
+  
+   if (modalData.user) {
+     await fetchUserData(currentUser.uid)
+   }
+   else if (modalData.trackID) {
+     await fetchTrackData(modalData.trackID);
+   }
+  
+ })
 
 const handleArtworkUpload = async (e) => {
   const file = e.target.files[0];
@@ -181,17 +287,13 @@ const handleArtworkUpload = async (e) => {
   }
 };
 
-const handleMusicUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    musicFile.value = file;
-  }
-};
+
 
 const handleSubmit = async () => {
   if (isSubmitting.value) return;
 
-  if (!name.value || !genre.value || !year.value || !artworkBlob.value || !musicFile.value) {
+  if (modalData?.trackID) {
+    if (!name.value || !genre.value || !year.value) {
     alert('Please fill in all the fields!');
     return;
   }
@@ -199,74 +301,119 @@ const handleSubmit = async () => {
   isSubmitting.value = true;
 
   try {
-    // Create a new track document reference so we can use its ID for Storage paths
-    const trackDocRef = doc(collection(db, "track"));
-    const trackId = trackDocRef.id;
 
-    // Run a transaction to check credits, add the track document, and update the user's doc
-    const userRef = doc(db, "user", currentUser.uid);
-    await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists()) {
-        throw new Error("User document does not exist!");
-      }
-      const userData = userDoc.data();
-      const currentCredits = userData.credits || 0;
-      if (currentCredits < 5) {
-        throw new Error("Not enough credits!");
-      }
+    const fieldsToCheck = [
+  { field: 'name', newVal: name, modalValue: track.value.name },
+  { field: 'genre', newVal: genre, modalValue: track.value.genre },
+  { field: 'year', newVal: year, modalValue: track.value.year },
+  { field: 'description', newVal: description, modalValue: track.value.description },
+  { field: 'socials.youtube', newVal: yt, modalValue: track.value.socials.youtube },
+  { field: 'socials.spotify', newVal: spotify, modalValue: track.value.socials.spotify },
+  { field: 'socials.soundcloud', newVal: soundc, modalValue: track.value.socials.soundcloud },
+  { field: 'socials.applemusic', newVal: apple, modalValue: track.value.socials.applemusic },
+  
+  // Add other fields as needed
+];
 
-      const trackData = {
-        artist: currentUser.uid,
-        name: name.value,
-        genre: genre.value,
-        year: year.value,
-        image: "", // To be updated after Storage upload
-        url: "",   // To be updated after Storage upload
-        id: trackId,
-        description: description,
-        socials: {
-          youtube: yt || null,
-          spotify: spotify || null,
-          soundcloud: soundc || null,
-          applemusic: apple || null
-        },
-        views: 0,
-        createdAt: new Date(),
-      };
+fieldsToCheck.forEach(({ field, newVal, modalValue }) => {
+  if (newVal.value !== modalValue) {
+    updateProfileField(field, newVal.value);
+  }
+});
 
-      transaction.set(trackDocRef, trackData);
-      transaction.update(userRef, {
-        tracks: arrayUnion(trackId),
-        credits: currentCredits - 5,
-      });
-    });
+    if(artworkBlob.value) {
+      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
-    // Upload the artwork to Firebase Storage
-    const artworkStorageRef = storageRef(storage, `tracks/artwork/${trackId}`);
+      // Update the artwork to Firebase Storage
+    const artworkStorageRef = storageRef(storage, `tracks/artwork/${modalData.trackID}`);
     await uploadBytes(artworkStorageRef, artworkBlob.value, { contentType: 'image/png' });
     const artworkUrl = await getDownloadURL(artworkStorageRef);
-
-    // Upload the audio file to Firebase Storage
-    const audioStorageRef = storageRef(storage, `tracks/audio/${trackId}`);
-    await uploadBytes(audioStorageRef, musicFile.value, { contentType: 'audio/mpeg' });
-    const audioUrl = await getDownloadURL(audioStorageRef);
 
     // Update the track document with the Storage URLs
     await updateDoc(trackDocRef, {
       image: artworkUrl,
-      url: audioUrl,
     });
-
-    alert('Track uploaded successfully!');
+  }
     closeModal();
   } catch (error) {
-    console.error('Error uploading track:', error);
-    alert('Failed to upload the track. Please try again.');
+    console.error('Error updating track:', error);
+    alert('Failed to update the track. Please try again.');
   } finally {
     isSubmitting.value = false;
   }
+  }
+  
+  if (modalData?.user) {
+    if (!userName.value) {
+    alert('Please fill in all the fields!');
+    return;
+  }
+
+  isSubmitting.value = true;
+
+  try {
+
+      const fieldsToCheck = [
+{ field: 'name', newVal: userName, modalValue: track.value.userGenre },
+{ field: 'genre', newVal: userGenre, modalValue: track.value.userGenre },
+{ field: 'about', newVal: userAbout, modalValue: track.value.userAbout },
+{ field: 'location', newVal: userLocation, modalValue: track.value.userLocation },
+
+// Add other fields as needed
+      ];
+
+      fieldsToCheck.forEach(({ field, newVal, modalValue }) => {
+if (newVal.value !== modalValue) {
+updateProfileField(field, newVal.value);
+}
+      });
+
+      closeModal();
+      } catch (error) {
+console.error('Error updating track:', error);
+alert('Failed to update the track. Please try again.');
+      } finally {
+isSubmitting.value = false;
+      }
+
+  }
 };
+
+
+const updateProfileField = async (field, value) => {
+  if(modalData.trackID) {
+    try {
+    const trackRef = doc(db, 'track', modalData.trackID);
+    await updateDoc(trackRef, { [field]: value });
+  } catch (error) {
+    console.error('Error updating field:', error);
+  }
+  } else if(modalData.user) {
+    try {
+    const userRef = doc(db, 'user', modalData.user);
+    await updateDoc(userRef, { [field]: value });
+  } catch (error) {
+    console.error('Error updating field:', error);
+  }
+  }
+
+  if(modalData.user) {
+    try {
+    const trackRef = doc(db, 'user', modalData.user);
+    await updateDoc(trackRef, { [field]: value });
+  } catch (error) {
+    console.error('Error updating field:', error);
+  }
+  } else if(modalData.user) {
+    try {
+    const userRef = doc(db, 'user', modalData.user);
+    await updateDoc(userRef, { [field]: value });
+  } catch (error) {
+    console.error('Error updating field:', error);
+  }
+  }
+};
+
 
 const closeModal = () => {
   // Clear inputs
@@ -275,8 +422,7 @@ const closeModal = () => {
   year.value = '';
   artwork.value = '';
   artworkBlob.value = null;
-  musicFile.value = null;
-  modalStore.toggleModal('uploadTrackModal');
+  modalStore.toggleModal('editProfileModal');
 };
 </script>
 
