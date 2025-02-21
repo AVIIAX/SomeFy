@@ -8,158 +8,132 @@
         </h1>
         <span v-if="isArtist">~ Artist</span>
         <p v-if="isAuthUser" class="credits">
-  <strong>Credits : </strong> 
-  <span :class="{ 'low-credits': userCredits <= 5 }">
-    {{ userCredits || '0' }}
-  </span>
-</p>
-
+          <strong>Credits : </strong>
+          <span :class="{ 'low-credits': userCredits <= 5 }">
+            {{ userCredits || '0' }}
+          </span>
+        </p>
       </div>
     </div>
 
     <div class="profile-header flex-col gap-2">
       <div class="profile-img-container cursor-pointer">
         <!-- Avatar -->
-        <img :src="userAvatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg'" alt="User Avatar" class="profile-img" @click="triggerFileInput" />
+        <img :src="userAvatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg'" alt="User Avatar"
+          class="profile-img" @click="triggerFileInput" />
         <div class="edit-icon-container" v-if="isAuthUser">
           <i class="material-icons">✏</i>
         </div>
         <!-- File Input -->
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>
-      
+
       <div class="text-[#dadadaf3] flex gap-5 relative">
-        <span @click="handleFollowClick(followers, 'Followers')" class="cursor-pointer">{{ followers.length || '0'}}</span>
+        <span @click="handleFollowClick(followers, 'Followers')" class="cursor-pointer">{{ followers.length ||
+          '0'}}</span>
         |
-        <span @click="handleFollowClick(following, 'Following')" class="cursor-pointer">{{ following.length || '0'}}</span>
-        <span v-if="isAuthUser" class="edit-icon absolute left-full" @click="editTrack">
-              <Cog fillColor="#FFFFFF" :size="20" />
-            </span>
-        
+        <span @click="handleFollowClick(following, 'Following')" class="cursor-pointer">{{ following.length ||
+          '0'}}</span>
+        <span v-if="isAuthUser" class="edit-icon absolute left-full" @click="editUser">
+          <Cog fillColor="#FFFFFF" :size="20" />
+        </span>
       </div>
-      
+
       <div class="follow flex">
-    <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
-      <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
-      <div v-else class="followed-btn">UNFOLLOW</div>
-    </div>
-    <div v-if="isFollowed" class="collab-btn flex items-center gap-1" @click="handleCollabClick">
-      <Collab fillColor="#aea9d89" :size="20" />
-      COLLAB?</div>
-  </div>
-      
-    </div>
-    
-    <div class="profile-info">
-        <p class="about">
-          {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
-        </p>
+        <div v-if="!isAuthUser" class="follow" @click="toggleFollow">
+          <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
+          <div v-else class="followed-btn">UNFOLLOW</div>
+        </div>
+        <div v-if="isFollowed" class="collab-btn flex items-center gap-1" @click="handleCollabClick">
+          <Collab fillColor="#aea9d89" :size="20" />
+          COLLAB?
+        </div>
       </div>
-    
-    
-    <div v-if="isAuthUser" :style="{width: '100%'}">
+    </div>
+
+    <div class="profile-info">
+      <div class="text-gray-500">{{ userGenre }}</div>
+      <p class="about">
+        {{ userAbout.length > 1000 ? userAbout.slice(0, 1000) + '...' : userAbout || 'No description available' }}
+      </p>
+    </div>
+
+    <div v-if="isAuthUser" :style="{ width: '100%' }">
       <button v-if="!isArtist" id="beArtist" @click="beArtist">Switch To Artist Page</button>
-</div>
+    </div>
   </div>
 
   <!-- Tracks -->
-   <div v-if="isArtist"></div>
-   <div class="border-b border-b-[#2A2A2A] mt-2"></div>
-   
-   <!-- My Tracks -->
-   <div v-if="isArtist" class="p-8">
-    
-    <button
-      type="button"
-      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-    >
+  <div v-if="isArtist"></div>
+  <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+
+  <!-- My Tracks -->
+  <div v-if="isArtist" class="p-8">
+    <button type="button" class="text-white text-2xl font-semibold hover:underline cursor-pointer">
       Tracks
     </button>
-  <div v-if="myTracks">
-    <div class="mt-6"></div>
-    <div class="flex items-center justify-between px-5 pt-2">
+    <div v-if="myTracks">
+      <div class="mt-6"></div>
+      <div class="flex items-center justify-between px-5 pt-2">
+        <div>
+          <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+        </div>
+      </div>
+      <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+      <div class="mb-4"></div>
+
+      <!-- Music Section -->
       <div>
-        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+        <ul class="w-full">
+          <li v-for="(track, index) in visibleTracks" :key="track">
+            <SongRow :trackId="track.id" :playList="myTracks" :index="index + 1" />
+          </li>
+        </ul>
+        <button v-if="myTracks.length > 3 && !showAllTracks" @click="showAllTracks = true" class="see-more-button">
+          Show More
+        </button>
       </div>
     </div>
-
-    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
-    <div class="mb-4"></div>
-
-    
-    <!-- Music Section -->
-    <div>
-    <ul class="w-full">
-      <li v-for="(track, index) in visibleTracks" :key="track">
-        <SongRow :trackId="track.id" :playList="myTracks" :index="index + 1" />
-      </li>
-    </ul>
-    <button 
-      v-if="myTracks.length > 3 && !showAllTracks" 
-      @click="showAllTracks = true" 
-      class="see-more-button"
-    >
-      Show More
-    </button>
-  </div>
-
-
-
-
-    </div>
-
-    
-    <div v-if="!myTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No tracks yet</div>
-      <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-        <button @click="handleSongUploadClick" class="open-modal-btn happyBtn" v-if="!myTracks.length" :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem',paddingRight:'1rem',paddingLeft:'1rem', borderRadius: '18px'}">Upload</button>
+    <div v-if="!myTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem' }">No
+      tracks yet</div>
+    <div v-if="isAuthUser" :style="{ textAlign: 'center' }">
+      <button @click="handleSongUploadClick" class="open-modal-btn happyBtn" v-if="!myTracks.length"
+        :style="{ backgroundColor: '#3481c9', color: 'Black', padding: '0.4rem', paddingRight: '1rem', paddingLeft: '1rem', borderRadius: '18px' }">Upload</button>
     </div>
   </div>
 
-     <!-- Liked Tracks -->
-     <div v-if=" likedTracks" class="p-8">
-    
-    <button
-      type="button"
-      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-    >
+  <!-- Liked Tracks -->
+  <div v-if="likedTracks" class="p-8">
+    <button type="button" class="text-white text-2xl font-semibold hover:underline cursor-pointer">
       Liked Tracks
     </button>
-  <div v-if="likedTracks">
-    <div class="mt-6"></div>
-    <div class="flex items-center justify-between px-5 pt-2">
+    <div v-if="likedTracks">
+      <div class="mt-6"></div>
+      <div class="flex items-center justify-between px-5 pt-2">
+        <div>
+          <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+        </div>
+      </div>
+      <div class="border-b border-b-[#2A2A2A] mt-2"></div>
+      <div class="mb-4"></div>
+
+      <!-- Music Section -->
       <div>
-        <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+        <ul class="w-full">
+          <li v-for="(track, index) in visibleLikedTracks" :key="track">
+            <SongRow :trackId="track.id" :playList="likedTracks" :index="index + 1" />
+          </li>
+        </ul>
+        <button v-if="likedTracks.length > 3 && !showAllLikedTracks" @click="showAllLikedTracks = true"
+          class="see-more-button">
+          Show More
+        </button>
       </div>
     </div>
-
-    <div class="border-b border-b-[#2A2A2A] mt-2"></div>
-    <div class="mb-4"></div>
-
-    
-    <!-- Music Section -->
-    <div>
-    <ul class="w-full">
-      <li v-for="(track, index) in visibleLikedTracks" :key="track">
-        <SongRow :trackId="track.id" :playList="likedTracks" :index="index + 1" />
-      </li>
-    </ul>
-    <button 
-      v-if="likedTracks.length > 3 && !showAllLikedTracks" 
-      @click="showAllLikedTracks = true" 
-      class="see-more-button"
-    >
-      Show More
-    </button>
+    <div v-if="!likedTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem' }">
+      No liked tracks</div>
+    <div v-if="isAuthUser" :style="{ textAlign: 'center' }"></div>
   </div>
-
-    </div>
-
-    
-    <div v-if="!likedTracks.length" class="text-sm" :style="{ color: '#666666', textAlign: 'center', padding: '2rem'}">No liked tracks</div>
-      <div v-if="isAuthUser" :style="{textAlign: 'center'}">
-    </div>
-  </div>
-
 </template>
 
 <script setup>
@@ -174,8 +148,15 @@ import Collab from 'vue-material-design-icons/AccountMultipleOutline.vue';
 import axios from 'axios';
 import { useModalStore } from '../stores/modalStore.js';
 import uniqolor from 'uniqolor';
-let randColor = ref('')
-randColor.value = uniqolor.random({lightness: 10})
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { cropImageToSquare } from "../main.js";
+
+
+// Initialize Firebase Storage
+const storage = getStorage();
+
+let randColor = ref('');
+randColor.value = uniqolor.random({ lightness: 10 });
 
 const route = useRoute();
 const db = getFirestore();
@@ -183,6 +164,7 @@ const currentUser = getAuth().currentUser;
 const isFollowed = ref(false);
 const userID = ref(route.params.userID);
 const userName = ref('');
+const userGenre = ref('');
 const userAvatar = ref('');
 const userAbout = ref('');
 const userCredits = ref('');
@@ -197,6 +179,13 @@ const errorMessage = ref('');
 const modalStore = useModalStore();
 const showAllTracks = ref(false);
 const showAllLikedTracks = ref(false);
+const artworkBlob = ref(null); // To store the cropped image blob
+
+// Utility function to update a profile field in Firestore
+const updateProfileField = async (field, value) => {
+  const userDocRef = doc(db, 'user', userID.value);
+  await updateDoc(userDocRef, { [field]: value });
+};
 
 const fetchUserData = async (id) => {
   try {
@@ -206,6 +195,7 @@ const fetchUserData = async (id) => {
     if (userDoc.exists()) {
       const userData = userDoc.data();
       userName.value = userData.name;
+      userGenre.value = userData.genre;
       userAvatar.value = userData.avatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg';
       userAbout.value = userData.about || 'No description available';
       isAuthUser.value = currentUser && currentUser.uid === id;
@@ -218,20 +208,11 @@ const fetchUserData = async (id) => {
       followers.value = userData.followers || [];
       following.value = userData.following || [];
 
-
-      //Followers
       if (userData.followers && Array.isArray(userData.followers)) {
-
-if (userData.followers.includes(currentUser.uid)) {
-  isFollowed.value = true;
-} else {
-  isFollowed.value = false;
-}
-} else {
-  isFollowed.value = false;
-}
-
-
+        isFollowed.value = userData.followers.includes(currentUser.uid);
+      } else {
+        isFollowed.value = false;
+      }
     } else {
       console.error('No such user document!');
     }
@@ -257,7 +238,7 @@ const fetchTrackDetails = async (trackIds) => {
   })).then(tracks => tracks.filter(Boolean));
 };
 
-// Handle live updates
+// Handle live updates from Firestore
 const handleLiveUpdates = (id) => {
   const unsubscribe = onSnapshot(doc(db, 'user', id), async (docSnapshot) => {
     if (docSnapshot.exists()) {
@@ -265,43 +246,43 @@ const handleLiveUpdates = (id) => {
       userCredits.value = userData.credits || '0';
 
       if (isArtist.value && Array.isArray(userData.tracks)) {
-          const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
-            const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
-            const trackDoc = await getDoc(trackRef);
-            if (trackDoc.exists()) {
-              return { id: trackId, ...trackDoc.data() };
-            }
-            return null;
-          }));
-  
-          myTracks.value = tracksWithDetails
-            .filter(track => track !== null)
-            .sort((a, b) => {
-              if (a.boost && b.boost) return b.boost - a.boost;
-              if (a.boost) return -1;
-              if (b.boost) return 1;
-              return (b.views || 0) - (a.views || 0);
-            });
-        }
-        if (Array.isArray(userData.liked)) {
-          const tracksWithDetails = await Promise.all(userData.liked.map(async (trackId) => {
-            const trackRef = doc(db, 'track', trackId); // Ensure trackId exists
-            const trackDoc = await getDoc(trackRef);
-            if (trackDoc.exists()) {
-              return { id: trackId, ...trackDoc.data() };
-            }
-            return null;
-          }));
-  
-          likedTracks.value = tracksWithDetails
-            .filter(track => track !== null)
-            .sort((a, b) => {
-              if (a.boost && b.boost) return b.boost - a.boost;
-              if (a.boost) return -1;
-              if (b.boost) return 1;
-              return (b.views || 0) - (a.views || 0);
-            });
-        }
+        const tracksWithDetails = await Promise.all(userData.tracks.map(async (trackId) => {
+          const trackRef = doc(db, 'track', trackId);
+          const trackDoc = await getDoc(trackRef);
+          if (trackDoc.exists()) {
+            return { id: trackId, ...trackDoc.data() };
+          }
+          return null;
+        }));
+
+        myTracks.value = tracksWithDetails
+          .filter(track => track !== null)
+          .sort((a, b) => {
+            if (a.boost && b.boost) return b.boost - a.boost;
+            if (a.boost) return -1;
+            if (b.boost) return 1;
+            return (b.views || 0) - (a.views || 0);
+          });
+      }
+      if (Array.isArray(userData.liked)) {
+        const tracksWithDetails = await Promise.all(userData.liked.map(async (trackId) => {
+          const trackRef = doc(db, 'track', trackId);
+          const trackDoc = await getDoc(trackRef);
+          if (trackDoc.exists()) {
+            return { id: trackId, ...trackDoc.data() };
+          }
+          return null;
+        }));
+
+        likedTracks.value = tracksWithDetails
+          .filter(track => track !== null)
+          .sort((a, b) => {
+            if (a.boost && b.boost) return b.boost - a.boost;
+            if (a.boost) return -1;
+            if (b.boost) return 1;
+            return (b.views || 0) - (a.views || 0);
+          });
+      }
     }
   });
 
@@ -318,7 +299,7 @@ onUnmounted(() => {
   if (unsubscribe) unsubscribe();
 });
 
-// Watch for route changes
+// Watch for route changes to update user data and reinitialize colors
 watch(
   () => route.params.userID,
   async (newID) => {
@@ -328,7 +309,7 @@ watch(
     likedTracks.value = [];
     await fetchUserData(newID);
     unsubscribe = handleLiveUpdates(newID);
-    randColor.value = uniqolor.random({lightness: 10})
+    randColor.value = uniqolor.random({ lightness: 10 });
   }
 );
 
@@ -340,26 +321,9 @@ const visibleLikedTracks = computed(() => {
   return showAllLikedTracks.value ? likedTracks.value : likedTracks.value.slice(0, 3);
 });
 
-const editTrack = async () => {
-  
-  const dataForEditModal = { trackID: null, user: userID };  
-  modalStore.toggleModal('editProfileModal', dataForEditModal); 
-}
-
-const editName = async () => {
-  const newName = prompt('Edit your name:', userName.value);
-  if (newName) {
-    userName.value = newName;
-    await updateProfileField('name', newName);
-  }
-};
-
-const editAbout = async () => {
-  const newAbout = prompt('Edit your description:', userAbout.value);
-  if (newAbout) {
-    userAbout.value = newAbout;
-    await updateProfileField('about', newAbout);
-  }
+const editUser = async () => {
+  const dataForEditModal = { trackID: null, user: userID };
+  modalStore.toggleModal('editProfileModal', dataForEditModal);
 };
 
 const triggerFileInput = () => {
@@ -368,43 +332,26 @@ const triggerFileInput = () => {
 
 const handleFileChange = async (event) => {
   const file = event.target.files[0];
-  const webhookUrl =
-    'https://discord.com/api/webhooks/1329746552008212523/_3YiBZAKs8yCECE12IVBUBVP7UiGemGageDp0QbXD6b1X0w6pJ--Nmd9G2WpfUSFHKHK';
   if (file) {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('payload_json', JSON.stringify({ content: 'User uploaded an image' }));
+      // Crop the image to a square using the provided function (returns a Blob)
+      const croppedBlob = await cropImageToSquare(file);
+      artworkBlob.value = croppedBlob;
 
-      const response = await axios.post(webhookUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // Upload the cropped image to Firebase Storage
+      const artworkStorageRef = storageRef(storage, `users/${userID.value}/profile/avatar.png`);
 
-      if (response.data.attachments && response.data.attachments.length > 0) {
-        userAvatar.value = response.data.attachments[0].url;
-        errorMessage.value = '';
-        await updateProfileField('avatar', userAvatar.value);
-      } else {
-        throw new Error('No attachment URL found in the response.');
-      }
+      await uploadBytes(artworkStorageRef, artworkBlob.value, { contentType: 'image/png' });
+      const artworkUrl = await getDownloadURL(artworkStorageRef);
+
+      // Update the user's avatar with the new image URL
+      userAvatar.value = artworkUrl;
+      errorMessage.value = '';
+      await updateProfileField('avatar', artworkUrl);
     } catch (error) {
-      console.error('Error uploading file to Discord webhook:', error);
+      console.error('Error uploading file to Firebase Storage:', error);
       errorMessage.value = 'Failed to upload file. Please try again.';
     }
-  }
-};
-
-const updateProfileField = async (field, value) => {
-  try {
-    const userRef = doc(db, 'user', userID.value);
-    await updateDoc(userRef, {
-      [field]: value,
-    });
-    console.log(`${field} updated successfully!`);
-  } catch (error) {
-    console.error('Error updating field:', error);
   }
 };
 
@@ -430,7 +377,6 @@ const toggleFollow = async () => {
       const userData = userSnap.data();
       const thisUserData = thisUserSnap.data();
 
-      // Ensure followers and following are arrays
       const userFollowers = Array.isArray(userData.followers) ? userData.followers : [];
       const thisUserFollowing = Array.isArray(thisUserData.following) ? thisUserData.following : [];
 
@@ -449,25 +395,19 @@ const toggleFollow = async () => {
         newFollowers.push(currentUser.uid);
         newFollowing.push(userID.value);
 
-        // Generate a unique mail key.
-        const mailKey =
-          Date.now().toString() + Math.random().toString(36).substring(2, 15);
-
-        // Build a new mail object.
+        const mailKey = Date.now().toString() + Math.random().toString(36).substring(2, 15);
         const newMail = {
           type: "follower",
           follower: currentUser.uid,
-          time: new Date(), // or use serverTimestamp() if desired
+          time: new Date(),
           seen: false,
         };
 
-        // Update followed user's doc: update followers array and add the new mail.
         await updateDoc(userDocRef, {
           followers: newFollowers,
           [`inboxMails.${mailKey}`]: newMail,
         });
 
-        // Update current user's following array.
         await updateDoc(thisUserDocRef, { following: newFollowing });
       }
 
@@ -479,8 +419,8 @@ const toggleFollow = async () => {
 };
 
 const handleFollowClick = (dataType, name) => {
-  const dataForBoostModal = { users: dataType, name: name};  // Example data
-  modalStore.toggleModal('followModal', dataForBoostModal);  // Pass data to Boost modal
+  const dataForBoostModal = { users: dataType, name: name };
+  modalStore.toggleModal('followModal', dataForBoostModal);
 };
 
 const handleCollabClick = () => {
@@ -488,8 +428,6 @@ const handleCollabClick = () => {
   modalStore.toggleModal('collabModal', dataForCollabModal);
 };
 </script>
-
-
 
 <style scoped>
 .user-profile {
@@ -563,7 +501,6 @@ const handleCollabClick = () => {
 .about {
   display: flex;
   font-size: 1.2rem;
-  font-style: italic;
   margin-top: 10px;
   word-wrap: break-word;
   line-height: 1.4;
@@ -601,6 +538,7 @@ const handleCollabClick = () => {
   border-radius: 10px;
   width: 100%;
 }
+
 .low-credits {
   color: rgb(223, 68, 68);
 }

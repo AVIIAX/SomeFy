@@ -8,7 +8,6 @@ module.exports = {
     extend: {},
   },
   plugins: [
-    require('@pinegrow/tailwindcss-plugin').default,
     //...
   ],
   //...

@@ -125,16 +125,13 @@
     <div class="profile-info">
       <p class="about">
         {{ trackAbout.length > 1000 ? trackAbout.slice(0, 1000) + '...' : trackAbout }}
-        <span v-if="isAuthUser" class="edit-icon" @click="editAbout">
-          <Pencil fillColor="#FFFFFF" :size="20" />
-        </span>
       </p>
     </div>
     
     <div class="border-b border-b-[#2A2A2A] mt-2"></div>
     
     <!-- Artist Tracks -->
-    <div class="p-8 text-center">
+    <div class="p-8 text-center w-full">
       <button type="button" class="text-white text-2xl font-semibold hover:underline cursor-pointer">
         {{ artist.name }}'s Other Tracks
       </button>
@@ -515,60 +512,6 @@ const editTrack = async () => {
   modalStore.toggleModal('editProfileModal', dataForEditModal); 
 }
 
-const editName = async () => {
-  const newName = prompt('Edit Track Name:', trackName.value);
-  if (newName) {
-    trackName.value = newName;
-    await updateProfileField('name', newName);
-  }
-};
-
-const editAbout = async () => {
-  const newAbout = prompt('Edit your description:', trackAbout.value);
-  if (newAbout) {
-    trackAbout.value = newAbout;
-    await updateProfileField('description', newAbout);
-  }
-};
-
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
-
-const handleFileChange = async (event) => {
-  const file = event.target.files[0];
-  const webhookUrl = 'https://discord.com/api/webhooks/1329746552008212523/_3YiBZAKs8yCECE12IVBUBVP7UiGemGageDp0QbXD6b1X0w6pJ--Nmd9G2WpfUSFHKHK';
-  if (file) {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('payload_json', JSON.stringify({ content: 'User uploaded an image' }));
-      const response = await axios.post(webhookUrl, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      if (response.data.attachments && response.data.attachments.length > 0) {
-        userAvatar.value = response.data.attachments[0].url;
-        errorMessage.value = '';
-        await updateProfileField('avatar', userAvatar.value);
-      } else {
-        throw new Error('No attachment URL found in the response.');
-      }
-    } catch (error) {
-      console.error('Error uploading file to Discord webhook:', error);
-      errorMessage.value = 'Failed to upload file. Please try again.';
-    }
-  }
-};
-
-const updateProfileField = async (field, value) => {
-  try {
-    const userRef = doc(db, 'track', trackID.value);
-    await updateDoc(userRef, { [field]: value });
-    console.log(`${field} updated successfully!`);
-  } catch (error) {
-    console.error('Error updating field:', error);
-  }
-};
 </script>
 
 <style scoped>

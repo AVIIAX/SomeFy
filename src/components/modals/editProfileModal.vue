@@ -171,7 +171,7 @@ import {
   getDownloadURL
 } from "firebase/storage";
 import { cropImageToSquare } from "../../main.js";
-import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
+import { makeNotification } from '../../main.js';
 
 const modalStore = useModalStore();
 const db = getFirestore();
@@ -288,7 +288,6 @@ const handleArtworkUpload = async (e) => {
 };
 
 
-
 const handleSubmit = async () => {
   if (isSubmitting.value) return;
 
@@ -322,10 +321,10 @@ fieldsToCheck.forEach(({ field, newVal, modalValue }) => {
 });
 
     if(artworkBlob.value) {
-      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
       // Update the artwork to Firebase Storage
-    const artworkStorageRef = storageRef(storage, `tracks/artwork/${modalData.trackID}`);
+      const artworkStorageRef = storageRef(storage,`users/${currentUser.uid}/tracks/${modalData.trackID}/artwork.png`);
+
     await uploadBytes(artworkStorageRef, artworkBlob.value, { contentType: 'image/png' });
     const artworkUrl = await getDownloadURL(artworkStorageRef);
 
@@ -335,9 +334,9 @@ fieldsToCheck.forEach(({ field, newVal, modalValue }) => {
     });
   }
     closeModal();
+    makeNotification('success', 'Track Updated Successfully!')
   } catch (error) {
-    console.error('Error updating track:', error);
-    alert('Failed to update the track. Please try again.');
+    makeNotification('failure', 'Couldnt Update Track! Try Again.')
   } finally {
     isSubmitting.value = false;
   }
@@ -369,11 +368,11 @@ updateProfileField(field, newVal.value);
       });
 
       closeModal();
+      makeNotification('success', 'Profile Updated Successfully!')
       } catch (error) {
-console.error('Error updating track:', error);
-alert('Failed to update the track. Please try again.');
+        makeNotification('failure', 'Couldnt Update Profile! Try Again.')
       } finally {
-isSubmitting.value = false;
+        isSubmitting.value = false;
       }
 
   }

@@ -13,6 +13,7 @@ import boostModal from './components/modals/boostModal.vue';
 import boostedModal from './components/modals/boostedModal.vue';
 import followModal from './components/modals/followModal.vue';
 import editProfileModal from './components/modals/editProfileModal.vue';
+import NotifiModal from './components/modals/NotifiModal.vue';
 import Mail from './components/Mails.vue';
 import CollabModal from './components/modals/collabModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
@@ -339,6 +340,7 @@ export default {
         <followModal v-if="modalStore.modals.followModal.isVisible"/>
         <collabModal v-if="modalStore.modals.collabModal.isVisible"/>
         <editProfileModal v-if="modalStore.modals.editProfileModal.isVisible"/>
+        <NotifiModal v-if="modalStore.modals.NotifiModal.isVisible"/>
         </teleport>
 
         <MusicPlayer v-if="currentTrack"/>
@@ -349,7 +351,7 @@ export default {
 <style>
 body {
    background-color:  rgb(0 0 0);
-   font-family: "Liter", serif;
+   font-family: "Figtree", serif;
   font-weight: 400;
   font-style: normal;
   letter-spacing: 1px;

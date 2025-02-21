@@ -20,6 +20,7 @@ import { storeToRefs } from 'pinia';
 let auth = getAuth();
 const db = getFirestore();
 const topHits = ref([]);
+const topLiked = ref([]);
 const boosted = ref([]);
 const topBoost = ref("");
 
@@ -46,6 +47,7 @@ const getTracks = async (playList) => {
 
 onMounted(async () => {
   topHits.value = await getTracks('topHits'); 
+  topLiked.value = await getTracks('mostLiked');
   boosted.value = await getTracks('boosted');
   topBoost.value = '53LnKhGA495Z3m6VdXMM';
 
@@ -150,6 +152,34 @@ onAuthStateChanged(auth, async (user) => {
     >
     <div v-for="track in boosted" :key="track">
       <HomeCard :trackId="track" :playList="boosted" />
+    </div>
+    </div>
+  </div>
+
+  <!-- Top Liked Section -->
+  <div class="relative p-8">
+    <button
+      type="button"
+      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+    >
+      Most Liked
+    </button>
+
+    <div class="py-1.5"></div>
+
+    <!-- Responsive Grid Layout for Top Hits -->
+    <div
+      class="
+        grid 
+        grid-cols-2 
+        sm:grid-cols-3 
+        md:grid-cols-4 
+        lg:grid-cols-5 
+        gap-4
+      "
+    >
+    <div v-for="track in topLiked" :key="track">
+      <HomeCard :trackId="track" :playList="topLiked" />
     </div>
     </div>
   </div>

@@ -13,22 +13,17 @@
     "@mdi/light-js": "^0.2.63",
     "axios": "^1.7.9",
     "firebase": "^11.2.0",
-    "firebase-admin": "^13.1.0",
     "firebase-functions": "^6.3.2",
     "pinia": "^2.0.28",
     "pinia-plugin-persistedstate": "^3.0.2",
-    "soundtouchjs": "^0.1.30",
     "tone": "^15.0.4",
     "uniqolor": "^1.1.0",
     "vue": "^3.2.45",
     "vue-material-design-icons": "^5.1.2",
     "vue-router": "^4.1.6",
-    "wavesurfer.js": "^7.9.0",
-    "weq8": "^0.2.2"
+    "wavesurfer.js": "^7.9.0"
   },
   "devDependencies": {
-    "@pinegrow/tailwindcss-plugin": "^3.0.35",
-    "@pinegrow/vite-plugin": "^3.0.69",
     "@vitejs/plugin-vue": "^4.0.0",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",

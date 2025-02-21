@@ -136,6 +136,7 @@ import {
   getDownloadURL
 } from "firebase/storage";
 import { cropImageToSquare } from "../../main.js";
+import { makeNotification } from '../../main.js';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 
 const modalStore = useModalStore();
@@ -217,23 +218,24 @@ const handleSubmit = async () => {
       }
 
       const trackData = {
-        artist: currentUser.uid,
-        name: name.value,
-        genre: genre.value,
-        year: year.value,
-        image: "", // To be updated after Storage upload
-        url: "",   // To be updated after Storage upload
-        id: trackId,
-        description: description,
-        socials: {
-          youtube: yt || null,
-          spotify: spotify || null,
-          soundcloud: soundc || null,
-          applemusic: apple || null
-        },
-        views: 0,
-        createdAt: new Date(),
-      };
+  artist: currentUser.uid,
+  name: name.value,
+  genre: genre.value,
+  year: year.value,
+  image: "", // To be updated after Storage upload
+  url: "",   // To be updated after Storage upload
+  id: trackId,
+  description: description.value,  // Use .value to get the actual string
+  socials: {
+    youtube: yt.value || null,
+    spotify: spotify.value || null,
+    soundcloud: soundc.value || null,
+    applemusic: apple.value || null
+  },
+  views: 0,
+  createdAt: new Date(),
+};
+
 
       transaction.set(trackDocRef, trackData);
       transaction.update(userRef, {
@@ -243,13 +245,13 @@ const handleSubmit = async () => {
     });
 
     // Upload the artwork to Firebase Storage
-    const artworkStorageRef = storageRef(storage, `tracks/artwork/${trackId}`);
+    const artworkStorageRef = storageRef(storage,`users/${currentUser.uid}/tracks/${trackId}/artwork.png`);
     await uploadBytes(artworkStorageRef, artworkBlob.value, { contentType: 'image/png' });
     const artworkUrl = await getDownloadURL(artworkStorageRef);
 
     // Upload the audio file to Firebase Storage
-    const audioStorageRef = storageRef(storage, `tracks/audio/${trackId}`);
-    await uploadBytes(audioStorageRef, musicFile.value, { contentType: 'audio/mpeg' });
+    const audioStorageRef = storageRef(storage,`users/${currentUser.uid}/tracks/${trackId}/audio.wav`);
+    await uploadBytes(audioStorageRef, musicFile.value, { contentType: 'audio/wav' });
     const audioUrl = await getDownloadURL(audioStorageRef);
 
     // Update the track document with the Storage URLs
@@ -258,11 +260,10 @@ const handleSubmit = async () => {
       url: audioUrl,
     });
 
-    alert('Track uploaded successfully!');
     closeModal();
+    makeNotification('success', 'Track Uploaded Successfully!')
   } catch (error) {
-    console.error('Error uploading track:', error);
-    alert('Failed to upload the track. Please try again.');
+    makeNotification('failure', 'Track Upload Failed! Try Again.')
   } finally {
     isSubmitting.value = false;
   }

@@ -3,7 +3,7 @@
     <div class="modal-container">
       <button class="close-btn" @click="closeModal">&times;</button>
       <h1>{{ modalName }}</h1>
-      <div v-if="userList.length > 0" class="overflow-auto mt-2 w-full bg-[#181822] rounded-lg shadow-lg h-fot z-50">
+      <div v-if="userList.length > 0" class="overflow-auto mt-2 w-full bg-[#181822] rounded-lg shadow-lg h-fit z-50">
         <SearchResult :style="{
           gap: '4rem',
           textAlign: 'left',

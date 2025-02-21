@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import NotifiModal from '../components/modals/NotifiModal.vue';
 
 export const useModalStore = defineStore('modal', () => {
   // Create an object to store visibility states and data for multiple modals
@@ -25,6 +26,10 @@ export const useModalStore = defineStore('modal', () => {
       data: null,  // Store data for another modal
     },
     editProfileModal: {
+      isVisible: false,
+      data: null,  // Store data for another modal
+    },
+    NotifiModal: {
       isVisible: false,
       data: null,  // Store data for another modal
     },

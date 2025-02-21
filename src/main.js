@@ -8,6 +8,7 @@ import './assets/main.css'
 import './nvm/eq.css'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { useModalStore } from './stores/modalStore'
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -64,6 +65,13 @@ export async function cropImageToSquare(file) {
   });
 }
 
+export async function makeNotification(type, message) {
+  console.log("Toggling NOti");
+  
+const modalStore = useModalStore();
+  const dataForNotifyModal = { type: type, message: message };
+  modalStore.toggleModal('NotifiModal', dataForNotifyModal);
+}
 
 
 app.use(pinia)
