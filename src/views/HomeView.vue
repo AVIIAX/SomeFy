@@ -160,7 +160,7 @@ onAuthStateChanged(auth, async (user) => {
   <div class="relative p-8">
     <button
       type="button"
-      class="text-white text-2xl font-semibold hover:underline cursor-pointer"
+      class="text-white text-2xl font-semibold hover:underline"
     >
       Most Liked
     </button>

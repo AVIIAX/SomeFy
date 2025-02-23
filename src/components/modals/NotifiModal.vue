@@ -41,7 +41,7 @@ onMounted(() => {
   z-index: 50;
   position: absolute;
   bottom: 110px;
-  left: 10px;
+  left: 20px;
   background-color: #382525c7;
   backdrop-filter: blur(10px);
   width: fit-content;

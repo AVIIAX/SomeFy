@@ -103,7 +103,9 @@
 
           <!-- Track Genre -->
            <div class="genreList">
+            <RouterLink :to="{path: `/library/${track.genre}`}">
             <div># {{track.genre}}</div>
+            </RouterLink>
            </div>
           <!-- Track Socials -->
            <div v-if="track.socials" class="socials mt-5">
@@ -193,7 +195,7 @@
 
 <script setup>
 import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import { getFirestore, doc, getDoc, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { useSongStore } from '../stores/song';

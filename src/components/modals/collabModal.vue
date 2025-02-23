@@ -95,7 +95,8 @@
 <script setup>
 import { watch, onMounted, ref } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { makeNotification } from '../../main.js';
 
 const modalStore = useModalStore();
 // Access the modal's data from the store
@@ -161,9 +162,9 @@ const request = async (target, thisUser, message) => {
           [`inboxMails.${mailKey}`]: newMail,
         });
         closeModal();
-    
+        makeNotification('success', 'Request Sent!')
   } catch (error) {
-    console.error('Error sending collab request:', error);
+    makeNotification('failure', 'An Error Occurred! Try Again.')
   }
 };
 

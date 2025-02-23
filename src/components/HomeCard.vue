@@ -156,6 +156,7 @@ onMounted(async () => {
 .image {
   border-radius: 0.375rem;
   transition: all 0.3s ease;
+  margin-tosp: -8rem;
 }
 
 .play-pause-container {

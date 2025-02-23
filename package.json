@@ -19,6 +19,7 @@
     "tone": "^15.0.4",
     "uniqolor": "^1.1.0",
     "vue": "^3.2.45",
+    "vue-masonry-css": "^1.0.3",
     "vue-material-design-icons": "^5.1.2",
     "vue-router": "^4.1.6",
     "wavesurfer.js": "^7.9.0"

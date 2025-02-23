@@ -1,5 +1,5 @@
 <script setup>
-import { watch , ref, onMounted, computed  } from 'vue';
+import { watch, ref, onMounted, computed } from 'vue';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
 import Register from './components/Register.vue';
@@ -22,10 +22,11 @@ import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 import MailBox from 'vue-material-design-icons/EmailOutline.vue';
 import MailBoxOpen from 'vue-material-design-icons/EmailOpenOutline.vue';
 import PlusIcon from 'vue-material-design-icons/Plus.vue';
+import Knight from 'vue-material-design-icons/ChessKnight.vue';
 import { useSongStore } from './stores/song';
 import { useModalStore } from './stores/modalStore.js';
 import { storeToRefs } from 'pinia';
-import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot} from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
 import draggable from './utils/DraggableDirective.js';
 
 const db = getFirestore();
@@ -61,7 +62,7 @@ onMounted(() => {
     if (user) {
       // If a user is authenticated
       userEmail.value = user.email;
-      
+
       // Reference to the user's document in Firestore
       const userRef = doc(db, "user", user.uid);
 
@@ -77,16 +78,16 @@ onMounted(() => {
             "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
           userCredits.value = userData.credits || 0;
           isArtist.value = userData.artist || false;
-          
+
           // Convert inboxMails (which is a map) to an array
-      // if (userData.inboxMails) {
-      //   userMails.value = Object.keys(userData.inboxMails).map((key) => {
-      //     return { id: key, ...userData.inboxMails[key] };
-      //   });
-      // } else {
-      //   userMails.value = [];
-      // }
-      fetchUserMails(user.uid)
+          // if (userData.inboxMails) {
+          //   userMails.value = Object.keys(userData.inboxMails).map((key) => {
+          //     return { id: key, ...userData.inboxMails[key] };
+          //   });
+          // } else {
+          //   userMails.value = [];
+          // }
+          fetchUserMails(user.uid)
         } else {
           console.log("No such document!");
         }
@@ -131,7 +132,7 @@ const fetchUserMails = async (id) => {
       if (userData.inboxMails) {
         // Convert the inboxMails map to an array
         userMails.value = Object.keys(userData.inboxMails).map((key) => {
-          
+
           return { id: key, ...userData.inboxMails[key] };
         });
         // Sort the mails so that the newest (most recent timestamp) is at the top
@@ -161,7 +162,7 @@ const fetchUserMails = async (id) => {
 const logout = async () => {
   try {
     console.log(auth);
-    
+
     await signOut(auth);
     isLoggedIn.value = false;
     currentView.value = 'Login';
@@ -186,19 +187,20 @@ export default {
   },
 };
 </script>
-<template> 
-    <!-- NOT LOGGED IN -->
-    <div v-if="!isLoggedIn" class="fixed left-0 top-0 w-full h-full bg-gradient-to-b from-[#1C1C1C] to-black flex items-center justify-center">
-        <div>
-            <Register v-if="showRegister" @switchToLogin="switchToLogin"/>
-            <Login v-else @switchToRegister="switchToRegister"/>
-        </div>
+<template>
+  <!-- NOT LOGGED IN -->
+  <div v-if="!isLoggedIn"
+    class="fixed left-0 top-0 w-full h-full bg-gradient-to-b from-[#1C1C1C] to-black flex items-center justify-center">
+    <div>
+      <Register v-if="showRegister" @switchToLogin="switchToLogin" />
+      <Login v-else @switchToRegister="switchToRegister" />
     </div>
-    <!-- LOGGED IN -->
-    <div v-if="isLoggedIn">
-        <div>
-            <!-- TopNav -->
-            <div id="TopNav" class="
+  </div>
+  <!-- LOGGED IN -->
+  <div v-if="isLoggedIn">
+    <div>
+      <!-- TopNav -->
+      <div id="TopNav" class="
             w-[calc(100%-240px)] 
             h-[60px] 
             fixed 
@@ -210,104 +212,90 @@ export default {
             items-center 
             justify-between
           ">
-                <RouterLink to="/Shop">
-                    <div class="flex items-center ml-6">
-                        <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
-                            <CircleMultiple fillColor="#FFFFFF" :size="30"/>
-                        </button>
-                        <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
-                            {{userCredits}}
-</button>
-                    </div>
-                </RouterLink>
-                <div class="flex items-center ml-6 gap-5">
+        <RouterLink to="/Shop">
+          <div class="flex items-center ml-6">
+            <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
+              <CircleMultiple fillColor="#FFFFFF" :size="30" />
+            </button>
+            <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer text-white">
+              {{ userCredits }}
+            </button>
+          </div>
+        </RouterLink>
+        <div class="flex items-center ml-6 gap-5">
 
-                  <div class="cursor-pointer relative">
-    <MailBox
-      v-if="!openMail"
-      @click="openMail = true"
-      fillColor="#FFFFFF"
-      :size="30"
-    />
-    <MailBoxOpen
-      v-else
-      @click="openMail = false"
-      fillColor="#FFFFFF"
-      :size="30"
-    />
-    <!-- Red dot indicator if there are unseen mails -->
-    <span
-      v-if="unseenMailCount > 0"
-      class="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500"
-    ></span>
-  </div>
+          <Knight fillColor="#FFFFFF" :size="30"/>
 
-  <span
-    v-if="openMail"
-    class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[105px] w-[250px] h-[300px] p-1 cursor-pointer"
-  >
-    <div class="text-gray-200 font-semibold text-[14px]">
-      <div
-        v-if="userMails && userMails.length > 0"
-        class="overflow-auto mt-2 w-full h-[400px]  bg-[#181822] rounded-lg shadow-lg z-50"
-      >
-      <Mail
-      v-for="(mail, index) in userMails"
-      :key="mail.id"        
-      :data="mail"          
-    ></Mail>
-      </div>
-      <div v-else class="text-center text-gray-400 mt-4">No mails found.</div>
-    </div>
-  </span>
-                    
-                <button @click="openMenu = !openMenu" :class="openMenu ? 'bg-[#282828]' : 'bg-black'" class="bg-black hover:bg-[#282828] rounded-full p-0.5 mr-8 mt-0.5 cursor-pointer">
-                    <div class="flex items-center">
-                        <img class="rounded-full navProfileImg" width="27" height="27" :src='userAV'/>
-                        <div class="text-white text-[14px] ml-1.5 font-semibold">{{userName}}</div>
-                        <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25"/>
-                        <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25"/>
-                    </div>
-                </button>
+          <div class="cursor-pointer relative">
+            <MailBox v-if="!openMail" @click="openMail = true" fillColor="#FFFFFF" :size="30" />
+            <MailBoxOpen v-else @click="openMail = false" fillColor="#FFFFFF" :size="30" />
+            <!-- Red dot indicator if there are unseen mails -->
+            <span v-if="unseenMailCount > 0"
+              class="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500"></span>
+          </div>
+
+          <span v-if="openMail"
+            class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[105px] w-[250px] h-[300px] p-1 cursor-pointer">
+            <div class="text-gray-200 font-semibold text-[14px]">
+              <div v-if="userMails && userMails.length > 0"
+                class="overflow-auto mt-2 w-full h-[400px]  bg-[#181822] rounded-lg shadow-lg z-50">
+                <Mail v-for="(mail, index) in userMails" :key="mail.id" :data="mail"></Mail>
               </div>
-              
-              
-              <span v-if="openMenu && userMails" class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer"> <ul class="text-gray-200 font-semibold text-[14px]">
-                        <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">
-                            <RouterLink :to="`/user/${userID}`">Profile</RouterLink>
-                        </li>
-                        <li class="px-3 py-2.5 hover:bg-[#3E3D3D]" @click="logout">Log out</li>
-                    </ul> </span>
+              <div v-else class="text-center text-gray-400 mt-4">No mails found.</div>
+            </div>
+          </span>
 
+          <button @click="openMenu = !openMenu" :class="openMenu ? 'bg-[#282828]' : 'bg-black'"
+            class="bg-black hover:bg-[#282828] rounded-full p-0.5 mr-8 mt-0.5 cursor-pointer">
+            <div class="flex items-center">
+              <img class="rounded-full navProfileImg" width="27" height="27" :src='userAV' />
+              <div class="text-white text-[14px] ml-1.5 font-semibold">{{ userName }}</div>
+              <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25" />
+              <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25" />
             </div>
-            <!-- NavBar -->
-            <div id="SideNav" class="p-6 w-[240px] fixed z-50 bg-black" :style="{
-          height: currentTrack ? 'calc(100% - 90px)' : '100%'
-        }">
-                <RouterLink to="/">
-                    <img width="125" src="https://i.postimg.cc/QdgWWrjW/Sound-Wave.png"/>
-                </RouterLink>
-                <div class="my-8"></div>
-                <ul>
-                    <RouterLink to="/">
-                        <MenuItem class="ml-[1px]" name="Home" pageUrl="/"/>
-                    </RouterLink>
-                    <RouterLink to="/Shop">
-                        <MenuItem class="ml-[1px]" name="Get More Credits" pageUrl="/Shop"/>
-                    </RouterLink>
-                    <RouterLink to="/library">
-                        <MenuItem class="ml-[1px]" name="Library" pageUrl="/library"/>
-                    </RouterLink>
-                    <div class="py-3.5"></div>
-                </ul>
-                <div class="border-b border-b-gray-700"></div>
-                <div class="mt-4">
-                    <SearchBar/>
-                </div>
-            </div>
+          </button>
         </div>
-        <!-- MainComp -->
-        <div class="
+
+
+        <span v-if="openMenu && userMails"
+          class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer">
+          <ul class="text-gray-200 font-semibold text-[14px]">
+            <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">
+              <RouterLink :to="`/user/${userID}`">Profile</RouterLink>
+            </li>
+            <li class="px-3 py-2.5 hover:bg-[#3E3D3D]" @click="logout">Log out</li>
+          </ul>
+        </span>
+
+      </div>
+      <!-- NavBar -->
+      <div id="SideNav" class="p-6 w-[240px] fixed z-50 bg-black" :style="{
+        height: currentTrack ? 'calc(100% - 90px)' : '100%'
+      }">
+        <RouterLink to="/">
+          <img width="125" src="https://i.postimg.cc/QdgWWrjW/Sound-Wave.png" />
+        </RouterLink>
+        <div class="my-8"></div>
+        <ul>
+          <RouterLink to="/">
+            <MenuItem class="ml-[1px]" name="Home" pageUrl="/" />
+          </RouterLink>
+          <RouterLink to="/Shop">
+            <MenuItem class="ml-[1px]" name="Get More Credits" pageUrl="/Shop" />
+          </RouterLink>
+          <RouterLink to="/library">
+            <MenuItem class="ml-[1px]" name="Library" pageUrl="/library" />
+          </RouterLink>
+          <div class="py-3.5"></div>
+        </ul>
+        <div class="border-b border-b-gray-700"></div>
+        <div class="mt-4">
+          <SearchBar />
+        </div>
+      </div>
+    </div>
+    <!-- MainComp -->
+    <div class="
           fixed
           right-0
           top-0
@@ -318,44 +306,46 @@ export default {
           from-[#1C1C1C]
           to-black
         ">
-            <div class="mt-[60px]"></div>
-            <RouterView/>
-            <div class="mb-[100px]"></div>
-        </div>
-        <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black draggable-box" v-if="isArtist" :style="{ 
+      <div class="mt-[60px]"></div>
+      <RouterView />
+      <div class="mb-[100px]"></div>
+    </div>
+    <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black draggable-box"
+      v-if="isArtist" :style="{
         border: 'solid 2px  #3481c9',
-        color: 'Black', 
-        padding: '1rem', 
+        color: 'Black',
+        padding: '0.5rem',
         borderRadius: '100%',
         bottom: '130px',
         right: '60px'
-        }">
-            <PlusIcon fillColor="#FFFFFF" :size="30"/>
-        </button>
-        
-        <teleport to="body">
-        <UploadTrackModal v-if="modalStore.modals.uploadTrackModal.isVisible"/>
-        <boostModal v-if="modalStore.modals.boostModal.isVisible"/>
-        <boostedModal v-if="modalStore.modals.boostedModal.isVisible"/>
-        <followModal v-if="modalStore.modals.followModal.isVisible"/>
-        <collabModal v-if="modalStore.modals.collabModal.isVisible"/>
-        <editProfileModal v-if="modalStore.modals.editProfileModal.isVisible"/>
-        <NotifiModal v-if="modalStore.modals.NotifiModal.isVisible"/>
-        </teleport>
+      }">
+      <PlusIcon fillColor="#FFFFFF" :size="30" />
+    </button>
 
-        <MusicPlayer v-if="currentTrack"/>
-    </div>
+    <teleport to="body">
+      <UploadTrackModal v-if="modalStore.modals.uploadTrackModal.isVisible" />
+      <boostModal v-if="modalStore.modals.boostModal.isVisible" />
+      <boostedModal v-if="modalStore.modals.boostedModal.isVisible" />
+      <followModal v-if="modalStore.modals.followModal.isVisible" />
+      <collabModal v-if="modalStore.modals.collabModal.isVisible" />
+      <editProfileModal v-if="modalStore.modals.editProfileModal.isVisible" />
+      <NotifiModal v-if="modalStore.modals.NotifiModal.isVisible" />
+    </teleport>
 
-    
+    <MusicPlayer v-if="currentTrack" />
+  </div>
+
+
 </template>
 <style>
 body {
-   background-color:  rgb(0 0 0);
-   font-family: "Figtree", serif;
+  background-color: rgb(0 0 0);
+  font-family: "Figtree", serif;
   font-weight: 400;
   font-style: normal;
   letter-spacing: 1px;
 }
+
 /* width */
 ::-webkit-scrollbar {
   width: 7px;
@@ -369,17 +359,20 @@ body {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #ffffff86;border-radius: 20px;
+  background: #ffffff86;
+  border-radius: 20px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffffffd7;border-radius: 20px;
+  background: #ffffffd7;
+  border-radius: 20px;
 }
 
 .happyBtn {
   transition: all 0.2s linear;
 }
+
 .happyBtn:hover {
   transform: scale(1.1) rotateZ(10deg);
 }

@@ -150,6 +150,7 @@ import { useModalStore } from '../stores/modalStore.js';
 import uniqolor from 'uniqolor';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { cropImageToSquare } from "../main.js";
+import { makeNotification } from '../main.js';
 
 
 // Initialize Firebase Storage
@@ -348,9 +349,9 @@ const handleFileChange = async (event) => {
       userAvatar.value = artworkUrl;
       errorMessage.value = '';
       await updateProfileField('avatar', artworkUrl);
+      makeNotification('success', 'Profile Image Updated Successfully!')
     } catch (error) {
-      console.error('Error uploading file to Firebase Storage:', error);
-      errorMessage.value = 'Failed to upload file. Please try again.';
+      makeNotification('failure', 'An Error Occurred! Try Again.')
     }
   }
 };

@@ -1,41 +1,35 @@
 <template>
-    <RouterLink to="library">
-        <div
-            v-if="randColor.color"
-            :style="`background-color: ${randColor.color};`"
-            class="
-                contrast-[2] 
-                brightness-[0.87] 
-                rounded-xl 
-                aspect-square 
-                relative 
-                overflow-hidden
-            "
-        >
-            <div class="text-white pt-3 pl-4 font-semibold text-[23px]">{{ category }}</div>
-            <img
-                class="
-                    absolute 
-                    contrast-[0.55]
-                    -right-3.5 
-                    bottom-0 
-                    max-w-[100px] 
-                    rotate-[20deg]
-                "
-                :src="image || ''"
-            >
-        </div>
-    </RouterLink>
+  <div
+    v-if="randColor.color"
+    :class="rClass"
+    :style="{ 
+      backgroundColor: randColor.color, 
+      width: width, 
+      height: height 
+    }"
+    class="contrast-[2] brightness-[0.87] rounded-xl relative overflow-hidden"
+  >
+    <div class="text-white pt-3 pl-4 font-semibold text-[23px]">{{ text }}</div>
+  </div>
 </template>
 
 <script setup>
 import { ref, toRefs } from 'vue'
-import { RouterLink } from 'vue-router';
-import uniqolor from 'uniqolor';
+import uniqolor from 'uniqolor'
+
+// Props received for dynamic class and text
+const props = defineProps({ text: String, rClass: String })
+const { text, rClass } = toRefs(props)
+
+// Generate a random color
 let randColor = ref('')
 randColor.value = uniqolor.random()
 
-const props = defineProps({ category: String, image: String })
-const { category } = toRefs(props)
+// Randomize width and height for each category
+const width = `${Math.floor(Math.random() * 200) + 250}px` // Random width between 250px and 450px
+const height = `${Math.floor(Math.random() * 200) + 250}px` // Random height between 250px and 450px
 </script>
 
+<style scoped>
+/* Additional styles for layout, if needed */
+</style>

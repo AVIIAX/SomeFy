@@ -245,3 +245,14 @@
   width: 50px;
   height: 50px;
 }
+
+select option {
+  background-color: #131313bb;
+  border: none;
+  outline: none;
+}
+
+select option:hover {
+  display: none;
+  background-color: #131313de;
+}

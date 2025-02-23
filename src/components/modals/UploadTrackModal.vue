@@ -6,110 +6,45 @@
         <!-- Artwork Input -->
         <div class="artwork-container">
           <label for="artwork" class="artwork-label cursor-pointer">
-            <img
-              v-if="artwork"
-              :src="artwork"
-              class="artwork-preview"
-              alt="Uploaded artwork"
-            />
-            <!-- <img
-              v-else
-              src="https://archive.org/download/placeholder-image/placeholder-image.jpg"
-              class="artwork-placeholder"
-              alt="Placeholder"
-            /> -->
-
+            <img v-if="artwork" :src="artwork" class="artwork-preview" alt="Uploaded artwork" />
             <div v-else class="imagePlaceHold artwork-placeholder"></div>
           </label>
-          <input
-            id="artwork"
-            type="file"
-            accept="image/*"
-            class="hidden-input"
-            @change="handleArtworkUpload"
-          />
+          <input id="artwork" type="file" accept="image/*" class="hidden-input" @change="handleArtworkUpload" />
         </div>
 
         <div class="max-h-[500px] overflow-auto my-8 p-3">
-        <span>Required</span>
-        <!-- Name Input -->
-        <input
-          v-model="name"
-          type="text"
-          placeholder="Track Name"
-          class="input"
-        />
+          <span>Required</span>
+          <!-- Name Input -->
+          <input v-model="name" type="text" placeholder="Track Name" class="input" />
 
-        <!-- Genre Input -->
-        <input
-          v-model="genre"
-          type="text"
-          placeholder="Genre"
-          class="input"
-        />
+          <!-- Genre Dropdown -->
+          <select v-model="selectedGenre" class="input">
+            <option value="" disabled>Select Genre</option>
+            <option v-for="genre in genresList" :key="genre" :value="genre">
+              {{ genre }}
+            </option>
+          </select>
 
-        <!-- Year Input -->
-        <input
-          v-model="year"
-          type="number"
-          min="1900" 
-          max="2025" 
-          placeholder="Release Year"
-          class="input"
-        />
+          <!-- Year Input -->
+          <input v-model="year" type="number" min="1900" max="2025" placeholder="Release Year" class="input" />
 
-        <!-- Music File Input -->
-         <span>Upload Track File</span>
-        <input
-          id="music"
-          type="file"
-          accept="audio/*"
-          @change="handleMusicUpload"
-          class="input track-upload"
-        />
+          <!-- Music File Input -->
+          <span>Upload Track File</span>
+          <input id="music" type="file" accept="audio/*" @change="handleMusicUpload" class="input track-upload" />
 
-        <span>Optional</span>
-        <!-- Description Input -->
-        <textarea
-          v-model="description"
-          type="text"
-          placeholder="Description"
-          class="input"
-        />
+          <span>Optional</span>
+          <!-- Description Input -->
+          <textarea v-model="description" type="text" placeholder="Description" class="input"></textarea>
 
-        <!-- Socials -->
-         <!-- Year Input -->
-        <input
-          v-model="yt"
-          type="text"
-          placeholder="Youtube Link"
-          class="input"
-        />
-
-        <input
-          v-model="spotify"
-          type="text"
-          placeholder="Spotify Link"
-          class="input"
-        />
-
-        <input
-          v-model="soundc"
-          type="text"
-          placeholder="Sound Cloud Link"
-          class="input"
-        />
-
-        <input
-          v-model="apple"
-          type="text"
-          placeholder="Apple Music Link"
-          class="input"
-        />
-        
-      </div>
+          <!-- Socials -->
+          <input v-model="yt" type="text" placeholder="Youtube Link" class="input" />
+          <input v-model="spotify" type="text" placeholder="Spotify Link" class="input" />
+          <input v-model="soundc" type="text" placeholder="Sound Cloud Link" class="input" />
+          <input v-model="apple" type="text" placeholder="Apple Music Link" class="input" />
+        </div>
         <!-- Submit Button -->
-        <button  type="submit" class="submit-btn">Submit 5
+        <button type="submit" class="submit-btn">
+          Submit 5
           <CircleMultiple fill="#FFFFFF" size="20" />
         </button>
       </form>
@@ -118,12 +53,13 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref, defineEmits, onMounted } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
 import { getAuth } from "firebase/auth";
 import {
   getFirestore,
   doc,
+  getDoc,
   updateDoc,
   collection,
   arrayUnion,
@@ -149,7 +85,8 @@ const currentUser = auth.currentUser;
 
 // Track details
 const name = ref('');
-const genre = ref('');
+const selectedGenre = ref('');
+const selectedLocation = ref('');
 const year = ref('');
 const description = ref('');
 const yt = ref('');
@@ -161,6 +98,25 @@ const artwork = ref(''); // Data URL for preview
 const artworkBlob = ref(null); // Blob to be uploaded
 const musicFile = ref(null); // Audio file object
 const isSubmitting = ref(false);
+
+// Dropdown options
+const genresList = ref([]);
+
+onMounted(async () => {
+  try {
+    // Fetch system data from Firestore (assumes a document at misc/system with fields 'genres' and 'location')
+    const systemDocRef = doc(db, "misc", "system");
+    const systemDocSnap = await getDoc(systemDocRef);
+    if (systemDocSnap.exists()) {
+      const data = systemDocSnap.data();
+      genresList.value = data.genres || [];
+    } else {
+      console.error("System document does not exist!");
+    }
+  } catch (error) {
+    console.error("Error fetching system data:", error);
+  }
+});
 
 const handleArtworkUpload = async (e) => {
   const file = e.target.files[0];
@@ -192,7 +148,15 @@ const handleMusicUpload = (e) => {
 const handleSubmit = async () => {
   if (isSubmitting.value) return;
 
-  if (!name.value || !genre.value || !year.value || !artworkBlob.value || !musicFile.value) {
+  // Ensure required fields are filled (name, genre, location, year, artwork, music file)
+  if (
+    !name.value ||
+    !selectedGenre.value ||
+    !year.value ||
+    !artworkBlob.value ||
+    !musicFile.value ||
+    !selectedLocation.value
+  ) {
     alert('Please fill in all the fields!');
     return;
   }
@@ -218,24 +182,24 @@ const handleSubmit = async () => {
       }
 
       const trackData = {
-  artist: currentUser.uid,
-  name: name.value,
-  genre: genre.value,
-  year: year.value,
-  image: "", // To be updated after Storage upload
-  url: "",   // To be updated after Storage upload
-  id: trackId,
-  description: description.value,  // Use .value to get the actual string
-  socials: {
-    youtube: yt.value || null,
-    spotify: spotify.value || null,
-    soundcloud: soundc.value || null,
-    applemusic: apple.value || null
-  },
-  views: 0,
-  createdAt: new Date(),
-};
-
+        artist: currentUser.uid,
+        name: name.value,
+        genre: selectedGenre.value,
+        location: selectedLocation.value,
+        year: year.value,
+        image: "", // To be updated after Storage upload
+        url: "",   // To be updated after Storage upload
+        id: trackId,
+        description: description.value,
+        socials: {
+          youtube: yt.value || null,
+          spotify: spotify.value || null,
+          soundcloud: soundc.value || null,
+          applemusic: apple.value || null
+        },
+        views: 0,
+        createdAt: new Date(),
+      };
 
       transaction.set(trackDocRef, trackData);
       transaction.update(userRef, {
@@ -245,12 +209,12 @@ const handleSubmit = async () => {
     });
 
     // Upload the artwork to Firebase Storage
-    const artworkStorageRef = storageRef(storage,`users/${currentUser.uid}/tracks/${trackId}/artwork.png`);
+    const artworkStorageRef = storageRef(storage, `users/${currentUser.uid}/tracks/${trackId}/artwork.png`);
     await uploadBytes(artworkStorageRef, artworkBlob.value, { contentType: 'image/png' });
     const artworkUrl = await getDownloadURL(artworkStorageRef);
 
     // Upload the audio file to Firebase Storage
-    const audioStorageRef = storageRef(storage,`users/${currentUser.uid}/tracks/${trackId}/audio.wav`);
+    const audioStorageRef = storageRef(storage, `users/${currentUser.uid}/tracks/${trackId}/audio.wav`);
     await uploadBytes(audioStorageRef, musicFile.value, { contentType: 'audio/wav' });
     const audioUrl = await getDownloadURL(audioStorageRef);
 
@@ -261,9 +225,9 @@ const handleSubmit = async () => {
     });
 
     closeModal();
-    makeNotification('success', 'Track Uploaded Successfully!')
+    makeNotification('success', 'Track Uploaded Successfully!');
   } catch (error) {
-    makeNotification('failure', 'Track Upload Failed! Try Again.')
+    makeNotification('failure', 'Track Upload Failed! Try Again.');
   } finally {
     isSubmitting.value = false;
   }
@@ -272,7 +236,8 @@ const handleSubmit = async () => {
 const closeModal = () => {
   // Clear inputs
   name.value = '';
-  genre.value = '';
+  selectedGenre.value = '';
+  selectedLocation.value = '';
   year.value = '';
   artwork.value = '';
   artworkBlob.value = null;
@@ -286,6 +251,7 @@ const closeModal = () => {
   width: 700px;
   padding: 30px;
 }
+
 /* Artwork Input */
 .artwork-container {
   margin: 20px 0;
@@ -379,7 +345,7 @@ const closeModal = () => {
   visibility: hidden;
 }
 
-.imagePlaceHold{
+.imagePlaceHold {
   display: flex;
   text-align: center;
   justify-content: center;

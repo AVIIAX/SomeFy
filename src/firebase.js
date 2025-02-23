@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getFunctions } from "firebase/functions";
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -19,6 +20,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 const db = getFirestore(app);
 const auth = getAuth(app);
+const functions = getFunctions(app, 'us-central1'); // use your function's region if applicable
 
 // Export the initialized services
-export { app, db, auth };
+export { app, db, auth, functions };
