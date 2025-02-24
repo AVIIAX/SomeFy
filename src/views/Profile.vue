@@ -70,7 +70,14 @@
   <!-- My Tracks -->
   <div v-if="isArtist" class="p-8">
     <button type="button" class="text-white text-2xl font-semibold hover:underline cursor-pointer">
+      
+      <RouterLink :to="{
+                    path: `/library/MyTracks`,
+                    params: { playlist: myTracks, genre: null }
+                    }">
       Tracks
+      </RouterLink>
+
     </button>
     <div v-if="myTracks">
       <div class="mt-6"></div>

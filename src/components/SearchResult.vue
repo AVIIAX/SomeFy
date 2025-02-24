@@ -36,7 +36,7 @@
 
   <RouterLink v-else-if="data.type === 'playlist'" :to="`/playlist/${data.id}`">
     <div id="" class="mainTab">
-      📂 {{ data.name }}
+      📂 {{ data }}
 
     </div>
   </RouterLink>

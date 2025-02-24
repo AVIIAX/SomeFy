@@ -15,7 +15,8 @@
                 <!-- Pass track IDs in the query -->
                 <RouterLink :to="{
                     path: `/library/${genre}`,
-                }" class="w-full h-full flex flex-col items-center justify-center z-2">
+                    params: { playlist: null, genre: genre }
+                    }" class="w-full h-full flex flex-col items-center justify-center z-2">
                     <div class="font-bold text-lg">
                         {{ genre }}
                     </div>

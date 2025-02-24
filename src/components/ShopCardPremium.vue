@@ -54,16 +54,10 @@ function onBuy() {
       src="https://assets-v2.lottiefiles.com/a/5a022e76-117b-11ee-88ed-e7a134fba5cb/aQXIz0BRr4.lottie"
     />
     <div class="quantity-control">
-      <button class="quantity-btn" @click="decreaseQuantity">-</button>
-      <input
-        type="number"
-        v-model.number="quantity"
-        :min="minQuantity"
-      />
-      <button class="quantity-btn" @click="increaseQuantity">+</button>
+
     </div>
     <div class="total-price">
-      Total: ${{ totalPrice }}
+      ${{ totalPrice }}
     </div>
     <button class="buy-btn" @click="onBuy">Buy</button>
   </div>

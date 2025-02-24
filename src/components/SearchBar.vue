@@ -34,13 +34,12 @@
     return;
   }
 
-  console.log('Searching for:', sQuery.value); // Log search term
+  console.log('Searching for:', sQuery.value);
 
   try {
     const searches = [
       searchCollection('user', sQuery.value),     // Query users
-      searchCollection('track', sQuery.value),   // Query tracks
-      searchCollection('playlist', sQuery.value), // Query playlists
+      searchCollection('track', sQuery.value),    // Query tracks      // Query playlists by genre
     ];
 
     const [users, tracks, playlists] = await Promise.all(searches);
@@ -48,7 +47,7 @@
     // Combine results from all collections
     results.value = [...users, ...tracks, ...playlists];
 
-    console.log('Final results:', results.value); // Log combined results
+    console.log('Final results:', results.value);
   } catch (error) {
     console.error('Error during search:', error);
   }
@@ -81,7 +80,6 @@ const searchCollection = async (collectionName, searchTerm) => {
     return [];
   }
 };
-
 
   
   const expandSideNav = () => {

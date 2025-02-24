@@ -14,5 +14,5 @@ const { demoteExpiredBoosts } = require("./funcs/demoteExpiredBoosts");
 
 //exports.updateTopHits = updateTopHits;
 //exports.updateMostLiked = updateMostLiked;
-exports.boostTrack = boostTrack;
-exports.demoteExpiredBoosts = demoteExpiredBoosts;
+//exports.boostTrack = boostTrack;
+//exports.demoteExpiredBoosts = demoteExpiredBoosts;

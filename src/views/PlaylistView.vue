@@ -62,14 +62,35 @@ async function fetchTracks(queryField, value) {
   }
 }
 
+const fetchTrackDetails = async (trackIds) => {
+  return Promise.all(trackIds.map(async (trackId) => {
+    try {
+      const trackRef = doc(db, 'track', trackId);
+      const trackDoc = await getDoc(trackRef);
+      if (trackDoc.exists()) {
+        return { id: trackId, ...trackDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching track with ID ${trackId}:`, error);
+      return null;
+    }
+  })).then(tracks => tracks.filter(Boolean));
+};
+
 // On mount, fetch tracks based on which parameter is provided
 onMounted(async () => {
+  
+  console.log(isPlaylistPage,isGenrePage);
+  
+  
   if (isGenrePage.value && currentGenre.value) {
     // For a genre page, fetch tracks where the track's 'genre' field matches the parameter
     allTracks.value = await fetchTracks('genre', currentGenre.value)
   } else if (isPlaylistPage.value && currentPlaylist.value) {
     // For a playlist page, fetch tracks where the track's 'playlist' field matches the parameter
-    allTracks.value = await fetchTracks('playlist', currentPlaylist.value)
+    allTracks.value = await fetchTrackDetails(currentPlaylist.value)
+    console.log('MyTracks');
   }
   randBoost.value = await getRandomBoostedTrackId()
 })
