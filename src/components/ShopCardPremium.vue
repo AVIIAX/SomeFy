@@ -18,7 +18,7 @@ const premiumFeatures = [
   '25 Credits Monthly',
   'Extended Music Player',
   'Custom Profile URL'
-];w
+];
 
 // Listen for price updates from Firestore
 onMounted(() => {
