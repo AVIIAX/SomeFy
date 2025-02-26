@@ -2,76 +2,120 @@
 import { ref, computed, onMounted } from 'vue';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
-import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
+import Knight from 'vue-material-design-icons/ChessKnight.vue';
+import Check from 'vue-material-design-icons/Check.vue';
+
 
 // Initialize Firestore
 const db = getFirestore();
 
-// Minimum quantity can be adjusted here
-const minQuantity = 2;
+// State
+const plan = ref('monthly'); // can be 'monthly' or 'annually'
+const prices = ref({ premiumMonth: 0, premiumYear: 0 });
+const featuresOpen = ref(false);
+const premiumFeatures = [
+  'Ad-free Experience',
+  '25 Credits Monthly',
+  'Extended Music Player',
+  'Custom Profile URL'
+];w
 
-const quantity = ref(minQuantity);
-const pricePerCredit = ref(0);
-
-// Live total calculation (formatted to 2 decimal places)
-const totalPrice = computed(() => (pricePerCredit.value * quantity.value).toFixed(2));
-
-// Retrieve price per credit from Firestore (doc: "shop/prices", field: credit)
+// Listen for price updates from Firestore
 onMounted(() => {
   const docRef = doc(db, 'shop', 'prices');
   onSnapshot(docRef, (docSnap) => {
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      if (data.credit !== undefined) {
-        pricePerCredit.value = data.credit;
-      }
+      prices.value = docSnap.data();
     }
   });
 });
 
-function increaseQuantity() {
-  quantity.value++;
-}
+// Computed property for the current price based on selected plan
+const price = computed(() => {
+  return plan.value === 'monthly'
+    ? prices.value.premiumMonth
+    : prices.value.premiumYear;
+});
 
-function decreaseQuantity() {
-  if (quantity.value > minQuantity) {
-    quantity.value--;
-  }
-}
+// Switch plan to monthly
+const setMonthly = () => {
+  plan.value = 'monthly';
+};
 
-function onBuy() {
-  console.log(`Buying ${quantity.value} credits for $${totalPrice.value}`);
-}
+// Switch plan to annually
+const setAnnually = () => {
+  plan.value = 'annually';
+};
+
+// Log the chosen plan and price when the Buy button is clicked
+const onBuy = () => {
+  console.log(
+    `Buying premium ${plan.value === 'monthly' ? 'Monthly' : 'Annually'} Plan for $${price.value}`
+  );
+};
+
+// Toggle the “Why PRO?” dropdown
+const toggleFeatures = () => {
+  featuresOpen.value = !featuresOpen.value;
+};
 </script>
 
 <template>
   <div class="shop-card">
-    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Premium</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
+    <!-- Header -->
+    <div class="header flex gap-3 justify-center items-center">
+      <h2>Buy Premium</h2>
+      <Knight fillColor="#FFFFFF" :size="30" />
+    </div>
+
+    <!-- Lottie Animation -->
     <DotLottieVue
       class="lottie"
       autoplay
       loop
       src="https://assets-v2.lottiefiles.com/a/5a022e76-117b-11ee-88ed-e7a134fba5cb/aQXIz0BRr4.lottie"
     />
-    <div class="quantity-control">
 
+    <!-- Modern Toggle -->
+    <div class="modern-toggle">
+      <div
+        :class="['toggle-option', { active: plan === 'monthly' }]"
+        @click="setMonthly"
+      >
+        MONTHLY
+      </div>
+      <div
+        :class="['toggle-option', { active: plan === 'annually' }]"
+        @click="setAnnually"
+      >
+        ANNUALLY
+      </div>
     </div>
-    <div class="total-price">
-      ${{ totalPrice }}
-    </div>
+
+    <!-- Dropdown: Why PRO? -->
+        <div class="dropdown">
+          <div class="dropdown-header" @click="toggleFeatures">
+            <h3>Why PRO?</h3>
+            <span>{{ featuresOpen ? '▲' : '▼' }}</span>
+          </div>
+          <transition name="fade">
+            <ul v-if="featuresOpen" class="dropdown-content">
+              <li v-for="(feature, index) in premiumFeatures" :key="index">
+                <Check fillColor="WHITE" /> {{ feature }}
+              </li>
+            </ul>
+          </transition>
+        </div>
+
+    <!-- Price & Buy Button -->
+    <div class="total-price">${{ price }}</div>
     <button class="buy-btn" @click="onBuy">Buy</button>
+
+    
   </div>
 </template>
 
 <style scoped>
-* {
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-  letter-spacing: 2px;
-}
-h2 {
-  color: #acacac;
-  font-size: 25px;
-}
 .shop-card {
   background-color: #1f2225;
   color: #fff;
@@ -81,9 +125,11 @@ h2 {
   width: 350px;
   margin: 2rem auto;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
 
-  transform: scale(1.09);
+.header h2 {
+  color: #acacac;
+  font-size: 25px;
 }
 
 .lottie {
@@ -92,51 +138,34 @@ h2 {
   margin: 0 auto 1rem;
 }
 
-.quantity-control {
+/* Modern two-tab toggle */
+.modern-toggle {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  border: 1px solid #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1.5rem auto;
+  width: 250px; /* Adjust width as needed */
 }
 
-.quantity-btn {
-  background: #2b6391;
-  border: none;
-  border-radius: 50%;
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.quantity-btn:hover {
-  background: #1976d2;
-}
-
-input[type="number"] {
-  width: 60px;
+.toggle-option {
+  flex: 1;
   text-align: center;
-  font-size: 1.2rem;
-  padding: 0.5rem;
-  border: 2px solid #2c5a80;
-  border-radius: 8px;
-  background: transparent;
-  color: #fff;
-  outline: none;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
-/* Remove default spinner arrows */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.toggle-option.active {
+  background-color: #fff;
+  color: #000;
 }
 
 .total-price {
   font-size: 1.3rem;
+  margin-top: 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -153,5 +182,63 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .buy-btn:hover {
   background: #3b5179;
+}
+
+/* Dropdown: Why PRO? */
+.dropdown {
+  margin-top: 20px;
+  text-align: left;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
+}
+
+.dropdown-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.dropdown-header span {
+  font-size: 16px;
+  color: #fff;
+}
+
+.dropdown-content {
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+}
+
+.dropdown-content li {
+  padding: 5px 0;
+  border-bottom: 1px solid #444;
+  font-size: 14px;
+  color: #ccc;
+  display: flex;
+  gap: 1rem;
+}
+
+.dropdown-content li:last-child {
+  border-bottom: none;
+}
+
+/* Simple fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

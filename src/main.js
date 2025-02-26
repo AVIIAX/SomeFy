@@ -66,8 +66,6 @@ export async function cropImageToSquare(file) {
 }
 
 export async function makeNotification(type, message) {
-  console.log("Toggling NOti");
-  
 const modalStore = useModalStore();
   const dataForNotifyModal = { type: type, message: message };
   modalStore.toggleModal('NotifiModal', dataForNotifyModal);

@@ -54,7 +54,9 @@ import { ref } from "vue";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "vue-router";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useModalStore } from '../stores/modalStore.js';
 
+const modalStore = useModalStore();
 const db = getFirestore();
 const username = ref("");
 const email = ref("");
@@ -80,6 +82,9 @@ const register = async () => {
 
     console.log("User registered and data saved successfully!");
     router.push("/"); // Redirect after successful registration
+
+    const dataForEditModal = { trackID: null, user: user.uid };
+    modalStore.toggleModal('editProfileModal', dataForEditModal);
   } catch (error) {
     console.error("Error registering user:", error);
     alert(error.message);

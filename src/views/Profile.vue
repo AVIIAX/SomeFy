@@ -21,9 +21,7 @@
         <!-- Avatar -->
         <img :src="userAvatar || 'https://i.postimg.cc/wxrwGs5t/a331a8d0a8ff50827c6cb3437f336a30.jpg'" alt="User Avatar"
           class="profile-img" @click="triggerFileInput" />
-        <div class="edit-icon-container" v-if="isAuthUser">
-          <i class="material-icons">✏</i>
-        </div>
+          
         <!-- File Input -->
         <input v-if="isAuthUser" type="file" ref="fileInput" class="file-input" @change="handleFileChange" />
       </div>

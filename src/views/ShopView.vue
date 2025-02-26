@@ -14,10 +14,9 @@ import { storeToRefs } from 'pinia';
 
 <template>
   <!-- Top Boost Section -->
-  <div class="relative items-center" :style="{
-  }">
+  <div class="relative items-center h-full" :style="{ }">
 
-  <div class="shop-list">
+  <div class="shop-list relative top-[60px]">
     <div>
       <ShopCardCredits itemId="1" />
     </div>
