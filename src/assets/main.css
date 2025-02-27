@@ -256,3 +256,26 @@ select option:hover {
   display: none;
   background-color: #131313de;
 }
+
+.minimal-btn {
+  position: relative;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0ea;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  word-spacing: 0.5rem;
+  transition: all 0.3s;
+}
+
+.minimal-btn:hover {
+  background-color: #e0e0e041;
+  transform: translateX(-50%) scale(1.05);
+}

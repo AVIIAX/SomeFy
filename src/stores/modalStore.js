@@ -33,6 +33,10 @@ export const useModalStore = defineStore('modal', () => {
       isVisible: false,
       data: null,  // Store data for another modal
     },
+    StripeCheckout: {
+      isVisible: false,
+      data: null,  // Store data for another modal
+    },
     // You can add more modals here
   });
 

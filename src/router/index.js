@@ -24,7 +24,7 @@ const router = createRouter({
       component: Profile,
     },
     {
-      path: '/track/:trackID',  // Dynamic route to match userID
+      path: '/track/:customID?/:trackID',  // Dynamic route to match userID
       name: 'TrackProfile',
       component: Track,
     },

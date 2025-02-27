@@ -3,6 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
+import Plus from 'vue-material-design-icons/Plus.vue';
+import Minus from 'vue-material-design-icons/Minus.vue';
+import { useModalStore } from '../stores/modalStore.js';
+
+const modalStore = useModalStore();
 
 // Initialize Firestore
 const db = getFirestore();
@@ -41,6 +46,8 @@ function decreaseQuantity() {
 
 function onBuy() {
   console.log(`Buying ${quantity.value} credits for $${totalPrice.value}`);
+  const dataForStripeCheckout = { type: 'credits', price: totalPrice };  // Example data
+  modalStore.toggleModal('StripeCheckout', dataForStripeCheckout);  // Pass data to Boost modal
 }
 </script>
 
@@ -54,18 +61,22 @@ function onBuy() {
       src="https://assets-v2.lottiefiles.com/a/ce38d508-f56c-11ee-9b29-f770b8fcb8fb/5hrf3OpgXE.lottie"
     />
     <div class="quantity-control">
-      <button class="quantity-btn" @click="decreaseQuantity">-</button>
+      <button class="quantity-btn" @click="decreaseQuantity">
+        <Minus fillColor="WHITE" />
+      </button>
       <input
         type="number"
         v-model.number="quantity"
         :min="minQuantity"
       />
-      <button class="quantity-btn" @click="increaseQuantity">+</button>
+      <button class="quantity-btn" @click="increaseQuantity">
+        <Plus fillColor="WHITE" />
+      </button>
     </div>
     <div class="total-price">
       Total: ${{ totalPrice }}
     </div>
-    <button class="buy-btn" @click="onBuy">Buy</button>
+    <button class="minimal-btn" @click="onBuy">Buy</button>
   </div>
 </template>
 
@@ -105,19 +116,25 @@ h2 {
 }
 
 .quantity-btn {
-  background: #2b6391;
-  border: none;
-  border-radius: 50%;
   color: #fff;
-  width: 40px;
-  height: 40px;
+  width: fit-content;
+  height: fit-content;
   font-size: 1.5rem;
   cursor: pointer;
-  transition: background 0.3s;
+  text-align: center;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  justify-items: center;
 }
 
 .quantity-btn:hover {
-  background: #1976d2;
+  opacity: 80%;
+}
+
+.quantity-btn > span {
+  width: fit-content;
+
 }
 
 input[type="number"] {

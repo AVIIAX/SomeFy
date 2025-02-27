@@ -4,7 +4,8 @@ import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import Knight from 'vue-material-design-icons/ChessKnight.vue';
 import Check from 'vue-material-design-icons/Check.vue';
-
+import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 // Initialize Firestore
 const db = getFirestore();
@@ -96,7 +97,9 @@ const toggleFeatures = () => {
         <div class="dropdown">
           <div class="dropdown-header" @click="toggleFeatures">
             <h3>Why PRO?</h3>
-            <span>{{ featuresOpen ? '▲' : '▼' }}</span>
+            
+            <ChevronUp v-if="featuresOpen" fillColor="WHITE" />
+            <ChevronDown v-else fillColor="WHITE" />
           </div>
           <transition name="fade">
             <ul v-if="featuresOpen" class="dropdown-content">
@@ -108,8 +111,9 @@ const toggleFeatures = () => {
         </div>
 
     <!-- Price & Buy Button -->
-    <div class="total-price">${{ price }}</div>
-    <button class="buy-btn" @click="onBuy">Buy</button>
+    <div class="total-price">${{ price }}<span class="text-gray-500">/{{ plan === 'monthly' ? 'Month' : 'Year' }}</span>
+    </div>
+    <button class="minimal-btn" @click="onBuy">Buy</button>
 
     
   </div>

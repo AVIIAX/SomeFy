@@ -10,6 +10,7 @@ import './nvm/eq.css'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { useModalStore } from './stores/modalStore'
 
+//import { VueStripe } from 'vue-stripe-js';
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 // Import Firebase services from the dedicated file
@@ -19,6 +20,8 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
+
+//app.use(VueStripe, { pk: 'pk_test_51Qk8TQBZZyFOcsgGsmhWji0pGNkodneInvB9lGBLtgrLuEhvl8eSrGTcCHBmyUWjoqxT86vbrlxLC6IBGtSba8xn000DRZM10Q' }); // Replace with actual key
 
 //Image crop
 export async function cropImageToSquare(file) {

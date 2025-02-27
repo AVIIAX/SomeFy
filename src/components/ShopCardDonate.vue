@@ -2,32 +2,23 @@
 import { ref, computed, onMounted } from 'vue';
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
-import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
+import Coffee from 'vue-material-design-icons/Coffee.vue';
+import Plus from 'vue-material-design-icons/Plus.vue';
+import Minus from 'vue-material-design-icons/Minus.vue';
 
 // Initialize Firestore
 const db = getFirestore();
 
 // Minimum quantity can be adjusted here
-const minQuantity = 2;
+const minQuantity = 1;
 
 const quantity = ref(minQuantity);
-const pricePerCredit = ref(0);
+const pricePerCredit = ref(1);
 
 // Live total calculation (formatted to 2 decimal places)
-const totalPrice = computed(() => (pricePerCredit.value * quantity.value).toFixed(2));
+const totalPrice = computed(() => (pricePerCredit.value * quantity.value).toFixed(1));
 
-// Retrieve price per credit from Firestore (doc: "shop/prices", field: credit)
-onMounted(() => {
-  const docRef = doc(db, 'shop', 'prices');
-  onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      if (data.credit !== undefined) {
-        pricePerCredit.value = data.credit;
-      }
-    }
-  });
-});
+
 
 function increaseQuantity() {
   quantity.value++;
@@ -46,7 +37,7 @@ function onBuy() {
 
 <template>
   <div class="shop-card">
-    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Me A Coffee</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
+    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Me A Coffee</h2><Coffee fillColor="#FFFFFF" :size="30"/></div>
     <DotLottieVue
       style="height: 200px; width: 200px" 
       class="lottie"
@@ -55,18 +46,22 @@ function onBuy() {
       src="https://assets-v2.lottiefiles.com/a/910d258a-1188-11ee-b88a-9bd716c2ab21/7Frf5sO43U.lottie"
     />
     <div class="quantity-control">
-      <button class="quantity-btn" @click="decreaseQuantity">-</button>
+      <button class="quantity-btn" @click="decreaseQuantity">
+        <Minus fillColor="WHITE" />
+      </button>
       <input
         type="number"
         v-model.number="quantity"
         :min="minQuantity"
       />
-      <button class="quantity-btn" @click="increaseQuantity">+</button>
+      <button class="quantity-btn" @click="increaseQuantity">
+        <Plus fillColor="WHITE" />
+      </button>
     </div>
     <div class="total-price">
       Total: ${{ totalPrice }}
     </div>
-    <button class="buy-btn" @click="onBuy">Buy</button>
+    <button class="minimal-btn" @click="onBuy">Buy</button>
   </div>
 </template>
 
@@ -106,19 +101,25 @@ h2 {
 }
 
 .quantity-btn {
-  background: #2b6391;
-  border: none;
-  border-radius: 50%;
   color: #fff;
-  width: 40px;
-  height: 40px;
+  width: fit-content;
+  height: fit-content;
   font-size: 1.5rem;
   cursor: pointer;
-  transition: background 0.3s;
+  text-align: center;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  justify-items: center;
 }
 
 .quantity-btn:hover {
-  background: #1976d2;
+  opacity: 80%;
+}
+
+.quantity-btn > span {
+  width: fit-content;
+
 }
 
 input[type="number"] {

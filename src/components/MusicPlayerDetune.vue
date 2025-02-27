@@ -164,7 +164,7 @@ const onWheel = (e) => {
 // --- TOGGLE LOGIC ---
 // Clicking the center toggles the slowed state and updates playback rate.
 const toggleSlowed = () => {
-  useSong.isSlowed = !useSong.isSlowed
+  useSong.isVoc = !useSong.isVoc
   useSong.updatePlaybackRate()
 }
 </script>

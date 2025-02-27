@@ -123,8 +123,11 @@
 
   
       <div class="flex items-center justify-end">
+
+        <div v-if="isPro" class="pro">
           <MusicPlayerDetune />
           <MusicPlayerSlow />
+        </div>  
           <MusicPlayerVolume />
       </div>
   </div>
@@ -134,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import MusicPlayerVolume from '../components/MusicPlayerVolume.vue';
 import MusicPlayerSlow from '../components/MusicPlayerSlow.vue';
 import MusicPlayerDetune from '../components/MusicPlayerDetune.vue';
@@ -149,6 +152,10 @@ import { useSongStore } from '../stores/song';
 import { storeToRefs } from 'pinia';
 import WaveSurfer from 'wavesurfer.js';
 import { getAuth } from 'firebase/auth';
+import { useUserStore } from '../stores/user';  // Import the store
+const userStore = useUserStore();  // Access the store
+
+const isPro = computed(() => userStore.isPro);  // Access `isPro` from the store
 
 const useSong = useSongStore();
 const { isPlaying, currentTrack, trackQueue, currentArtist, wavesurfer } = storeToRefs(useSong);

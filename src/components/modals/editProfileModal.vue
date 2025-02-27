@@ -2,6 +2,7 @@
   <div class="modal-overlay">
     <div class="modal-container">
       <button class="close-btn" @click="closeModal">&times;</button>
+      <h1>Update {{modalData?.user ? 'Profile' : 'Track'}}</h1>
 
       <!-- Edit Track -->
       <form v-if="modalData?.trackID" @submit.prevent="handleSubmit">
@@ -103,6 +104,16 @@
             class="input"
           />
 
+          <!-- Custom Name Input -->
+          <input v-if="isPro"
+       v-model="userCustomID"
+       type="text"
+       placeholder="Custom Username"
+       class="input"
+       :style="{ border: 'solid 2px', borderColor: customIDStatus === 'taken' ? 'red' : customIDStatus === 'available' ? 'green' : '' }" />
+          <span v-if="customIDStatus === 'taken'" class="text-red-500">Username Not Available</span>
+          <span v-if="customIDStatus === 'available'" class="text-green-500">Username Available</span>
+
           <!-- Genre Dropdown -->
           <select v-model="userGenre" class="input">
             <option value="" disabled>Select Genre</option>
@@ -135,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, onMounted } from 'vue';
+import { ref, defineEmits, onMounted, computed, watch } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
 import { getAuth } from "firebase/auth";
 import {
@@ -143,7 +154,10 @@ import {
   doc,
   getDoc,
   updateDoc,
-  runTransaction
+  collection,
+  query,
+  where,
+  getDocs
 } from "firebase/firestore";
 import {
   getStorage,
@@ -153,6 +167,9 @@ import {
 } from "firebase/storage";
 import { cropImageToSquare } from "../../main.js";
 import { makeNotification } from '../../main.js';
+import { useUserStore } from '../../stores/user';  // Import the store
+const userStore = useUserStore();  // Access the store
+const isPro = computed(() => userStore.isPro);  // Access `isPro` from the store
 
 const modalStore = useModalStore();
 const db = getFirestore();
@@ -166,6 +183,8 @@ const currentUser = auth.currentUser;
 // Profile details
 const user = ref([]);
 const userName = ref('');
+const userCustomID = ref('');
+const customIDStatus = ref(''); // 'available' or 'taken' or ''
 const userAvatar = ref('');
 const userAbout = ref('');
 const userGenre = ref('');
@@ -202,6 +221,7 @@ const fetchUserData = async (id) => {
       const userData = userDoc.data();
       user.value = userData;
       userName.value = userData.name;
+      userCustomID.value = userData.customID;
       userAvatar.value = userData.avatar;
       userAbout.value = userData.about;
       userGenre.value = userData.genre;
@@ -257,6 +277,22 @@ const fetchTrackData = async (id) => {
   }
 };
 
+const checkCustomIDAvailability = async (customID) => {
+  try {
+    const usersRef = collection(db, 'user');
+    const q = query(usersRef, where('customID', '==', customID));
+    const querySnapshot = await getDocs(q);
+
+    // If customID matches the current user's customID, it's considered available
+    return querySnapshot.empty || (querySnapshot.size === 1 && querySnapshot.docs[0].id === currentUser.uid);
+  } catch (error) {
+    console.error('Error checking customID availability:', error);
+    return false; // Return false if there's an error (e.g., network issues)
+  }
+};
+
+
+
 onMounted(async () => {
   if (modalData.user) {
     await fetchUserData(currentUser.uid);
@@ -264,6 +300,19 @@ onMounted(async () => {
     await fetchTrackData(modalData.trackID);
   }
 });
+
+watch(userCustomID, async (newCustomID) => {
+  if (newCustomID) {
+    // If the new customID is the same as the current user's customID, consider it available
+    const isAvailable = newCustomID === user.value.customID || await checkCustomIDAvailability(newCustomID);
+    customIDStatus.value = isAvailable ? 'available' : 'taken';
+    
+  } else {
+    customIDStatus.value = ''; // Reset if customID is empty
+  }
+});
+
+
 
 const handleArtworkUpload = async (e) => {
   const file = e.target.files[0];
@@ -338,7 +387,7 @@ const handleSubmit = async () => {
   }
 
   if (modalData?.user) {
-    if (!userName.value) {
+    if (!userName.value || customIDStatus.value === 'taken') {
       alert('Please fill in all the fields!');
       return;
     }
@@ -348,6 +397,7 @@ const handleSubmit = async () => {
     try {
       const fieldsToCheck = [
         { field: 'name', newVal: userName, modalValue: user.value.name },
+        { field: 'customID', newVal: userCustomID, modalValue: user.value.customID },
         { field: 'genre', newVal: userGenre, modalValue: user.value.genre },
         { field: 'about', newVal: userAbout, modalValue: user.value.about },
         { field: 'location', newVal: userLocation, modalValue: user.value.location },

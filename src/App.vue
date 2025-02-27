@@ -14,6 +14,7 @@ import boostedModal from './components/modals/boostedModal.vue';
 import followModal from './components/modals/followModal.vue';
 import editProfileModal from './components/modals/editProfileModal.vue';
 import NotifiModal from './components/modals/NotifiModal.vue';
+import StripeCheckout from './components/modals/StripeCheckout.vue';
 import Mail from './components/Mails.vue';
 import CollabModal from './components/modals/collabModal.vue';
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue';
@@ -25,6 +26,7 @@ import PlusIcon from 'vue-material-design-icons/Plus.vue';
 import Knight from 'vue-material-design-icons/ChessKnight.vue';
 import { useSongStore } from './stores/song';
 import { useModalStore } from './stores/modalStore.js';
+import { useUserStore } from './stores/user';
 import { storeToRefs } from 'pinia';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
 import draggable from './utils/DraggableDirective.js';
@@ -46,9 +48,10 @@ const unseenMailCount = computed(() => {
 });
 const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
-
+const userStore = useUserStore();
 const modalStore = useModalStore();
 
+const { isPro } = storeToRefs(userStore);
 
 
 onMounted(() => {
@@ -78,6 +81,8 @@ onMounted(() => {
             "https://cdn.discordapp.com/attachments/1329382057264025611/1329791122477809767/nopic.png?ex=678b9ffd&is=678a4e7d&hm=63dc663cb5406512356f176f746dcb96657e0bcc927396d897a9394a4105917d&";
           userCredits.value = userData.credits || 0;
           isArtist.value = userData.artist || false;
+
+          userStore.setIsPro(userData?.isPro || false);  // Store `isPro` globally
 
           // Convert inboxMails (which is a map) to an array
           // if (userData.inboxMails) {
@@ -181,6 +186,7 @@ let openMenu = ref(false);
 let openMail = ref(false);
 </script>
 <script>
+
 export default {
   directives: {
     draggable, // Register the custom directive
@@ -224,7 +230,7 @@ export default {
         </RouterLink>
         <div class="flex items-center ml-6 gap-5">
 
-          <Knight fillColor="#FFFFFF" :size="30"/>
+          <Knight v-if="isPro" fillColor="#FFFFFF" :size="30"/>
 
           <div class="cursor-pointer relative">
             <MailBox v-if="!openMail" @click="openMail = true" fillColor="#FFFFFF" :size="30" />
@@ -330,6 +336,7 @@ export default {
       <collabModal v-if="modalStore.modals.collabModal.isVisible" />
       <editProfileModal v-if="modalStore.modals.editProfileModal.isVisible" />
       <NotifiModal v-if="modalStore.modals.NotifiModal.isVisible" />
+      <StripeCheckout v-if="modalStore.modals.StripeCheckout.isVisible" />
     </teleport>
 
     <MusicPlayer v-if="currentTrack" />

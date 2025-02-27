@@ -144,7 +144,7 @@
 <script setup>
 import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import SongRow from '../components/SongRow.vue';
 import ModalComponent from '../components/modals/UploadTrackModal.vue';
@@ -156,7 +156,9 @@ import uniqolor from 'uniqolor';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { cropImageToSquare } from "../main.js";
 import { makeNotification } from '../main.js';
-
+import { useUserStore } from '../stores/user';  // Import the store
+const userStore = useUserStore();  // Access the store
+const isPro = computed(() => userStore.isPro);  // Access `isPro` from the store
 
 // Initialize Firebase Storage
 const storage = getStorage();
@@ -168,7 +170,8 @@ const route = useRoute();
 const db = getFirestore();
 const currentUser = getAuth().currentUser;
 const isFollowed = ref(false);
-const userID = ref(route.params.userID);
+const userID = ref(route.params.userID || null);
+const userCustomID = ref(route.params.customID || null);
 const userName = ref('');
 const userGenre = ref('');
 const userAvatar = ref('');
@@ -191,6 +194,34 @@ const artworkBlob = ref(null); // To store the cropped image blob
 const updateProfileField = async (field, value) => {
   const userDocRef = doc(db, 'user', userID.value);
   await updateDoc(userDocRef, { [field]: value });
+};
+
+const fetchCustomID = async (customID) => {
+  try {
+    // Reference to the 'user' collection in Firestore
+    
+    const colRef = collection(db, 'user');
+    
+    // Create a query to search for a user where customID field matches the provided value
+    const q = query(colRef, where("customID", "==", customID));
+    
+    // Execute the query
+    const querySnapshot = await getDocs(q);
+    
+    // Check if any documents matched the query
+    if (!querySnapshot.empty) {
+      // If a document is found, return the uid of the first matching document
+      const userDoc = querySnapshot.docs[0];  // Assuming customID is unique
+      
+      return userDoc.id;  // Return the UID of the document
+    } else {
+      console.log("No user found with the provided customID.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching user by customID: ", error);
+    return null;
+  }
 };
 
 const fetchUserData = async (id) => {
@@ -297,9 +328,22 @@ const handleLiveUpdates = (id) => {
 
 let unsubscribe;
 onMounted(async () => {
-  await fetchUserData(userID.value);
-  unsubscribe = handleLiveUpdates(userID.value);
+
+    // Wait for the result of fetchCustomID to get the resolved value (the user UID)
+    const id = await fetchCustomID(userID.value);
+    
+    if (id) {
+      userID.value = id;
+    } else {
+      console.log("No matching user found.");
+    }
+
+    // In case of error, fall back to the userID directly
+    await fetchUserData(userID.value);
+    unsubscribe = handleLiveUpdates(userID.value);
+  
 });
+
 
 onUnmounted(() => {
   if (unsubscribe) unsubscribe();
