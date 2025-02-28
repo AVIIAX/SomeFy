@@ -277,26 +277,32 @@ const fetchTrackData = async (id) => {
   }
 };
 
-const checkCustomIDAvailability = async (customID) => {
-  try {
-    // List of restricted characters
-    const restrictedCharacters = [
+const restrictedCharacters = [
   '/', '>', '<', '@', '#', '$', '%', '&', '*', '!', '(', ')', '=', '+', 
   '[', ']', '{', '}', ';', ':', '"', "'", '\\', '|', '^', '~', '`', 
   ',', '.', '?', ' ', '\t', '\n', '\r', '\b', '\f'
 ];
-// You can add or remove characters from this list
 
+// Emoji Unicode range patterns (these are broad patterns, but will capture most emojis)
+const emojiRegex = /[\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}|\u{2600}-\u{26FF}|\u{2700}-\u{27BF}|\u{2B50}]/gu;
+
+const checkCustomIDAvailability = async (customID) => {
+  try {
     // If customID is empty, return null immediately
     if (!customID || customID.trim() === '') {
       return null;
     }
 
-    // Check if customID contains any restricted characters
+    // Check if customID contains any restricted characters (including emojis)
     for (const char of restrictedCharacters) {
       if (customID.includes(char)) {
         return false; // Return false if restricted characters are found
       }
+    }
+
+    // Check if customID contains emojis or special symbols using regex
+    if (emojiRegex.test(customID)) {
+      return false; // Return false if emojis or special symbols are found
     }
 
     const usersRef = collection(db, 'user');
