@@ -111,8 +111,8 @@
        placeholder="Custom Username"
        class="input"
        :style="{ border: 'solid 2px', borderColor: customIDStatus === 'taken' ? 'red' : customIDStatus === 'available' ? 'green' : '' }" />
-          <span v-if="customIDStatus === 'taken'" class="text-red-500">Username Not Available</span>
-          <span v-if="customIDStatus === 'available'" class="text-green-500">Username Available</span>
+          <span v-if="customIDStatus === 'taken' && customIDStatus !== 'null'" class="text-red-500">Username Not Available</span>
+          <span v-if="customIDStatus === 'available' && customIDStatus !== 'null'" class="text-green-500">Username Available</span>
 
           <!-- Genre Dropdown -->
           <select v-model="userGenre" class="input">
@@ -279,17 +279,45 @@ const fetchTrackData = async (id) => {
 
 const checkCustomIDAvailability = async (customID) => {
   try {
+    // List of restricted characters
+    const restrictedCharacters = [
+  '/', '>', '<', '@', '#', '$', '%', '&', '*', '!', '(', ')', '=', '+', 
+  '[', ']', '{', '}', ';', ':', '"', "'", '\\', '|', '^', '~', '`', 
+  ',', '.', '?', ' ', '\t', '\n', '\r', '\b', '\f'
+];
+// You can add or remove characters from this list
+
+    // If customID is empty, return null immediately
+    if (!customID || customID.trim() === '') {
+      return null;
+    }
+
+    // Check if customID contains any restricted characters
+    for (const char of restrictedCharacters) {
+      if (customID.includes(char)) {
+        return false; // Return false if restricted characters are found
+      }
+    }
+
     const usersRef = collection(db, 'user');
     const q = query(usersRef, where('customID', '==', customID));
     const querySnapshot = await getDocs(q);
 
-    // If customID matches the current user's customID, it's considered available
-    return querySnapshot.empty || (querySnapshot.size === 1 && querySnapshot.docs[0].id === currentUser.uid);
+    // If customID matches the current user's customID, return null
+    if (querySnapshot.size === 1 && querySnapshot.docs[0].id === currentUser.uid) {
+      return null;
+    }
+
+    // If no documents were found, customID is available
+    return querySnapshot.empty;
   } catch (error) {
     console.error('Error checking customID availability:', error);
     return false; // Return false if there's an error (e.g., network issues)
   }
 };
+
+
+
 
 
 
@@ -305,7 +333,14 @@ watch(userCustomID, async (newCustomID) => {
   if (newCustomID) {
     // If the new customID is the same as the current user's customID, consider it available
     const isAvailable = newCustomID === user.value.customID || await checkCustomIDAvailability(newCustomID);
-    customIDStatus.value = isAvailable ? 'available' : 'taken';
+    customIDStatus.value = isAvailable === null 
+  ? 'null' 
+  : isAvailable 
+  ? 'available' 
+  : 'taken';
+
+    console.log(isAvailable);
+    
     
   } else {
     customIDStatus.value = ''; // Reset if customID is empty
