@@ -177,7 +177,7 @@ body {
 .feature {
   width: 200px;
   background: rgb(38,36,70);
-background: linear-gradient(90deg, rgba(38, 36, 70, 0.637) 0%, rgba(74, 44, 44, 0.596) 100%);
+background: linear-gradient(90deg, rgba(38, 36, 70, 0.726) 0%, rgba(23, 45, 64, 0.63) 100%);
   padding: 1.5rem;
   border-radius: 10px;
   cursor: pointer;
