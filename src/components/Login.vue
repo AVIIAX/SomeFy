@@ -12,12 +12,14 @@
             type="text"
             placeholder="Email"
             v-model="email"
+            @keydown.enter="login"
             class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
           />
           <input
             type="password"
             placeholder="Password"
             v-model="password"
+            @keydown.enter="login"
             class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
           />
           <p v-if="errMsg" class="text-sm text-red-500 text-center">{{ errMsg }}</p>
@@ -66,7 +68,7 @@
         router.push("/");
       })
       .catch((error) => {
-        errMsg.value = error.message;
+        errMsg.value = error.code.split('/')[1];
       });
   };
   

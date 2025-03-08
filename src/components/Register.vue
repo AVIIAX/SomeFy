@@ -14,20 +14,26 @@
           type="text"
           placeholder="Name"
           v-model="username"
+          @keydown.enter="register"
           class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
         />
         <input
           type="text"
           placeholder="Email"
           v-model="email"
+          @keydown.enter="register"
           class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
         />
         <input
           type="password"
           placeholder="Password"
           v-model="password"
+          @keydown.enter="register"
           class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
         />
+
+        <p v-if="errMsg" class="text-sm text-red-500 text-center">{{ errMsg }}</p>
+
         <button
           @click="register"
           class="w-full p-3 text-sm font-medium text-white minimal-btn text-center justify-center"
@@ -69,6 +75,7 @@ const username = ref("");
 const email = ref("");
 const password = ref("");
 const router = useRouter();
+const errMsg = ref(null);
 
 const register = async () => {
   try {
@@ -92,8 +99,8 @@ const register = async () => {
     const dataForEditModal = { trackID: null, user: user.uid };
     modalStore.toggleModal('editProfileModal', dataForEditModal);
   } catch (error) {
-    console.error("Error registering user:", error);
-    alert(error.message);
+    errMsg.value = error.code.split('/')[1];
+    
   }
 };
 
