@@ -1,30 +1,37 @@
 <template>
-    <div class="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#1C1C1C] to-black">
-      <div class="w-full max-w-sm bg-[#2C2C2C] rounded-lg shadow-lg p-8">
+  <div class="gradient z-[-1]">
+    <div class="gradient-1"></div>
+    <div class="gradient-2"></div>
+  </div>
+
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="w-full max-w-sm rounded-lg shadow-lg p-8">
         <h1 class="text-3xl font-semibold text-white text-center mb-6">Log In</h1>
         <div class="space-y-4">
           <input
             type="text"
             placeholder="Email"
             v-model="email"
-            class="w-full p-3 text-sm rounded-md bg-[#1C1C1C] text-white border border-[#444] focus:outline-none focus:border-white"
+            class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
           />
           <input
             type="password"
             placeholder="Password"
             v-model="password"
-            class="w-full p-3 text-sm rounded-md bg-[#1C1C1C] text-white border border-[#444] focus:outline-none focus:border-white"
+            class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
           />
           <p v-if="errMsg" class="text-sm text-red-500 text-center">{{ errMsg }}</p>
           <button
             @click="login"
-            class="w-full p-3 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+            class="w-full p-3 text-sm font-medium text-white minimal-btn text-center justify-center"
+            style="margin-top: 2.5rem;"
           >
             Submit
           </button>
           <button
             @click="signInWithGoogle"
-            class="w-full p-3 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+            class="w-full p-3 text-sm font-medium text-white minimal-btn text-center justify-center bg-[#e0e0e0ea]"
+            style="color: black;"
           >
             Sign In with Google
           </button>
@@ -69,8 +76,6 @@
   </script>
   
   <style scoped>
-  body {
-    color: aliceblue;
-  }
+
   </style>
   
