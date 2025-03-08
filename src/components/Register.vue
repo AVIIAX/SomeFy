@@ -80,7 +80,6 @@ const register = async () => {
       email: email.value,
     });
 
-    console.log("User registered and data saved successfully!");
     router.push("/"); // Redirect after successful registration
 
     const dataForEditModal = { trackID: null, user: user.uid };

@@ -39,7 +39,8 @@
   try {
     const searches = [
       searchCollection('user', sQuery.value),     // Query users
-      searchCollection('track', sQuery.value),    // Query tracks      // Query playlists by genre
+      searchCollection('track', sQuery.value),    // Query tracks    
+      searchCollection('playlists', sQuery.value),  // Query playlists by genre
     ];
 
     const [users, tracks, playlists] = await Promise.all(searches);

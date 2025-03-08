@@ -147,11 +147,11 @@ function getPointerAngle(e) {
       <defs>
         <!-- Radial gradient for a modern, 3D look -->
         <radialGradient id="knobGradient" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#555" />
+          <stop offset="0%" stop-color="#151515" />
           <stop offset="100%" stop-color="#111" />
         </radialGradient>
         <radialGradient id="knobGradientIn" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#555" />
+          <stop offset="0%" stop-color="#252525" />
           <stop offset="100%" stop-color="#222" />
         </radialGradient>
         <!-- Glow filter for the outer ring -->
@@ -170,7 +170,7 @@ function getPointerAngle(e) {
         cy="25"
         r="21"
         fill="none"
-        stroke="#7bc2e5"
+        stroke="#7babe5bf"
         stroke-width="2"
         filter="url(#glow)"
       />

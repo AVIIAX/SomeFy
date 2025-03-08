@@ -180,25 +180,7 @@ const toggleSlowed = () => {
       viewBox="0 0 50 50"
       class="cursor-pointer select-none"
     >
-      <defs>
-        <!-- Radial gradient for a modern, 3D look -->
-        <radialGradient id="knobGradient" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#555" />
-          <stop offset="100%" stop-color="#111" />
-        </radialGradient>
-        <radialGradient id="knobGradientIn" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#555" />
-          <stop offset="100%" stop-color="#222" />
-        </radialGradient>
-        <!-- Glow filter for the outer ring -->
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+   
 
       <!-- Stationary outer ring -->
       <circle
@@ -206,7 +188,7 @@ const toggleSlowed = () => {
         cy="25"
         r="21"
         fill="none"
-        stroke="#7be5ac"
+        stroke="#dae57bbf"
         stroke-width="2"
         filter="url(#glow)"
       />

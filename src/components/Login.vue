@@ -56,7 +56,6 @@
   const login = () => {
     signInWithEmailAndPassword(getAuth(), email.value, password.value)
       .then(() => {
-        alert("Successfully logged in!");
         router.push("/");
       })
       .catch((error) => {

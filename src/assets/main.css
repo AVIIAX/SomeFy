@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 
+
 .boost {
     font-family: Arial, Helvetica, sans-serif;
     text-transform: uppercase;
@@ -229,13 +230,10 @@
   background-color:transparent;
   width:35px;
   height:35px;
-  border-radius:50px;
   text-align: center;
   justify-content: center;
   justify-items: center;
   align-items: center;
-  border: solid 2px;
-  box-shadow: 0 0 5px #ff81b1, inset 0 0 5px #fc8cb7;
   cursor: pointer;
   display: flex;
   transition: all 1s;

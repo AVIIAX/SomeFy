@@ -2,13 +2,13 @@
 import { watch, ref, onMounted, computed } from 'vue';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { RouterLink, RouterView } from 'vue-router';
+import Landing from './components/Landing.vue';
 import Register from './components/Register.vue';
 import Login from './components/Login.vue';
 import MenuItem from './components/MenuItem.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
 import SearchBar from './components/SearchBar.vue';
 import UploadTrackModal from './components/modals/UploadTrackModal.vue';
-import songRow from './components/SongRow.vue';
 import boostModal from './components/modals/boostModal.vue';
 import boostedModal from './components/modals/boostedModal.vue';
 import followModal from './components/modals/followModal.vue';
@@ -34,7 +34,7 @@ import draggable from './utils/DraggableDirective.js';
 const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
 const isArtist = ref(false);
-const showRegister = ref(false); // Controls whether Register or Login is shown
+const showRegister = ref('land'); // Controls whether Register or Login is shown
 let auth = getAuth();
 const showModal = ref(false);
 const userID = ref("null");
@@ -55,6 +55,8 @@ const { isPro } = storeToRefs(userStore);
 
 
 onMounted(() => {
+  console.log(showRegister);
+  
   const auth = getAuth();
   const db = getFirestore();
 
@@ -117,11 +119,11 @@ onMounted(() => {
 });
 
 const switchToLogin = () => {
-  showRegister.value = false;
+  showRegister.value = 'login';
 };
 
 const switchToRegister = () => {
-  showRegister.value = true;
+  showRegister.value = 'register';
 };
 
 const handleSongUploadClick = () => {
@@ -198,7 +200,8 @@ export default {
   <div v-if="!isLoggedIn"
     class="fixed left-0 top-0 w-full h-full bg-gradient-to-b from-[#1C1C1C] to-black flex items-center justify-center">
     <div>
-      <Register v-if="showRegister" @switchToLogin="switchToLogin" />
+      <Landing v-if="showRegister === 'land'" @switchToLogin="switchToLogin" @switchToRegister="switchToRegister"/>
+      <Register v-else-if="showRegister === 'register'" @switchToLogin="switchToLogin" />
       <Login v-else @switchToRegister="switchToRegister" />
     </div>
   </div>
@@ -207,7 +210,7 @@ export default {
     <div>
       <!-- TopNav -->
       <div id="TopNav" class="
-            w-[calc(100%-240px)] 
+            w-[calc(100%-260px)] 
             h-[60px] 
             fixed 
             right-0 
@@ -275,12 +278,14 @@ export default {
 
       </div>
       <!-- NavBar -->
-      <div id="SideNav" class="p-6 w-[240px] fixed z-50 bg-black" :style="{
+      <div id="SideNav" class="p-6 w-[260px] fixed z-50 bg-black" :style="{
         height: currentTrack ? 'calc(100% - 90px)' : '100%'
       }">
         <RouterLink to="/">
-          <img width="125" src="https://i.postimg.cc/QdgWWrjW/Sound-Wave.png" />
+          <img width="300px" src="./assets/logo.svg" class="mt-[1rem]"/>
         </RouterLink>
+        <div class="border-b border-b-[#2A2A2A] mt-[2rem]"></div>
+
         <div class="my-8"></div>
         <ul>
           <RouterLink to="/">
@@ -292,6 +297,10 @@ export default {
           <RouterLink to="/library">
             <MenuItem class="ml-[1px]" name="Library" pageUrl="/library" />
           </RouterLink>
+          <RouterLink to="/webdev">
+            <MenuItem class="ml-[1px]" name="Want A Website??" pageUrl="/webdev" />
+          </RouterLink>
+
           <div class="py-3.5"></div>
         </ul>
         <div class="border-b border-b-gray-700"></div>
@@ -305,7 +314,7 @@ export default {
           fixed
           right-0
           top-0
-          w-[calc(100%-240px)]
+          w-[calc(100%-260px)]
           overflow-auto
           h-full
           bg-gradient-to-b
@@ -318,8 +327,8 @@ export default {
     </div>
     <button @click="handleSongUploadClick" class="open-modal-btn happyBtn p-6 fixed z-50 bg-black draggable-box"
       v-if="isArtist" :style="{
-        border: 'solid 2px  #3481c9',
-        color: 'Black',
+        border: 'solid 2px  #FFFFFFbf',
+        background: '#000000a8',
         padding: '0.5rem',
         borderRadius: '100%',
         bottom: '130px',
@@ -347,7 +356,7 @@ export default {
 <style>
 body {
   background-color: rgb(0 0 0);
-  font-family: "Figtree", serif;
+  font-family: "Oxanium", sans-serif;
   font-weight: 400;
   font-style: normal;
   letter-spacing: 1px;
@@ -381,7 +390,7 @@ body {
 }
 
 .happyBtn:hover {
-  transform: scale(1.1) rotateZ(10deg);
+  transform: scale(1.1);
 }
 
 .navProfileImg {

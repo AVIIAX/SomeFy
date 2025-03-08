@@ -61,7 +61,7 @@ function onBuy() {
     <div class="total-price">
       Total: ${{ totalPrice }}
     </div>
-    <button class="minimal-btn" @click="onBuy">Buy</button>
+    <button class="minimal-btn" @click="onBuy">Donate</button>
   </div>
 </template>
 
