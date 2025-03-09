@@ -38,6 +38,12 @@ const router = createRouter({
       component: PlaylistView,
       props: true, // this passes route params as props to PlaylistView
     },
+    {
+      path: '/library/MyLikes',
+      name: 'Liked',
+      component: PlaylistView,
+      props: true, // this passes route params as props to PlaylistView
+    },
   ]
 })
 

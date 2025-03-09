@@ -95,11 +95,12 @@ export const useSongStore = defineStore('song', {
     isPreservesPitch: false,
     isReverbed: false,
     slowedRate: 0.8, // Normal playback is 1; range is 0.4 (left) to 2 (right)
-    custDetune: 1200,  // Detune in cents (e.g. 1200 = 12 semitones)
     reverbImpulseUrl: '../reverb.wav', // Customize with your impulse response URL
     localStorageListenerAdded: false,
     // New: Tone pitch shifter instance
     pitchShifter: null,
+    // New: custom detune in cents for pitch shifting
+    custDetune: 0,
   }),
 
   actions: {
@@ -200,14 +201,15 @@ export const useSongStore = defineStore('song', {
           console.log('WaveSurfer interaction triggered');
         });
 
-        this.wavesurfer.on('finish', () => {
-          console.log('WaveSurfer finished playing');
+        // Automatically play the next song when the current one finishes
+        this.wavesurfer.on('finish', async () => {
+          console.log('WaveSurfer finished playing, loading next song...');
+          await this.nextSong();
         });
 
         Tone.start().then(() => {
           console.log("Tone.js AudioContext started");
         });
-
         
       } catch (error) {
         console.log(error);

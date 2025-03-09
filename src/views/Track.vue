@@ -141,7 +141,7 @@
         <div class="mt-6"></div>
         <div class="flex items-center justify-between px-5 pt-2">
           <div>
-            <ClockTimeThreeOutline fillColor="#FFFFFF" :size="18" />
+            <Arch fillColor="#FFFFFF" :size="18" />
           </div>
         </div>
         <div class="border-b border-b-[#2A2A2A] mt-2"></div>
@@ -211,7 +211,7 @@ import Soundcloud from 'vue-material-design-icons/Soundcloud.vue';
 import Apple from 'vue-material-design-icons/Apple.vue';
 import axios from 'axios';
 import HomeCard from '../components/HomeCard.vue';
-import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
+import Arch from 'vue-material-design-icons/Arch.vue'
 import WaveSurfer from 'wavesurfer.js'
 import { useModalStore } from '../stores/modalStore.js';
 

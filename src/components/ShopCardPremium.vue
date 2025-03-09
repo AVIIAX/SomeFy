@@ -64,7 +64,7 @@ const toggleFeatures = () => {
 <template>
   <div class="shop-card">
     <!-- Header -->
-    <div class="header flex gap-3 justify-center items-center">
+    <div class="glitch header flex gap-3 justify-center items-center">
       <h2>Buy Premium</h2>
       <Knight fillColor="#FFFFFF" :size="30" />
     </div>

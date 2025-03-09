@@ -4,9 +4,9 @@
     <div class="gradient-2"></div>
   </div>
 
-  <div class="flex items-center justify-center min-h-screen">
+  <div class="glitch flex items-center justify-center min-h-screen">
     <div class="w-full max-w-sm rounded-lg shadow-lg p-8">
-      <h1 class="text-3xl font-semibold text-white text-center mb-6">Create Account</h1>
+      <h1 class="glitch text-3xl font-semibold text-white text-center mb-6">Create Account</h1>
       <div class="space-y-4">
 
         <!-- Other Inputs -->
@@ -63,11 +63,42 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "vue-router";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useModalStore } from '../stores/modalStore.js';
+import { PowerGlitch } from 'powerglitch'
+
+onMounted(() => {
+  PowerGlitch.glitch('.glitch'), {
+  "playMode": "always",
+  "optimizeSeo": true,
+  "createContainers": true,
+  "hideOverflow": false,
+  "timing": {
+    "duration": 3950,
+    "easing": "ease-in-out"
+  },
+  "glitchTimeSpan": {
+    "start": 0.5,
+    "end": 0.7
+  },
+  "shake": {
+    "velocity": 2,
+    "amplitudeX": 0.2,
+    "amplitudeY": 0.2
+  },
+  "slice": {
+    "count": 6,
+    "velocity": 1,
+    "minHeight": 0.02,
+    "maxHeight": 0.15,
+    "hueRotate": true
+  },
+  "pulse": false
+}
+})
 
 const modalStore = useModalStore();
 const db = getFirestore();

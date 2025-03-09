@@ -89,7 +89,7 @@
     </div>
 
 
-    <div class="flex items-center justify-end">
+    <div class="flex items-center justify-end w-1/4">
 
 
       <MusicPlayerSlow v-if="isPro" class="pro" />

@@ -30,11 +30,13 @@ import { useUserStore } from './stores/user';
 import { storeToRefs } from 'pinia';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
 import draggable from './utils/DraggableDirective.js';
+import { PowerGlitch } from 'powerglitch'
+
 
 const db = getFirestore();
 const isLoggedIn = ref(false); // Corrected variable naming
 const isArtist = ref(false);
-const showRegister = ref('land'); // Controls whether Register or Login is shown
+const showRegister = ref(''); // Controls whether Register or Login is shown
 let auth = getAuth();
 const showModal = ref(false);
 const userID = ref("null");
@@ -55,8 +57,37 @@ const { isPro } = storeToRefs(userStore);
 
 
 onMounted(() => {
-  console.log(showRegister);
-  
+  PowerGlitch.glitch('.glitch'), {
+  "playMode": "always",
+  "optimizeSeo": true,
+  "createContainers": true,
+  "hideOverflow": false,
+  "timing": {
+    "duration": 3950,
+    "easing": "ease-in-out"
+  },
+  "glitchTimeSpan": {
+    "start": 0.5,
+    "end": 0.7
+  },
+  "shake": {
+    "velocity": 20,
+    "amplitudeX": 0.2,
+    "amplitudeY": 0.2
+  },
+  "slice": {
+    "count": 6,
+    "velocity": 15,
+    "minHeight": 0.02,
+    "maxHeight": 0.15,
+    "hueRotate": true
+  },
+  "pulse": false
+}
+
+  showRegister.value = 'land';
+ 
+
   const auth = getAuth();
   const db = getFirestore();
 
@@ -282,7 +313,7 @@ export default {
         height: currentTrack ? 'calc(100% - 90px)' : '100%'
       }">
         <RouterLink to="/">
-          <img width="300px" src="./assets/logo.svg" class="mt-[1rem]"/>
+          <img width="300px" src="./assets/logo.svg" class="glitch mt-[1rem]"/>
         </RouterLink>
         <div class="border-b border-b-[#2A2A2A] mt-[2rem]"></div>
 

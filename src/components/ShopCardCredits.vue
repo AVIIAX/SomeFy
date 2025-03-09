@@ -6,6 +6,7 @@ import CircleMultiple from 'vue-material-design-icons/CircleMultiple.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
 import Minus from 'vue-material-design-icons/Minus.vue';
 import { useModalStore } from '../stores/modalStore.js';
+import { PowerGlitch } from 'powerglitch';
 
 const modalStore = useModalStore();
 
@@ -23,7 +24,36 @@ const totalPrice = computed(() => (pricePerCredit.value * quantity.value).toFixe
 
 // Retrieve price per credit from Firestore (doc: "shop/prices", field: credit)
 onMounted(() => {
+  PowerGlitch.glitch('.glitch'), {
+  "playMode": "always",
+  "optimizeSeo": true,
+  "createContainers": true,
+  "hideOverflow": false,
+  "timing": {
+    "duration": 3950,
+    "easing": "ease-in-out"
+  },
+  "glitchTimeSpan": {
+    "start": 0.5,
+    "end": 0.7
+  },
+  "shake": {
+    "velocity": 20,
+    "amplitudeX": 0.2,
+    "amplitudeY": 0.2
+  },
+  "slice": {
+    "count": 6,
+    "velocity": 15,
+    "minHeight": 0.02,
+    "maxHeight": 0.15,
+    "hueRotate": true
+  },
+  "pulse": false
+}
+
   const docRef = doc(db, 'shop', 'prices');
+
   onSnapshot(docRef, (docSnap) => {
     if (docSnap.exists()) {
       const data = docSnap.data();
@@ -53,7 +83,7 @@ function onBuy() {
 
 <template>
   <div class="shop-card">
-    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Credits</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
+    <div class="glitch flex gap-3 justify-center items-center justify-items-center"><h2>Buy Credits</h2><CircleMultiple fillColor="#FFFFFF" :size="30"/></div>
     <DotLottieVue
       class="lottie"
       autoplay

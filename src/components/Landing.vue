@@ -7,7 +7,7 @@
   <div class="main-container">
     <div class="flex flex-col items-center justify-center p-20 z-50 top-0 left-0 h-full">
       <div class="flex">
-        <img src="../assets/logo-big.svg" width="600" alt="Logo">
+        <img src="../assets/logo-big.svg" width="600" alt="Logo" class="glitch">
       </div>
       <div class="tagline">
         <span>Share, Stream, Collab</span>
@@ -17,7 +17,7 @@
         <div @click="$emit('switchToRegister')">JOIN</div>
       </div>
 
-      <div class="feature-container">
+      <div class="glitch feature-container">
         <div class="feature">
           <h1>SHARE</h1>
           <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.</p>
@@ -36,8 +36,40 @@
 </template>
 
 <script setup>
-// No changes needed for the script
+import { onMounted } from 'vue'
+import { PowerGlitch } from 'powerglitch'
+
+onMounted(() => {
+  PowerGlitch.glitch('.glitch'), {
+  "playMode": "always",
+  "optimizeSeo": true,
+  "createContainers": true,
+  "hideOverflow": false,
+  "timing": {
+    "duration": 3950,
+    "easing": "ease-in-out"
+  },
+  "glitchTimeSpan": {
+    "start": 0.5,
+    "end": 0.7
+  },
+  "shake": {
+    "velocity": 20,
+    "amplitudeX": 0.2,
+    "amplitudeY": 0.2
+  },
+  "slice": {
+    "count": 6,
+    "velocity": 15,
+    "minHeight": 0.02,
+    "maxHeight": 0.15,
+    "hueRotate": true
+  },
+  "pulse": false
+}
+})
 </script>
+
 
 <style scoped>
 body {

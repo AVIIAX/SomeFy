@@ -37,7 +37,7 @@ function onBuy() {
 
 <template>
   <div class="shop-card">
-    <div class="flex gap-3 justify-center items-center justify-items-center"><h2>Buy Me A Coffee</h2><Coffee fillColor="#FFFFFF" :size="30"/></div>
+    <div class="glitch flex gap-3 justify-center items-center justify-items-center"><h2>Buy Me A Coffee</h2><Coffee fillColor="#FFFFFF" :size="30"/></div>
     <DotLottieVue
       style="height: 200px; width: 200px" 
       class="lottie"
