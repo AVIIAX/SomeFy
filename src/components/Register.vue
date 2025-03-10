@@ -32,6 +32,14 @@
           class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
         />
 
+        <input
+          type="password"
+          placeholder="Re-Enter Password"
+          v-model="password2"
+          @keydown.enter="register"
+          class="w-full p-3 text-sm rounded-md bg-[#0000002e] text-white border border-[#444] focus:outline-none focus:border-white"
+        />
+
         <p v-if="errMsg" class="text-sm text-red-500 text-center">{{ errMsg }}</p>
 
         <button
@@ -64,7 +72,7 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword,  signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "vue-router";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useModalStore } from '../stores/modalStore.js';
@@ -105,11 +113,13 @@ const db = getFirestore();
 const username = ref("");
 const email = ref("");
 const password = ref("");
+const password2 = ref("");
 const router = useRouter();
 const errMsg = ref(null);
 
 const register = async () => {
   try {
+  if (password2.value !== password.value) return errMsg.value = "Password Doesn't Match"
     // Create user with email and password
     const userCredential = await createUserWithEmailAndPassword(getAuth(), email.value, password.value);
     const user = userCredential.user;
@@ -135,8 +145,38 @@ const register = async () => {
   }
 };
 
-const signInWithGoogle = () => {
-  // Add Google Sign-In logic here
+const signInWithGoogle = async () => {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider(); // Corrected use of GoogleAuthProvider
+
+  try {
+    // Sign in with Google
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Extract user information from the Google account
+    const username = user.displayName;
+    const avatarUrl = user.photoURL;
+
+    // Create a reference in Firestore
+    const userRef = doc(getFirestore(), "user", user.uid);
+
+    // Save user data (including avatar URL) in Firestore
+    await setDoc(userRef, {
+      name: username,
+      email: user.email,
+      avatar: avatarUrl,
+      artist: false,
+      credits: "15",
+    });
+
+    // Optionally, redirect or show a modal after successful registration
+    router.push("/"); // Redirect after successful login
+
+  } catch (error) {
+    console.error("Error during Google sign-in: ", error.message);
+    errMsg.value = "Google Sign-In Failed. Please try again.";
+  }
 };
 </script>
 

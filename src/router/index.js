@@ -6,6 +6,7 @@ import Track from '../views/Track.vue'
 import ShopView from '../views/ShopView.vue'
 import LibraryView from '../views/LibraryView.vue'
 import PlaylistView from '../views/PlaylistView.vue'
+import EmbedMusicPlayer from '../components/EmbedMusicPlayer.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,6 +44,12 @@ const router = createRouter({
       name: 'Liked',
       component: PlaylistView,
       props: true, // this passes route params as props to PlaylistView
+    },
+    {
+      path: '/embed/:trackId',
+      name: 'embed',
+      component: EmbedMusicPlayer,
+      props: true, // Allow trackId to be passed as a prop
     },
   ]
 })

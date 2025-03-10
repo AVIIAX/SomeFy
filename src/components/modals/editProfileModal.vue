@@ -115,7 +115,7 @@
           <span v-if="customIDStatus === 'available' && customIDStatus !== 'null'" class="text-green-500">Username Available</span>
 
           <!-- Genre Dropdown -->
-          <select v-model="userGenre" class="input">
+          <select v-if="modalData?.user.artist" v-model="userGenre" class="input">
             <option value="" disabled>Select Genre</option>
             <option v-for="g in genresList" :key="g" :value="g">
               {{ g }}

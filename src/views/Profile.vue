@@ -42,7 +42,7 @@
           <div v-if="!isFollowed" class="follow-btn">FOLLOW</div>
           <div v-else class="followed-btn">UNFOLLOW</div>
         </div>
-        <div v-if="isFollowed" class="collab-btn flex items-center gap-1" @click="handleCollabClick">
+        <div v-if="isFollowed && isThisArtist" class="collab-btn flex items-center gap-1" @click="handleCollabClick">
           <Collab fillColor="#aea9d89" :size="20" />
           COLLAB?
         </div>
@@ -158,7 +158,7 @@ import { cropImageToSquare } from "../main.js";
 import { makeNotification } from '../main.js';
 import { useUserStore } from '../stores/user';  // Import the store
 const userStore = useUserStore();  // Access the store
-const isPro = computed(() => userStore.isPro);  // Access `isPro` from the store
+const isThisArtist = computed(() => userStore.isArtist);  // Access `isPro` from the store
 
 // Initialize Firebase Storage
 const storage = getStorage();

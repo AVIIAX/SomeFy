@@ -24,33 +24,7 @@ const totalPrice = computed(() => (pricePerCredit.value * quantity.value).toFixe
 
 // Retrieve price per credit from Firestore (doc: "shop/prices", field: credit)
 onMounted(() => {
-  PowerGlitch.glitch('.glitch'), {
-  "playMode": "always",
-  "optimizeSeo": true,
-  "createContainers": true,
-  "hideOverflow": false,
-  "timing": {
-    "duration": 3950,
-    "easing": "ease-in-out"
-  },
-  "glitchTimeSpan": {
-    "start": 0.5,
-    "end": 0.7
-  },
-  "shake": {
-    "velocity": 20,
-    "amplitudeX": 0.2,
-    "amplitudeY": 0.2
-  },
-  "slice": {
-    "count": 6,
-    "velocity": 15,
-    "minHeight": 0.02,
-    "maxHeight": 0.15,
-    "hueRotate": true
-  },
-  "pulse": false
-}
+  PowerGlitch.glitch('.glitch')
 
   const docRef = doc(db, 'shop', 'prices');
 

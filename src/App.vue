@@ -31,6 +31,7 @@ import { storeToRefs } from 'pinia';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from "firebase/firestore";
 import draggable from './utils/DraggableDirective.js';
 import { PowerGlitch } from 'powerglitch'
+import { log } from 'tone/build/esm/core/util/Debug.js';
 
 
 const db = getFirestore();
@@ -52,38 +53,11 @@ const useSong = useSongStore();
 const { isPlaying, currentTrack } = storeToRefs(useSong);
 const userStore = useUserStore();
 const modalStore = useModalStore();
-
 const { isPro } = storeToRefs(userStore);
 
-
 onMounted(() => {
-  PowerGlitch.glitch('.glitch'), {
-  "playMode": "always",
-  "optimizeSeo": true,
-  "createContainers": true,
-  "hideOverflow": false,
-  "timing": {
-    "duration": 3950,
-    "easing": "ease-in-out"
-  },
-  "glitchTimeSpan": {
-    "start": 0.5,
-    "end": 0.7
-  },
-  "shake": {
-    "velocity": 20,
-    "amplitudeX": 0.2,
-    "amplitudeY": 0.2
-  },
-  "slice": {
-    "count": 6,
-    "velocity": 15,
-    "minHeight": 0.02,
-    "maxHeight": 0.15,
-    "hueRotate": true
-  },
-  "pulse": false
-}
+  
+  PowerGlitch.glitch('.glitch')
 
   showRegister.value = 'land';
  
@@ -116,6 +90,7 @@ onMounted(() => {
           isArtist.value = userData.artist || false;
 
           userStore.setIsPro(userData?.isPro || false);  // Store `isPro` globally
+          userStore.setIsArtist(userData?.artist || false);
 
           // Convert inboxMails (which is a map) to an array
           // if (userData.inboxMails) {
